@@ -13,7 +13,7 @@ The Flung SDK: packages other people's projects install to use Flung. The API it
 | `spec/` | `openapi.json`, copied from flung-app by `pnpm sync:openapi`. Never edited by hand. |
 | `packages/connect/` | `@flung.dev/connect`: the `<flung-connect>` web component, the React component (`/react`), and the client and flows with no element (`/core`). |
 | `packages/sdk/` | `@flung.dev/sdk`: the `/v1` API client. `src/generated/` is written by hey-api from `spec/openapi.json` before every typecheck, test and build, and is not committed. |
-| `examples/` | Pages that use the packages as a reader would. `vanilla` runs on the built `dist` with a Node server of a few lines. |
+| `examples/` | Apps that use the packages as a reader would: `vanilla` (the built `dist` and a Node server of a few lines), `nextjs` and `react-vite` (installed from npm with their own lockfiles; the key lives in `.env.local`, read on a server only). CI builds each against the packed packages. |
 | `scripts/` | Repository checks and the OpenAPI sync. Not shipped. |
 
 ## Commands

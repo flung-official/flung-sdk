@@ -13,7 +13,7 @@ Workflows here follow:
 
 | Path | Purpose |
 |---|---|
-| `ci.yml` | On a pull request and a push to `main`: install, audit, `pnpm check`, build, and pack every package. |
+| `ci.yml` | On a pull request and a push to `main`: install, audit, `pnpm check`, build, and pack every package; then installs each app in `examples/` from its lockfile with the packed packages swapped in, type checks it and builds it. |
 | `publish.yml` | On a tag `<package folder>-v<version>` (`connect-v0.1.0`, `sdk-v0.1.0`): checks the tag against the package's version, runs `pnpm check`, builds, and publishes with OIDC. A version with a `-` (`0.2.0-beta.1`) goes to the `next` dist-tag, any other to `latest`. |
 
 ## Publishing a package
