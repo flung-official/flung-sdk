@@ -1,6 +1,6 @@
 /**
- * `@flung.official/connect`: `<flung-connect>`, a panel that lets people connect and disconnect their social accounts
- * from your page, with a connect token your server makes. `import '@flung.official/connect/register'` to register it,
+ * `@flung.dev/connect`: `<flung-connect>`, a panel that lets people connect and disconnect their social accounts
+ * from your page, with a connect token your server makes. `import '@flung.dev/connect/register'` to register it,
  * or call `defineFlungConnect()`.
  */
 export { defineFlungConnect, TAG_NAME } from './element/define.js'

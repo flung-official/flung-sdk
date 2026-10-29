@@ -26,14 +26,14 @@
 
 | Package | What it is |
 |---|---|
-| [`@flung.official/connect`](./packages/connect/README.md) | The `<flung-connect>` web component, the React component (`/react`), and the calls and flows with no element (`/core`). |
-| [`@flung.official/sdk`](./packages/sdk/README.md) | The `/v1` API client: posts, accounts, media, webhooks, connect tokens, and `verifyWebhook`. Runs on Node 20+, Workers, Deno and Bun. |
+| [`@flung.dev/connect`](./packages/connect/README.md) | The `<flung-connect>` web component, the React component (`/react`), and the calls and flows with no element (`/core`). |
+| [`@flung.dev/sdk`](./packages/sdk/README.md) | The `/v1` API client: posts, accounts, media, webhooks, connect tokens, and `verifyWebhook`. Runs on Node 20+, Workers, Deno and Bun. |
 
 ## Quick start
 
 ```ts
 // On your server
-import { Flung } from '@flung.official/sdk'
+import { Flung } from '@flung.dev/sdk'
 
 const flung = new Flung({ apiKey: process.env.FLUNG_API_KEY! })
 const { token } = await flung.connectTokens.create({ origins: ['https://app.example.com'] })
@@ -41,7 +41,7 @@ const { token } = await flung.connectTokens.create({ origins: ['https://app.exam
 
 ```html
 <!-- On your page -->
-<script type="module">import '@flung.official/connect/register'</script>
+<script type="module">import '@flung.dev/connect/register'</script>
 <flung-connect token="flung_ct_..."></flung-connect>
 ```
 
@@ -60,8 +60,8 @@ Published packages have no `dependencies` (`scripts/check-no-runtime-dependencie
 
 | Path | Purpose |
 |---|---|
-| `packages/connect/` | `@flung.official/connect`. |
-| `packages/sdk/` | `@flung.official/sdk`, generated from `spec/openapi.json`. |
+| `packages/connect/` | `@flung.dev/connect`. |
+| `packages/sdk/` | `@flung.dev/sdk`, generated from `spec/openapi.json`. |
 | `spec/` | The API's OpenAPI document the SDK is generated from. |
 | `examples/` | Pages that use the packages as a reader would. |
 | `scripts/` | Repository checks and the OpenAPI sync. Not shipped. |

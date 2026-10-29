@@ -1,5 +1,5 @@
 /**
- * `@flung.official/connect/core`: the connect calls and flows with no element, for a page that draws its own panel.
+ * `@flung.dev/connect/core`: the connect calls and flows with no element, for a page that draws its own panel.
  */
 export { ConnectClient, DEFAULT_BASE_URL, FlungConnectError } from './client.js'
 export type { ConnectClientOptions, TokenSource } from './client.js'

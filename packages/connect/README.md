@@ -1,9 +1,9 @@
-# @flung.official/connect
+# @flung.dev/connect
 
 `<flung-connect>`: a panel that lets the people using your app connect and disconnect their social accounts through Flung, on your own page. A web component, a React component, and the calls underneath for a page that draws its own. No runtime dependencies.
 
 ```bash
-npm install @flung.official/connect
+npm install @flung.dev/connect
 ```
 
 ## How it works
@@ -22,7 +22,7 @@ A connect token can only list, connect, reconnect and disconnect accounts, only 
 **Your server** (any language; this is the SDK):
 
 ```ts
-import { Flung } from '@flung.official/sdk'
+import { Flung } from '@flung.dev/sdk'
 
 const flung = new Flung({ apiKey: process.env.FLUNG_API_KEY! })
 
@@ -37,7 +37,7 @@ app.post('/connect-token', async (_request, response) => {
 
 ```html
 <script type="module">
-  import '@flung.official/connect/register'
+  import '@flung.dev/connect/register'
 
   const panel = document.querySelector('flung-connect')
   // A function: the panel asks again when a token expires.
@@ -51,7 +51,7 @@ app.post('/connect-token', async (_request, response) => {
 **React**:
 
 ```tsx
-import { FlungConnect } from '@flung.official/connect/react'
+import { FlungConnect } from '@flung.dev/connect/react'
 
 export function Accounts() {
   return <FlungConnect token={fetchConnectToken} platforms={['x', 'linkedin']} onConnect={({ accounts }) => console.log(accounts)} />
@@ -103,10 +103,10 @@ flung-connect::part(panel) { border: 0; }
 
 ## Without the element
 
-`@flung.official/connect/core` has the calls (`ConnectClient`) and the flows (`connectInPopup`, `readRedirectResult`) for a page that draws its own panel.
+`@flung.dev/connect/core` has the calls (`ConnectClient`) and the flows (`connectInPopup`, `readRedirectResult`) for a page that draws its own panel.
 
 ```ts
-import { ConnectClient, connectInPopup } from '@flung.official/connect/core'
+import { ConnectClient, connectInPopup } from '@flung.dev/connect/core'
 
 const client = new ConnectClient({ token })
 button.onclick = async () => {

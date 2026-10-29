@@ -1,6 +1,6 @@
 name: Publish
 
-# Publishes one package to npm under @flung.official with trusted publishing: npm trusts this workflow in this repository through
+# Publishes one package to npm under @flung.dev with trusted publishing: npm trusts this workflow in this repository through
 # GitHub's OIDC token, so no npm token exists anywhere, and every version carries a provenance statement that names this commit.
 #
 # Push a tag `<package folder>-v<version>`, such as `connect-v0.1.0`. The version must equal the package's package.json, or nothing

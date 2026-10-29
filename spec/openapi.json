@@ -5389,7 +5389,7 @@
           "Accounts"
         ],
         "summary": "Make a connect token for a page",
-        "description": "Lets a page in a browser show \"connect your accounts\" without holding your API key: make the token on your server, hand it to the page, and the page (with `<flung-connect>` from `@flung.official/connect`, or its own calls) can list, connect, reconnect and disconnect accounts until it expires, from the listed origins only. Needs a full-access credential.",
+        "description": "Lets a page in a browser show \"connect your accounts\" without holding your API key: make the token on your server, hand it to the page, and the page (with `<flung-connect>` from `@flung.dev/connect`, or its own calls) can list, connect, reconnect and disconnect accounts until it expires, from the listed origins only. Needs a full-access credential.",
         "security": [
           {
             "apiKey": []

@@ -1,6 +1,6 @@
 # Workflows
 
-CI for every change, and publishing to npm under `@flung.official` with trusted publishing.
+CI for every change, and publishing to npm under `@flung.dev` with trusted publishing.
 
 ## Standards
 
@@ -20,8 +20,8 @@ Workflows here follow:
 
 | Step | Who | What |
 |---|---|---|
-| 1 | Owner, once | On npmjs.com, create the organisation `flung.official`. |
-| 2 | Owner, once | In GitHub, add the environment `npm` to this repository (add required reviewers to approve each publish). |
+| 1 | Owner, once (done) | On npmjs.com, the organisation `flung.dev`. |
+| 2 | Owner, once (done) | In GitHub, the environment `npm` on this repository (add required reviewers there to approve each publish). |
 | 3 | Owner, once a package | In the package's settings on npm, add a trusted publisher: GitHub Actions, organisation `flung-official`, repository `flung-sdk`, workflow `publish.yml`, environment `npm`. If npm offers this only for a package that exists, publish the first version once by hand and set the trusted publisher straight after. |
 | 4 | Anyone with push | Set `version` in the package's `package.json`, merge, then push the tag: `git tag connect-v0.1.0 && git push origin connect-v0.1.0` (`sdk-v...` for the client). |
 | 5 | Owner, after the first trusted publish | In the package's settings on npm, require two-factor authentication and disallow tokens, so only this workflow can publish. |

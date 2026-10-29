@@ -1,9 +1,9 @@
-# @flung.official/sdk
+# @flung.dev/sdk
 
 The typed TypeScript client for the Flung API: schedule and publish social media posts, connect accounts, manage webhook endpoints and API keys, and verify the webhooks Flung sends. It runs anywhere with `fetch` and WebCrypto: Node 20+, Cloudflare Workers, Deno, Bun.
 
 ```ts
-import { Flung } from '@flung.official/sdk'
+import { Flung } from '@flung.dev/sdk'
 
 const flung = new Flung({ apiKey: process.env.FLUNG_API_KEY! })
 
@@ -67,7 +67,7 @@ Each account says how it stays connected: `renewal` is `automatic` (Flung refres
 
 ## Letting people connect from your page
 
-Your server makes a connect token, and `<flung-connect>` from [`@flung.official/connect`](../connect/README.md) uses it in the browser. The token can only list, connect, reconnect and disconnect accounts, from the origins you name, until it expires.
+Your server makes a connect token, and `<flung-connect>` from [`@flung.dev/connect`](../connect/README.md) uses it in the browser. The token can only list, connect, reconnect and disconnect accounts, from the origins you name, until it expires.
 
 ```ts
 const { token } = await flung.connectTokens.create({ origins: ['https://app.example.com'], expiresIn: 900 })
@@ -76,7 +76,7 @@ const { token } = await flung.connectTokens.create({ origins: ['https://app.exam
 ## Webhooks
 
 ```ts
-import { verifyWebhook } from '@flung.official/sdk'
+import { verifyWebhook } from '@flung.dev/sdk'
 
 const event = await verifyWebhook({ body: rawBody, headers: request.headers, secret: process.env.FLUNG_WEBHOOK_SECRET! })
 if (event.type === 'post.published') console.warn(event.data.post.id)
