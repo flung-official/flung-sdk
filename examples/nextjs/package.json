@@ -14,8 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flung.dev/connect": "0.1.1",
-    "@flung.dev/sdk": "0.1.1",
+    "@flung.dev/connect": "0.1.2",
+    "@flung.dev/sdk": "0.1.2",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"

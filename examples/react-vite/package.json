@@ -14,12 +14,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flung.dev/connect": "0.1.1",
+    "@flung.dev/connect": "0.1.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@flung.dev/sdk": "0.1.1",
+    "@flung.dev/sdk": "0.1.2",
     "@types/node": "22.20.4",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
