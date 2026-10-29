@@ -1,6 +1,6 @@
 {
   "name": "@flung.dev/connect",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Let people connect and disconnect their social accounts from your page: a <flung-connect> web component and a React component for Flung, with no runtime dependencies.",
   "license": "MIT",
   "type": "module",
