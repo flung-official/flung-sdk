@@ -16,7 +16,8 @@
 
 <p align="center">
   <a href="https://flung.dev">Website</a> &nbsp;·&nbsp;
-  <a href="https://api.flung.dev/docs">API reference</a> &nbsp;·&nbsp;
+  <a href="https://docs.flung.dev">Docs</a> &nbsp;·&nbsp;
+  <a href="https://docs.flung.dev/reference/api">API reference</a> &nbsp;·&nbsp;
   <a href="./packages/connect/README.md">Connect panel</a> &nbsp;·&nbsp;
   <a href="./packages/sdk/README.md">API client</a> &nbsp;·&nbsp;
   <a href="./examples/README.md">Examples</a>
