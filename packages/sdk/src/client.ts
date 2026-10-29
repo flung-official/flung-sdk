@@ -19,7 +19,7 @@ const CONNECT_WAIT_MS = 11 * 60_000
 export interface FlungOptions {
   /**
    * The credential: an API key (`flung_sk_...`), or an OAuth access token an app received through "Connect with Flung"
-   * (docs/oauth/connect-with-flung.md). Keep either on a server; never ship it to a browser.
+   * (see Authentication in the docs). Keep either on a server; never ship it to a browser.
    */
   apiKey: string
   /** Where the API lives. Defaults to production; pass `https://api-preview.flung.dev` to test against preview. */

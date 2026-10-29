@@ -22,13 +22,21 @@ export interface FlungConnectProps {
   platforms?: readonly Platform[] | undefined
   /** `redirect` sends the whole page to the platform and back, for pages that cannot open windows. */
   mode?: 'popup' | 'redirect' | undefined
+  /** `light` or `dark`. Follows the page's colour scheme when left out. */
   theme?: 'light' | 'dark' | undefined
+  /** Any of the panel's words, to put it in another language. */
   labels?: Partial<ConnectLabels> | undefined
+  /** A class for the element itself. */
   className?: string | undefined
+  /** Styles for the element, such as its `--flung-*` custom properties. */
   style?: CSSProperties | undefined
+  /** The accounts were read: on first show and after every change. */
   onLoad?: ((detail: LoadDetail) => void) | undefined
+  /** A connect or reconnect finished. */
   onConnect?: ((detail: ConnectDetail) => void) | undefined
+  /** An account was disconnected. */
   onDisconnect?: ((detail: DisconnectDetail) => void) | undefined
+  /** A call or a connect failed. */
   onError?: ((detail: ErrorDetail) => void) | undefined
 }
 
