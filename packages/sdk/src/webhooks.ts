@@ -36,6 +36,7 @@ export type HeaderSource = Headers | Record<string, string | string[] | undefine
 export interface VerifyWebhookInput {
   /** The raw request body, exactly as received. Parsing and re-serialising it changes the bytes and breaks the signature. */
   body: string
+  /** The request's headers, as a Fetch `Headers` or Node's `req.headers`; any casing works. */
   headers: HeaderSource
   /** The endpoint's `whsec_` secret. Pass two while you switch to a rotated secret; either one is accepted. */
   secret: string | readonly string[]

@@ -44,10 +44,12 @@ export class ConnectClient {
     this.#token = typeof options.token === 'string' ? options.token : null
   }
 
+  /** Every platform, and whether this Flung can connect it. */
   async platforms(): Promise<PlatformInfo[]> {
     return (await this.#call<{ data: PlatformInfo[] }>('GET', '/v1/platforms')).data
   }
 
+  /** The connected accounts the token may see: its profile's, or the whole workspace's. */
   async accounts(): Promise<Account[]> {
     return (await this.#call<{ data: Account[] }>('GET', '/v1/accounts')).data
   }
@@ -67,6 +69,7 @@ export class ConnectClient {
     return this.#call<Account>('DELETE', `/v1/accounts/${encodeURIComponent(accountId)}`)
   }
 
+  /** A connect session's state: pending, connected, failed or expired. */
   async session(id: string): Promise<ConnectSession> {
     return this.#call<ConnectSession>('GET', `/v1/connect-sessions/${encodeURIComponent(id)}`)
   }
