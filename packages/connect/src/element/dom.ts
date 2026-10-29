@@ -25,9 +25,22 @@ export function displayName(account: Account): string {
 }
 
 /** A button that calls `onClick`, with a `data-key` so focus can be put back on it after the panel is drawn again. */
-export function button(text: string, key: string, onClick: () => void, options: { primary?: boolean; danger?: boolean; disabled?: boolean; label?: string } = {}): HTMLButtonElement {
-  const className = options.primary === true ? 'primary' : options.danger === true ? 'danger' : undefined
+export function button(text: string, key: string, onClick: () => void, options: { primary?: boolean; danger?: boolean; warning?: boolean; quiet?: boolean; disabled?: boolean; label?: string } = {}): HTMLButtonElement {
+  const className = [options.primary === true && 'primary', options.danger === true && 'danger', options.warning === true && 'warning', options.quiet === true && 'quiet'].filter(Boolean).join(' ') || undefined
   const element = html('button', { type: 'button', class: className, 'data-key': key, disabled: options.disabled === true, 'aria-label': options.label }, text)
   element.addEventListener('click', onClick)
   return element
+}
+
+/** An icon drawn from one path, for the platform marks and Flung's own. Hidden from screen readers: the name beside it says what it is. */
+export function mark(path: string, viewBox = '0 0 24 24', className = 'mark'): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', viewBox)
+  svg.setAttribute('class', className)
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+  const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  shape.setAttribute('d', path)
+  svg.append(shape)
+  return svg
 }

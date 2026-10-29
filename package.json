@@ -12,11 +12,18 @@
     "build": "pnpm -r run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "check": "pnpm -r run typecheck && pnpm -r run test && node scripts/check-no-runtime-dependencies.mjs",
-    "sync:openapi": "node scripts/sync-openapi.mjs"
+    "check": "pnpm -r run typecheck && pnpm -r run test && node scripts/check-no-runtime-dependencies.mjs && node scripts/sync-icons.mjs --check",
+    "sync:openapi": "node scripts/sync-openapi.mjs",
+    "sync:icons": "node scripts/sync-icons.mjs",
+    "demo": "tsx tools/demo/main.ts",
+    "demo:shot": "tsx tools/demo/shot.ts"
   },
   "devDependencies": {
     "@types/node": "22.20.4",
+    "boxicons": "2.1.4",
+    "playwright-core": "1.64.1",
+    "simple-icons": "16.36.0",
+    "tsx": "4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.0.5"
   }

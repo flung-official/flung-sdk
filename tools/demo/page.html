@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connected accounts · Demo</title>
+    <style>
+      :root { color-scheme: light dark; --bg: #fafafa; --text: #18181b; --muted: #52525b; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #09090b; --text: #f4f4f5; --muted: #a1a1aa; } }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { max-width: 40rem; margin: 0 auto; padding: 48px 16px; }
+      h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+      p { margin: 0 0 24px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Connected accounts</h1>
+      <p>Posts go out to the accounts you connect here. Disconnect one at any time.</p>
+      <flung-connect id="panel"></flung-connect>
+    </main>
+    <script type="module">
+      import '/connect/register.js'
+
+      const panel = document.getElementById('panel')
+      panel.setAttribute('base-url', location.origin)
+      panel.token = 'flung_ct_ZGVtbw.demo'
+    </script>
+  </body>
+</html>

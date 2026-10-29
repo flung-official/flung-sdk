@@ -5,8 +5,9 @@ import { HANDLE_PROMPT, parsePlatformList, PLATFORM_NAMES, tokenPlatforms } from
 import type { Account, ConnectSession, Platform } from '../core/types.js'
 import { DEFAULT_LABELS, format } from './copy.js'
 import type { ConnectLabels } from './copy.js'
-import { button, displayName, html } from './dom.js'
+import { button, displayName, html, mark } from './dom.js'
 import type { ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
+import { FLUNG_MARK, PLATFORM_MARKS } from './marks.js'
 import { STYLES } from './styles.js'
 
 /** What one platform's row is doing besides listing its accounts. */
@@ -32,7 +33,7 @@ export interface FlungConnectElement extends HTMLElement {
 /** Builds the class on first use, so importing the package on a server, where there is no `HTMLElement`, is safe. */
 export function createFlungConnectClass(): new () => FlungConnectElement {
   return class FlungConnect extends HTMLElement implements FlungConnectElement {
-    static readonly observedAttributes = ['token', 'base-url', 'platforms']
+    static readonly observedAttributes = ['token', 'base-url', 'platforms', 'branding']
 
     readonly #root = this.attachShadow({ mode: 'open' })
     #source: TokenSource | null = null
@@ -75,7 +76,8 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
       if (previous === next || !this.#started) return
       if (name === 'token') this.#source = next
-      if (name === 'platforms') void this.#load()
+      if (name === 'branding') this.#render()
+      else if (name === 'platforms') void this.#load()
       else this.#reset()
     }
 
@@ -208,7 +210,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       const active = this.#root.activeElement instanceof HTMLElement ? (this.#root.activeElement.dataset['key'] ?? null) : null
       const list = html('ul', { class: 'list', part: 'list' }, ...this.#platforms.map((platform) => this.#platformRow(platform)))
       const message = html('p', { class: this.#message.error ? 'message error' : 'message', part: 'message', role: 'status', 'aria-live': 'polite' }, this.#message.text)
-      const panel = html('section', { class: 'panel', part: 'panel', 'aria-label': this.#labels.panel }, list, message)
+      const panel = html('section', { class: 'panel', part: 'panel', 'aria-label': this.#labels.panel }, list, message, this.#footer())
       this.#root.replaceChildren(html('style', {}, STYLES), panel)
       const key = this.#focus ?? active
       this.#focus = null
@@ -220,8 +222,11 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       const state = this.#rows.get(platform) ?? { kind: 'idle' }
       const busy = state.kind === 'waiting'
       const accounts = this.#accounts.filter((account) => account.platform === platform)
-      const connect = button(accounts.length === 0 ? this.#labels.connect : this.#labels.connectAnother, `connect-${platform}`, () => this.#askOrStart(platform), { primary: accounts.length === 0, disabled: busy, label: `${accounts.length === 0 ? this.#labels.connect : this.#labels.connectAnother} ${name}` })
-      const row = html('div', { class: 'row' }, html('span', { class: 'badge', part: 'badge', 'aria-hidden': 'true' }, name.slice(0, 2)), html('span', { class: 'name', part: 'name' }, name), connect)
+      const first = accounts.length === 0
+      const connect = button(first ? this.#labels.connect : this.#labels.connectAnother, `connect-${platform}`, () => this.#askOrStart(platform), { primary: first, disabled: busy, label: `${first ? this.#labels.connect : this.#labels.connectAnother} ${name}` })
+      const count = first ? this.#labels.notConnected : format(this.#labels.connectedCount, { count: String(accounts.length) })
+      const title = html('span', { class: 'title' }, html('span', { class: 'name', part: 'name' }, name), html('span', { class: first ? 'count' : 'count on' }, count))
+      const row = html('div', { class: 'row' }, html('span', { class: 'badge', part: 'badge', 'aria-hidden': 'true' }, mark(PLATFORM_MARKS[platform].path)), title, connect)
       const items = accounts.map((account) => this.#accountRow(account, busy))
       return html('li', { class: 'platform', part: 'platform', 'data-platform': platform }, row, items.length === 0 ? null : html('ul', { class: 'accounts' }, ...items), this.#rowExtra(platform, state))
     }
@@ -229,15 +234,22 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     #accountRow(account: Account, busy: boolean): HTMLLIElement {
       const due = account.reconnectBy === null ? null : new Date(account.reconnectBy)
       const status =
-        account.status === 'needs_reconnect' ? this.#labels.needsReconnect : due !== null && due.getTime() - Date.now() < SOON_MS ? format(this.#labels.reconnectBy, { date: due.toLocaleDateString() }) : null
+        account.status === 'needs_reconnect' ? this.#labels.needsReconnect : due !== null && due.getTime() - Date.now() < SOON_MS ? format(this.#labels.reconnectBy, { date: due.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) }) : null
+      const reconnect = status === null ? null : button(this.#labels.reconnect, `reconnect-${account.id}`, () => this.#start(account.platform, account, undefined), { warning: true, disabled: busy })
+      const disconnect = button(this.#labels.disconnect, `disconnect-${account.id}`, () => this.#confirm(account), { quiet: true, disabled: busy, label: `${this.#labels.disconnect} ${displayName(account)}` })
       return html(
         'li',
         { class: 'account', part: 'account', 'data-account': account.id },
-        html('span', { class: 'who' }, displayName(account)),
-        status === null ? null : html('span', { class: 'status', part: 'status' }, status),
-        status === null ? null : button(this.#labels.reconnect, `reconnect-${account.id}`, () => this.#start(account.platform, account, undefined), { disabled: busy }),
-        button(this.#labels.disconnect, `disconnect-${account.id}`, () => this.#confirm(account), { danger: true, disabled: busy, label: `${this.#labels.disconnect} ${displayName(account)}` }),
+        html('span', { class: 'who' }, html('span', { class: 'handle', title: displayName(account) }, displayName(account)), status === null ? null : html('span', { class: 'status', part: 'status' }, status)),
+        html('span', { class: 'actions' }, reconnect, disconnect),
       )
+    }
+
+    /** Flung's mark and name, linking to its docs, unless the page set `branding="none"`. */
+    #footer(): HTMLElement | null {
+      if (this.getAttribute('branding') === 'none') return null
+      const link = html('a', { href: 'https://docs.flung.dev', target: '_blank', rel: 'noopener' }, mark(FLUNG_MARK.path, FLUNG_MARK.viewBox, 'flung'), 'Flung')
+      return html('p', { class: 'footer', part: 'footer' }, this.#labels.securedBy, link)
     }
 
     #rowExtra(platform: Platform, state: RowState): HTMLElement | null {
@@ -257,7 +269,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       if (state.kind === 'waiting') {
         const link = state.blockedUrl === null ? null : html('a', { href: state.blockedUrl, target: '_blank', rel: 'noopener' }, format(this.#labels.openSignIn, { platform: name }))
         const text = state.blockedUrl === null ? format(this.#labels.waiting, { platform: name }) : `${format(this.#labels.blocked, { platform: name })} `
-        return html('p', { class: 'note', part: 'note' }, text, link, ' ', button(this.#labels.cancel, `cancel-${platform}`, () => (state.abort.abort(), this.#idle(platform))))
+        return html('p', { class: 'note', part: 'note' }, html('span', { class: 'spinner', 'aria-hidden': 'true' }), html('span', { class: 'note-text' }, text, link), button(this.#labels.cancel, `cancel-${platform}`, () => (state.abort.abort(), this.#idle(platform))))
       }
       if (state.kind === 'confirm') {
         return html(

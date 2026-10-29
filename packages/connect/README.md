@@ -69,6 +69,7 @@ export function Accounts() {
 | `platforms` | | Offer only these, comma-separated. A token made with `platforms` is narrowed to those as well. |
 | `mode` | | `popup` (the default) opens a small window. `redirect` sends the whole page to the platform and back, for pages that cannot open windows; Flung returns to the same address, and the panel reports the result and tidies the address. |
 | `theme` | | `light` or `dark`. Follows the page's scheme when left out. |
+| `branding` | | `none` hides the small "Secured by Flung" line under the list. |
 | | `labels` | Every word the panel shows, to put it in another language. See `DEFAULT_LABELS`. |
 | | `refresh()` | Reads the accounts again. |
 
@@ -85,7 +86,7 @@ Events bubble and cross the shadow root.
 
 ## Looks
 
-The panel draws in a shadow root. Set any of `--flung-font`, `--flung-text`, `--flung-muted`, `--flung-surface`, `--flung-raised`, `--flung-border`, `--flung-accent`, `--flung-accent-text`, `--flung-danger`, `--flung-warning` and `--flung-radius` on the element, or style its parts with `::part()`: `panel`, `list`, `platform`, `badge`, `name`, `account`, `status`, `form`, `note`, `confirm`, `message`.
+The panel draws in a shadow root. Set any of `--flung-font`, `--flung-text`, `--flung-muted`, `--flung-surface`, `--flung-raised`, `--flung-border`, `--flung-accent`, `--flung-accent-text`, `--flung-danger`, `--flung-warning`, `--flung-success`, `--flung-mark-strength` (how much of each platform's brand colour its mark keeps) and `--flung-radius` on the element, or style its parts with `::part()`: `panel`, `list`, `platform`, `badge`, `name`, `account`, `status`, `form`, `note`, `confirm`, `message`, `footer`.
 
 ```css
 flung-connect { --flung-accent: #0f766e; --flung-radius: 12px; }
@@ -120,7 +121,7 @@ button.onclick = async () => {
 | Path | Purpose |
 |---|---|
 | `src/core/` | `ConnectClient`, the popup and redirect flows, platform names, and the API shapes it reads. No DOM needed except `window.open` in the popup flow. |
-| `src/element/` | `<flung-connect>`: the element, its styles, words, events and node helpers. |
+| `src/element/` | `<flung-connect>`: the element, its styles, words, events and node helpers. `marks.ts` is the platforms' marks (Simple Icons; Boxicons for LinkedIn) and Flung's, written by `pnpm sync:icons`. |
 | `src/react/` | `<FlungConnect>`, the element for React. |
 | `src/register.ts` | The side-effect entry that registers the element. |
 | `src/__tests__/` | The client, flows, element and React component against a fake of the seven calls (`fake-api.ts`), in jsdom. |

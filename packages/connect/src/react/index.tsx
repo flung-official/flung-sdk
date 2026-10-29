@@ -24,6 +24,8 @@ export interface FlungConnectProps {
   mode?: 'popup' | 'redirect' | undefined
   /** `light` or `dark`. Follows the page's colour scheme when left out. */
   theme?: 'light' | 'dark' | undefined
+  /** `none` hides the small "Secured by Flung" line under the list. */
+  branding?: 'none' | undefined
   /** Any of the panel's words, to put it in another language. */
   labels?: Partial<ConnectLabels> | undefined
   /** A class for the element itself. */
@@ -84,6 +86,7 @@ function FlungConnectInner(props: FlungConnectProps, ref: Ref<FlungConnectElemen
     platforms: props.platforms?.join(','),
     mode: props.mode,
     theme: props.theme,
+    branding: props.branding,
     class: props.className,
     style: props.style,
   })

@@ -1,6 +1,6 @@
 /**
  * Every word the panel shows, in English. Pass `labels` to put it in another language; `{platform}`, `{account}`,
- * `{message}` and `{date}` are filled in where a label has them.
+ * `{message}`, `{date}` and `{count}` are filled in where a label has them.
  */
 export interface ConnectLabels {
   /** The panel's name for a screen reader. */
@@ -24,6 +24,12 @@ export interface ConnectLabels {
   disconnected: string
   needsReconnect: string
   reconnectBy: string
+  /** Under a platform's name once it has accounts. */
+  connectedCount: string
+  /** Under a platform's name before it has any. */
+  notConnected: string
+  /** Before Flung's name in the panel's footer, which `branding="none"` hides. */
+  securedBy: string
   loading: string
   loadFailed: string
   empty: string
@@ -51,6 +57,9 @@ export const DEFAULT_LABELS: ConnectLabels = {
   disconnected: '{account} is disconnected.',
   needsReconnect: 'Needs reconnecting',
   reconnectBy: 'Reconnect by {date}',
+  connectedCount: '{count} connected',
+  notConnected: 'Not connected',
+  securedBy: 'Secured by',
   loading: 'Loading accounts…',
   loadFailed: 'Could not load accounts: {message}',
   empty: 'There is nothing to connect here.',
