@@ -44,6 +44,18 @@ describe('Flung', () => {
     expect(await api.requests[0]?.json()).toEqual({ origins: ['https://app.example'] })
   })
 
+  it('finds a customer\'s profile by external id and lists its accounts', async () => {
+    const api = scripted(
+      () => Response.json({ data: [{ id: 'prof_1', name: 'Acme', externalId: 'user_8412', createdAt: '2026-10-29T00:00:00.000Z', updatedAt: '2026-10-29T00:00:00.000Z' }], hasMore: false }),
+      () => Response.json({ data: [] }),
+    )
+    const flung = new Flung({ apiKey: 'flung_sk_test', fetch: api.fetch, maxRetries: 0 })
+    const { data } = await flung.profiles.list({ externalId: 'user_8412' })
+    await flung.accounts.list({ profileId: data[0]?.id })
+    expect(new URL(api.requests[0]?.url ?? '').searchParams.get('externalId')).toBe('user_8412')
+    expect(new URL(api.requests[1]?.url ?? '').searchParams.get('profileId')).toBe('prof_1')
+  })
+
   it('walks every page with paginate', async () => {
     const api = scripted(
       () => Response.json({ data: [{ id: 'post_2' }, { id: 'post_1' }], hasMore: true }),

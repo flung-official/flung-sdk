@@ -73,6 +73,19 @@ Your server makes a connect token, and `<flung-connect>` from [`@flung.dev/conne
 const { token } = await flung.connectTokens.create({ origins: ['https://app.example.com'], expiresIn: 900 })
 ```
 
+## One profile per customer
+
+When your product's users each connect their own accounts, give each a profile, with your own user id as `externalId`. A connect token made with its `profileId` connects into it and sees only its accounts.
+
+```ts
+const profile = await flung.profiles.create({ name: 'Acme Studio', externalId: 'user_8412' })
+const { token } = await flung.connectTokens.create({ origins: ['https://app.example.com'], profileId: profile.id })
+const { data: accounts } = await flung.accounts.list({ profileId: profile.id })
+await flung.posts.create({ content: 'Hello', accountIds: accounts.map((account) => account.id), profileId: profile.id })
+```
+
+`flung.profiles.list({ externalId })` finds a profile again. `flung.profiles.delete({ id })` disconnects its accounts and cancels its scheduled posts.
+
 ## Webhooks
 
 ```ts

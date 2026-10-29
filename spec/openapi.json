@@ -42,6 +42,13 @@
               "cancelled"
             ]
           },
+          "profileId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The profile the post was made for, or null."
+          },
           "content": {
             "type": "string"
           },
@@ -177,6 +184,7 @@
         "required": [
           "id",
           "status",
+          "profileId",
           "content",
           "mediaIds",
           "platformOverrides",
@@ -296,6 +304,7 @@
                   "connect_failed",
                   "platform_error",
                   "post_not_editable",
+                  "external_id_taken",
                   "unknown_variable",
                   "rate_limited",
                   "unsupported_media",
@@ -358,6 +367,13 @@
               "failed",
               "cancelled"
             ]
+          },
+          "profileId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The profile the post was made for, or null."
           },
           "content": {
             "type": "string"
@@ -488,6 +504,7 @@
         "required": [
           "id",
           "status",
+          "profileId",
           "content",
           "mediaIds",
           "platformOverrides",
@@ -533,7 +550,8 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "The profile the account belongs to, or null for the workspace as a whole."
           },
           "status": {
             "type": "string",
@@ -748,6 +766,59 @@
           "duetDisabled",
           "stitchDisabled",
           "maxVideoSeconds"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "prof_aaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "name": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "externalId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ProfileList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Profile"
+            }
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "hasMore"
         ]
       },
       "CreatedWebhookEndpoint": {
@@ -1430,34 +1501,38 @@
                 "enum": [
                   "processing",
                   "ready",
-                  "failed"
+                  "failed",
+                  "skipped"
                 ],
-                "description": "Posts never wait for it; they use the file as uploaded."
+                "description": "`skipped` when the video is over 100 MB or this month's thumbnail allowance is used up. Posts never wait for a preview; they use the file as uploaded."
               },
               "thumbnailUrl": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "description": "A JPEG frame one second in, 640 pixels wide, at an address that does not expire."
               },
               "hlsUrl": {
                 "type": [
                   "string",
                   "null"
                 ],
-                "description": "Adaptive streaming for players, once ready."
+                "description": "Always null for now: streaming versions are not made."
               },
               "dashUrl": {
                 "type": [
                   "string",
                   "null"
-                ]
+                ],
+                "description": "Always null for now."
               },
               "durationSeconds": {
                 "type": [
                   "number",
                   "null"
-                ]
+                ],
+                "description": "Always null for now."
               }
             },
             "required": [
@@ -1467,7 +1542,7 @@
               "dashUrl",
               "durationSeconds"
             ],
-            "description": "Videos only, where Cloudflare Stream is set up: a thumbnail and streaming versions. Read the file again while `processing`."
+            "description": "Videos only, where previews are set up: a thumbnail. Read the file again while `processing`."
           },
           "createdAt": {
             "type": "string",
@@ -2542,7 +2617,9 @@
                     "description": "When to publish. Omit to publish now."
                   },
                   "profileId": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The profile the post belongs to. Every account in `accountIds` must be in it.",
+                    "example": "prof_aaaaaaaaaaaaaaaaaaaaaaaa"
                   },
                   "platformOverrides": {
                     "type": "object",
@@ -3233,6 +3310,16 @@
             "required": false,
             "description": "Only posts with a target on this account.",
             "name": "accountId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Only posts made for this profile."
+            },
+            "required": false,
+            "description": "Only posts made for this profile.",
+            "name": "profileId",
             "in": "query"
           }
         ],
@@ -4265,6 +4352,17 @@
           {
             "schema": {
               "type": "string",
+              "description": "Only the accounts in this profile.",
+              "example": "prof_aaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "required": false,
+            "description": "Only the accounts in this profile.",
+            "name": "profileId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "format": "date-time",
               "description": "Only accounts that need a reconnect before this time: already `needs_reconnect`, or `reconnectBy` earlier.",
               "example": "2026-11-30T00:00:00Z"
@@ -4475,7 +4573,7 @@
           "Accounts"
         ],
         "summary": "Change an account's settings",
-        "description": "Sets the default Pinterest board, or whether comments and mentions are read into the inbox.",
+        "description": "Sets the default Pinterest board, whether comments and mentions are read into the inbox, or the profile the account belongs to.",
         "security": [
           {
             "apiKey": []
@@ -4510,6 +4608,13 @@
                       "null"
                     ],
                     "description": "Read comments and mentions (true), stop (false), or go back to the platform's default (null)."
+                  },
+                  "profileId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Move the account into this profile, or out of every profile with null."
                   }
                 }
               }
@@ -4770,6 +4875,463 @@
           },
           "404": {
             "description": "No such account in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles": {
+      "post": {
+        "operationId": "profiles.create",
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Create a profile",
+        "description": "A profile keeps one of your customers' accounts apart from the rest of the workspace. Make a connect token with its `profileId`, and the accounts that customer connects join it; list them with `GET /v1/accounts?profileId=`.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again."
+            },
+            "required": false,
+            "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "A name for people to read, such as your customer's name.",
+                    "example": "Acme Studio"
+                  },
+                  "externalId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "Your own id for this customer, such as their user id. Unique in the workspace, so you can find the profile again by it.",
+                    "example": "user_8412"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another profile already has this external id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "profiles.list",
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "List profiles",
+        "description": "Newest first. Pass `externalId` to find the profile of one of your customers.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The id of the last profile of the previous page."
+            },
+            "required": false,
+            "description": "The id of the last profile of the previous page.",
+            "name": "startingAfter",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Only the profile with this external id.",
+              "example": "user_8412"
+            },
+            "required": false,
+            "description": "Only the profile with this external id.",
+            "name": "externalId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of profiles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profiles/{id}": {
+      "get": {
+        "operationId": "profiles.get",
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Get a profile",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such profile in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "profiles.update",
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Change a profile",
+        "description": "Its name or its external id.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "A name for people to read, such as your customer's name.",
+                    "example": "Acme Studio"
+                  },
+                  "externalId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "A new external id, or null to clear it.",
+                    "example": "user_8412"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such profile in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another profile already has this external id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "profiles.delete",
+        "tags": [
+          "Profiles"
+        ],
+        "summary": "Delete a profile",
+        "description": "For a customer who leaves. Disconnects every account in the profile (their tokens are deleted), cancels the profile's scheduled posts, and drops connects still waiting for a sign-in. Past posts and the disconnected accounts stay listed, without a profile. It cannot be undone.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such profile in this workspace.",
             "content": {
               "application/json": {
                 "schema": {
