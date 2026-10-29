@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/flung-official">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://assets.flung.dev/brand/logo/flung-lockup-on-dark.svg">
+      <img alt="Flung" src="https://assets.flung.dev/brand/logo/flung-lockup-on-light.svg" width="260">
+    </picture>
+  </a>
+</p>
+
 <h3 align="center">Flung SDK</h3>
 
 <p align="center">
