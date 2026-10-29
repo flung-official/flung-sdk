@@ -1,0 +1,51 @@
+{
+  "name": "@flung.official/sdk",
+  "version": "0.1.0",
+  "description": "The typed TypeScript client for the Flung API: schedule and publish social media posts, connect accounts, and verify webhooks.",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://flung.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flung-official/flung-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": [
+    "flung",
+    "social-media",
+    "scheduling",
+    "api-client",
+    "webhooks"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "generate": "openapi-ts --silent",
+    "build": "pnpm generate && tsdown",
+    "typecheck": "pnpm generate && tsc --noEmit",
+    "test": "pnpm generate && vitest run"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "tsdown": "0.23.1",
+    "typescript": "6.0.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

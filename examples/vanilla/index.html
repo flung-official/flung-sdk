@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connect your accounts</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; max-width: 36rem; margin: 8vh auto; padding: 0 16px; }
+      @media (prefers-color-scheme: dark) { body { background: #09090b; color: #f4f4f5; } }
+      pre { font-size: 13px; overflow: auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Connect your accounts</h1>
+    <p>Flung posts to the accounts you connect here. You can disconnect them at any time.</p>
+    <flung-connect id="panel" base-url="__FLUNG_BASE_URL__"></flung-connect>
+    <pre id="log"></pre>
+    <script type="module">
+      import '/connect/register.js'
+
+      const panel = document.getElementById('panel')
+      const log = (type, detail) => (document.getElementById('log').textContent += `${type} ${JSON.stringify(detail)}\n`)
+      // A function, so the panel asks for a fresh token when one expires.
+      panel.token = async () => {
+        const response = await fetch('/connect-token', { method: 'POST' })
+        if (!response.ok) throw new Error(`Could not make a connect token: ${await response.text()}`)
+        return (await response.json()).token
+      }
+      for (const type of ['flung-connect', 'flung-disconnect', 'flung-error']) panel.addEventListener(type, (event) => log(type, event.detail))
+    </script>
+  </body>
+</html>

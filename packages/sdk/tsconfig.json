@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true,
+    // The generated client (src/generated) is not written for exactOptionalPropertyTypes.
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/**/*.ts", "openapi-ts.config.ts", "tsdown.config.ts", "vitest.config.ts"]
+}
