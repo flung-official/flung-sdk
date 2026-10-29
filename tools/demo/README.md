@@ -29,9 +29,12 @@ The connect panel, built from `packages/connect`, on a page with made-up account
 | `demo` | Every platform but Farcaster connectable; two X accounts, LinkedIn due for a reconnect in ten days, Instagram needing one, Bluesky and Mastodon. |
 | `empty` | Nothing connected. |
 | `few` | X, LinkedIn and Bluesky only; X connected, LinkedIn due for a reconnect. |
+| `connects` | X, LinkedIn, Bluesky and Mastodon; X and LinkedIn connected. A connect finishes on the second read of its session, about two seconds after its window opens, and the account is added (Mastodon as `@acme@<server>`). |
 | `refused` | Every call refused with `forbidden`. |
 
 The sets are in `fixtures.ts`, typed with the panel's own `Account`, so a set cannot drift from what the panel reads. The clock is fixed at 29 October 2026 so dates read the same in every shot.
+
+A connect stays pending unless the set has `finishConnect: { afterPolls, usernames }`: the session then turns `connected` on its `afterPolls`th read of `GET /v1/connect-sessions/:id`, and the account is added, named from `usernames` with `{handle}` filled from what the person typed. The window the panel opens is left blank (`about:blank`); `demo:shot` closes it, and so do the docs' guide films, which use this handler with their own sets (flung-docs `tools/guide-film/`).
 
 | File | Purpose |
 |---|---|

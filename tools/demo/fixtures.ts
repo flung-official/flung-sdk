@@ -15,6 +15,12 @@ export interface FixtureSet {
   accounts: readonly Account[]
   /** Answer every call with this error instead, as an API that refuses the token. */
   refuse?: { status: number; code: string; message: string }
+  /**
+   * Let a connect finish, as if the person signed in: the session turns `connected` on the `afterPolls`th read of
+   * `GET /v1/connect-sessions/:id` and the account is added. Its name is `usernames[platform]` with `{handle}` filled from
+   * what the person typed (a Mastodon server, a Bluesky handle), or `acme`. Without it, every connect stays pending.
+   */
+  finishConnect?: { afterPolls: number; usernames?: Partial<Record<Platform, string>> }
 }
 
 const account = (id: number, platform: Platform, username: string | null, extra: Partial<Account> = {}): Account => ({
@@ -46,5 +52,11 @@ export const FIXTURE_SETS: Readonly<Record<string, FixtureSet>> = {
   },
   empty: { description: 'Every platform but Farcaster connectable, nothing connected yet', connectable: everything, accounts: [] },
   few: { description: 'Three platforms, as a page that passes platforms="x,linkedin,bluesky"; X connected, LinkedIn due for a reconnect', connectable: ['x', 'linkedin', 'bluesky'], accounts: [account(1, 'x', 'acmestudio'), account(2, 'linkedin', 'Acme Studio', { reconnectBy: '2026-11-08T00:00:00.000Z' })] },
+  connects: {
+    description: 'Like few with Mastodon too, and a connect finishes a few seconds after its window opens, adding the account',
+    connectable: ['x', 'linkedin', 'bluesky', 'mastodon'],
+    accounts: [account(1, 'x', 'acmestudio'), account(2, 'linkedin', 'Acme Studio', { reconnectBy: '2026-11-08T00:00:00.000Z' })],
+    finishConnect: { afterPolls: 2, usernames: { mastodon: '@acme@{handle}', bluesky: '{handle}', x: 'acme_news', linkedin: 'Acme Studio Team' } },
+  },
   refused: { description: 'The API refuses the token', connectable: everything, accounts: [], refuse: { status: 403, code: 'forbidden', message: 'This connect token is not valid for this page.' } },
 }

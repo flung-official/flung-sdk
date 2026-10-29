@@ -18,13 +18,16 @@ if (set === undefined) {
 
 execFileSync('pnpm', ['--filter', '@flung.dev/connect', 'build'], { cwd: ROOT, stdio: 'inherit' })
 const handler = createDemoHandler(set)
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
   if (url.pathname === '/__demo/reset') {
     handler.reset()
     return void response.writeHead(204).end()
   }
-  const answer = handler.handle(request.method ?? 'GET', url) ?? { status: 404, headers: {}, body: '' }
+  /* The body says which Mastodon server or Bluesky handle a connect was started with. */
+  const chunks: Buffer[] = []
+  for await (const chunk of request) chunks.push(chunk as Buffer)
+  const answer = handler.handle(request.method ?? 'GET', url, Buffer.concat(chunks).toString('utf8')) ?? { status: 404, headers: {}, body: '' }
   response.writeHead(answer.status, answer.headers).end(answer.body)
 })
 server.listen(Number(values.port), '127.0.0.1', () => {

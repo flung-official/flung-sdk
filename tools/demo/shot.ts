@@ -85,7 +85,7 @@ try {
         const refused = new Set<string>()
         await context.route('**/*', async (route) => {
           const url = new URL(route.request().url())
-          const answer = url.origin === 'http://demo.localhost' ? handler.handle(route.request().method(), url) : null
+          const answer = url.origin === 'http://demo.localhost' ? handler.handle(route.request().method(), url, route.request().postData() ?? undefined) : null
           if (answer === null) {
             refused.add(url.origin)
             return route.abort('blockedbyclient')
