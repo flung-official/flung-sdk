@@ -46,6 +46,15 @@ export interface VerifyWebhookInput {
 /**
  * Checks a webhook from Flung and returns the parsed event, or throws `FlungWebhookError`. Flung signs to the
  * Standard Webhooks spec, so any Standard Webhooks library verifies its events too.
+ *
+ * ```ts
+ * export async function POST(request: Request): Promise<Response> {
+ *   const body = await request.text()
+ *   const event = await verifyWebhook({ body, headers: request.headers, secret: process.env.FLUNG_WEBHOOK_SECRET! })
+ *   if (event.type === 'post.failed') console.warn(`Post ${event.data.post.id} failed`)
+ *   return new Response(null, { status: 204 })
+ * }
+ * ```
  */
 export async function verifyWebhook(input: VerifyWebhookInput): Promise<FlungWebhookEvent> {
   const id = header(input.headers, 'webhook-id')
