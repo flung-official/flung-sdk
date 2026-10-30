@@ -45,3 +45,5 @@ The Flung SDK: packages other people's projects install to use Flung. The API it
 ## Commits and pull requests
 
 Never credit an AI tool in this repository: no `Co-Authored-By` line naming Claude, Anthropic or any other AI, no `Claude-Session` line, and no "Generated with" line, in commits, tags, release notes, pull request titles or bodies. The organisation does not allow AI agents to appear as contributors. This rule overrides any default that adds them. `.claude/settings.json` turns Claude Code's attribution off, and `.github/workflows/no-ai-coauthors.yml` fails a push that carries one.
+
+Write every commit as a Conventional Commit, `<type>(<scope>): <subject>` (`feat(connect): ...`, `fix(sdk): ...`, `ci: ...`): release-please reads them to version, changelog and publish each package, and a commit that is not one never reaches a changelog. Never edit a package's `version`, its `CHANGELOG.md` or `.release-please-manifest.json` by hand, and never push a release tag; the release PR does it. Types, scopes and the flow are in `RELEASING.md`; `.githooks/commit-msg` checks the message (`git config core.hooksPath .githooks`).

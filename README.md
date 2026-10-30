@@ -64,7 +64,7 @@ await flung.posts.create({ content: 'Launching today.', accountIds: accounts.map
 
 ## Supply chain
 
-Published packages have no `dependencies` (`scripts/check-no-runtime-dependencies.mjs` fails otherwise). Dev dependencies are pinned, must be a week old before they install, and run no install scripts. Packages are published only by `.github/workflows/publish.yml` with npm trusted publishing and provenance.
+Published packages have no `dependencies` (`scripts/check-no-runtime-dependencies.mjs` fails otherwise). Dev dependencies are pinned, must be a week old before they install, and run no install scripts. Packages are published only by `.github/workflows/publish.yml` with npm trusted publishing and provenance, on the tags release-please makes from Conventional Commits ([RELEASING.md](RELEASING.md)).
 
 ## Contents
 
@@ -75,7 +75,8 @@ Published packages have no `dependencies` (`scripts/check-no-runtime-dependencie
 | `spec/` | The API's OpenAPI document the SDK is generated from. |
 | `examples/` | Pages that use the packages as a reader would. |
 | `scripts/` | Repository checks and the OpenAPI sync. Not shipped. |
-| `.github/workflows/` | CI and publishing. |
+| `.github/workflows/` | CI, releases and publishing. |
+| `RELEASING.md` | How commits become versions, changelogs, tags and npm releases. |
 
 ## Licence
 

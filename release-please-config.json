@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+
+  "separate-pull-requests": false,
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "tag-separator": "-",
+
+  "pull-request-header": "Merging this moves the version of each package it names, writes its section of the package's `CHANGELOG.md`, tags `<package>-v<version>`, creates the GitHub release and publishes the package to npm with provenance. Check the bump before merging: on 0.x, whether a change breaks callers is for a person to judge.",
+  "pull-request-footer": "Opened by the release workflow, .github/workflows/release-please.yml. See RELEASING.md.",
+
+  "changelog-sections": [
+    { "type": "feat", "section": "Added" },
+    { "type": "fix", "section": "Fixed" },
+    { "type": "perf", "section": "Fixed" },
+    { "type": "refactor", "section": "Changed" },
+    { "type": "revert", "section": "Changed" },
+    { "type": "docs", "section": "Changed", "hidden": true },
+    { "type": "chore", "section": "Changed", "hidden": true },
+    { "type": "test", "section": "Changed", "hidden": true },
+    { "type": "ci", "section": "Changed", "hidden": true },
+    { "type": "build", "section": "Changed", "hidden": true },
+    { "type": "style", "section": "Changed", "hidden": true }
+  ],
+
+  "packages": {
+    "packages/connect": {
+      "release-type": "node",
+      "component": "connect",
+      "package-name": "@flung.dev/connect",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    },
+    "packages/sdk": {
+      "release-type": "node",
+      "component": "sdk",
+      "package-name": "@flung.dev/sdk",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
+    }
+  }
+}

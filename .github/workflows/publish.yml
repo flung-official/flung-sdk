@@ -3,13 +3,23 @@ name: Publish
 # Publishes one package to npm under @flung.dev with trusted publishing: npm trusts this workflow in this repository through
 # GitHub's OIDC token, so no npm token exists anywhere, and every version carries a provenance statement that names this commit.
 #
-# Push a tag `<package folder>-v<version>`, such as `connect-v0.1.0`. The version must equal the package's package.json, or nothing
-# is published. On npm, each package's trusted publisher names: organisation `flung-official`, repository `flung-sdk`,
-# workflow `publish.yml`, environment `npm`.
+# Runs on a tag `<package folder>-v<version>`, such as `connect-v0.3.0`, two ways:
+#
+#   release-please.yml   dispatches this workflow on each tag it creates (the usual way; see RELEASING.md). A tag made
+#                        with GITHUB_TOKEN starts no workflow, and `workflow_dispatch` is the exception to that guard.
+#   by hand              run this workflow from Actions with "Use workflow from" set to an existing tag, to retry a publish
+#                        that failed; or, as the fallback with release-please off, push a tag yourself
+#                        (`git tag sdk-v0.2.1 && git push origin sdk-v0.2.1`) and set that version in
+#                        .release-please-manifest.json so the next release PR starts from it.
+#
+# The version must equal the package's package.json, or nothing is published. On npm, each package's trusted publisher
+# names: organisation `flung-official`, repository `flung-sdk`, workflow `publish.yml`, environment `npm`. npm checks the
+# top-level workflow of the run, which is why this workflow is dispatched and not called from release-please.yml.
 
 on:
   push:
     tags: ['*-v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -39,7 +49,9 @@ jobs:
         id: tag
         env:
           TAG: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
+          if [ "$REF_TYPE" != "tag" ]; then echo "Run this on a tag <package folder>-v<version>, not the branch $TAG" >&2; exit 1; fi
           folder="${TAG%-v*}"
           version="${TAG##*-v}"
           manifest="packages/$folder/package.json"

@@ -1,0 +1,65 @@
+#!/bin/sh
+# Checks a commit message before git records it: Conventional Commits, which
+# release-please reads to version and describe each package (RELEASING.md), and
+# no line that credits an AI tool, which .github/workflows/no-ai-coauthors.yml
+# would refuse on push.
+#
+#   <type>(<scope>)!: <subject>      the `(<scope>)` and the `!` are optional
+#
+#   types    feat fix perf refactor revert docs test build ci chore style
+#   scopes   connect sdk deps ci docs examples spec demo release main
+#            (several: `fix(connect,sdk): ...`)
+#   header   at most 72 characters, no full stop at the end
+#
+# Install once per clone: git config core.hooksPath .githooks
+# Emergency bypass:       SKIP_COMMIT_MSG=1 git commit ...
+[ "${SKIP_COMMIT_MSG:-0}" = "1" ] && exit 0
+
+file="$1"
+[ -f "$file" ] || exit 0
+
+# The message as git will record it: comment lines dropped, and everything below
+# the scissors line of `git commit -v` dropped.
+message=$(sed -e '/^# ------------------------ >8 ------------------------$/,$d' -e '/^#/d' "$file")
+header=$(printf '%s\n' "$message" | sed -n '/[^[:space:]]/{p;q;}')
+
+[ -z "$header" ] && exit 0
+
+fail() {
+  echo ""
+  echo "  commit-msg: $1"
+  echo "    $header"
+  echo ""
+  echo "  Write <type>(<scope>): <subject>, such as:"
+  echo "    feat(connect): ask which LinkedIn account to connect"
+  echo "    fix(sdk): keep the base path in both clients"
+  echo "    ci: dispatch publish.yml on each release tag"
+  echo "  Types and scopes are listed in .githooks/commit-msg and RELEASING.md."
+  echo "  Bypass for emergencies: SKIP_COMMIT_MSG=1 git commit ..."
+  echo ""
+  exit 1
+}
+
+# Messages git writes itself.
+case "$header" in
+  "Merge "*|"Revert \""*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+esac
+
+types='feat|fix|perf|refactor|revert|docs|test|build|ci|chore|style'
+scopes='connect|sdk|deps|ci|docs|examples|spec|demo|release|main'
+
+printf '%s\n' "$header" | grep -Eq "^($types)(\\(($scopes)(,($scopes))*\\))?!?: [^ ]" \
+  || fail "the first line is not a Conventional Commit with a known type and scope."
+printf '%s\n' "$header" | grep -Eq '\.$' && fail "the first line ends with a full stop."
+[ "${#header}" -gt 72 ] && fail "the first line is ${#header} characters; keep it to 72."
+
+# The same lines no-ai-coauthors.yml refuses.
+if printf '%s\n' "$message" | grep -iEq '^(co-authored-by:.*(claude|anthropic|copilot|chatgpt|openai|gemini|cursor|codex|devin|aider)|claude-session:|.*generated with .*(claude|ai))'; then
+  echo ""
+  echo "  commit-msg: the message credits an AI tool, which this organisation does not allow."
+  echo "  Remove the Co-Authored-By, Claude-Session or \"Generated with\" line."
+  echo ""
+  exit 1
+fi
+
+exit 0

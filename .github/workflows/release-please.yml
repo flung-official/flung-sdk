@@ -1,0 +1,170 @@
+# Turns the Conventional Commits landing on `main` into versions of the two
+# packages, a section of each package's CHANGELOG.md, a tag, a GitHub release,
+# and a publish to npm.
+#
+#   commit `feat(connect): ...`   ->  next minor of @flung.dev/connect + an "Added" entry
+#   commit `fix(sdk): ...`        ->  next patch of @flung.dev/sdk + a "Fixed" entry
+#   commit `feat(sdk)!: ...`      ->  breaking: a minor while the package is 0.x
+#   commit `ci: ...`, `docs: ...` ->  nothing
+#
+# A commit counts for a package when it changes a file under that package's
+# folder (packages/connect, packages/sdk); the scope is for people. Only
+# `feat`, `fix`, `perf`, `refactor`, `revert` and a breaking change open a
+# release; anything else waits for the next one of those.
+#
+# The packages, their tags (`connect-v<version>`, `sdk-v<version>`) and the
+# changelog sections are in release-please-config.json; the last released
+# version of each is in .release-please-manifest.json. RELEASING.md explains
+# the whole flow.
+#
+# ## The release PR is merged by this workflow, once CI has passed
+#
+#   push to `main`       keep the one release PR current, and release a PR a
+#                        person merged by hand. Nothing is merged here: the
+#                        commit that was pushed has not passed CI yet.
+#   CI succeeded on      the tip of `main` passed CI, so merge the open release
+#   `main`               PR, tag it, create the GitHub releases, and publish.
+#   workflow_dispatch    the same, by hand (Actions > release-please > Run).
+#
+# Set the Actions variable AUTO_RELEASE to "false" to stop at the PR and merge
+# it by hand; the push of that merge then releases and publishes.
+#
+# ## Why the tag and the publish happen inside this run
+#
+# The merge and the tags are made with GITHUB_TOKEN, and a push made with that
+# token starts no workflow, GitHub's guard against runs starting runs. So no
+# tag push would start publish.yml. This run therefore runs release-please a
+# second time once the merge has landed, which tags the merge commit and
+# creates the GitHub releases, then dispatches publish.yml on each new tag:
+# `workflow_dispatch` is the documented exception to that guard.
+#
+# publish.yml is dispatched rather than called (`workflow_call`) on purpose: npm
+# trusted publishing checks the top-level workflow of the run, so a call from
+# here would be checked as release-please.yml. Dispatched, publish.yml is its
+# own run, and the trusted publisher on npm (workflow `publish.yml`,
+# environment `npm`) stays as it is.
+#
+# Needs "Allow GitHub Actions to create and approve pull requests" (Settings >
+# Actions > General), and `main` to accept a merge from GitHub Actions (no rule
+# requiring a review or status checks, or GitHub Actions allowed to bypass it).
+# A PR opened with GITHUB_TOKEN gets no CI run of its own; the commits it
+# releases already passed CI on `main`.
+
+name: release-please
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+# One run at a time: a CI result arriving while a push run still writes the PR
+# would race it for the same branch.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    # A CI run counts only when it passed on a push to `main`: a pull request's
+    # run, a failure, or a cancelled run releases nothing.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # the release PR branch, the tags and the GitHub releases
+      pull-requests: write # opening, updating and merging the release PR
+      issues: write # PR labels belong to issues: `autorelease: pending` and `autorelease: tagged`
+      actions: write # dispatching publish.yml on each new tag
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: rp
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
+          token: ${{ github.token }}
+
+      - name: Decide whether to merge the release PR now
+        id: mode
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          AUTO_RELEASE: ${{ vars.AUTO_RELEASE }}
+        run: |
+          set -euo pipefail
+          merge=false
+          case "$GITHUB_EVENT_NAME" in
+            workflow_dispatch) merge=true ;;
+            workflow_run)
+              # A newer commit on `main` has its own CI run coming, and that run
+              # releases it: merging now would release a commit whose CI has not
+              # finished.
+              tip=$(gh api "repos/$GH_REPO/commits/main" --jq .sha)
+              if [ "$tip" = "$HEAD_SHA" ]; then merge=true; else echo "main moved on to $tip; its own CI run releases it"; fi
+              ;;
+          esac
+          if [ "${AUTO_RELEASE:-}" = "false" ]; then merge=false; echo "AUTO_RELEASE is false: merge the release PR by hand"; fi
+          echo "merge=$merge" >> "$GITHUB_OUTPUT"
+
+      - name: Merge the release PR
+        id: merge
+        if: steps.mode.outputs.merge == 'true'
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list --state open --base main --label 'autorelease: pending' --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "No open release PR: nothing releasable since the last release."
+            exit 0
+          fi
+          # Squash if the repository allows it, a merge commit otherwise.
+          gh pr merge "$pr" --squash || gh pr merge "$pr" --merge
+          for attempt in $(seq 1 30); do
+            [ "$(gh pr view "$pr" --json state --jq .state)" = "MERGED" ] && break
+            if [ "$attempt" -eq 30 ]; then echo "::error::Release PR #$pr did not merge."; exit 1; fi
+            sleep 5
+          done
+          echo "merged=true" >> "$GITHUB_OUTPUT"
+          echo "Merged release PR #$pr" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The merge push starts no workflow, so this run tags it.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: tag
+        if: steps.merge.outputs.merged == 'true'
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
+          token: ${{ github.token }}
+          skip-github-pull-request: true
+
+      # One publish run per new tag. `steps.rp` releases a PR a person merged
+      # (this run's push is that merge); `steps.tag` releases the PR merged above.
+      - name: Publish each released package
+        if: steps.rp.outputs.releases_created == 'true' || steps.tag.outputs.releases_created == 'true'
+        env:
+          RP: ${{ toJSON(steps.rp.outputs) }}
+          TAGGED: ${{ toJSON(steps.tag.outputs) }}
+        run: |
+          set -euo pipefail
+          for outputs in "$RP" "$TAGGED"; do
+            [ "$(jq -r '.releases_created // "false"' <<<"$outputs")" = "true" ] || continue
+            for path in $(jq -r '.paths_released | fromjson | .[]' <<<"$outputs"); do
+              tag=$(jq -r --arg p "$path" '.[$p + "--tag_name"]' <<<"$outputs")
+              url=$(jq -r --arg p "$path" '.[$p + "--html_url"] // ""' <<<"$outputs")
+              case "$tag" in connect-v*|sdk-v*) ;; *) echo "::error::Unexpected tag '$tag' for $path"; exit 1 ;; esac
+              gh workflow run publish.yml --ref "$tag"
+              echo "Released $tag ($url); dispatched publish.yml on $tag" | tee -a "$GITHUB_STEP_SUMMARY"
+            done
+          done
