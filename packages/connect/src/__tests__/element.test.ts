@@ -31,7 +31,7 @@ async function mount(attributes: Record<string, string> = { token: 'flung_ct_a.b
 const root = (element: FlungConnectElement) => element.shadowRoot as ShadowRoot
 const platformsShown = (element: FlungConnectElement) => [...root(element).querySelectorAll<HTMLElement>('[data-platform]')].map((row) => row.dataset['platform'])
 const press = (element: FlungConnectElement, key: string) => root(element).querySelector<HTMLButtonElement>(`[data-key="${key}"]`)?.click()
-const message = (element: FlungConnectElement) => root(element).querySelector('[part="message"]')?.textContent
+const message = (element: FlungConnectElement) => root(element).querySelector('[part~="message"]')?.textContent
 
 describe('<flung-connect>', () => {
   it('offers only platforms this Flung can connect, narrowed by the platforms attribute, with their accounts', async () => {
@@ -135,9 +135,87 @@ describe('<flung-connect>', () => {
   })
 
   it('never turns an account name into markup', async () => {
-    api.account('x', '<img src=x onerror=alert(1)>')
+    api.account('x', '<img src=x onerror=alert(1)>', { displayName: '<b>bold</b>' })
     const { element } = await mount()
     expect(root(element).querySelector('img')).toBeNull()
-    expect(root(element).querySelector('.who')?.textContent).toBe('<img src=x onerror=alert(1)>')
+    expect(root(element).querySelector('b')).toBeNull()
+    expect(root(element).querySelector('[part="account-name"]')?.textContent).toBe('<b>bold</b>')
+    expect(root(element).querySelector('[part="account-username"]')?.textContent).toBe('@<img src=x onerror=alert(1)>')
+  })
+
+  it('shows each account\'s picture safely, its display name, and the handle under it', async () => {
+    const ada = api.account('x', 'ada', { displayName: 'Ada Lovelace', avatarUrl: 'https://pbs.example/ada.jpg' })
+    const plain = api.account('x', 'plain', { avatarUrl: 'http://pbs.example/plain.jpg' })
+    const { element } = await mount()
+    const image = root(element).querySelector<HTMLImageElement>(`[data-account="${ada.id}"] img`)
+    expect(image?.getAttribute('part')).toBe('avatar avatar-image')
+    expect(image?.getAttribute('src')).toBe('https://pbs.example/ada.jpg')
+    expect(image?.getAttribute('referrerpolicy')).toBe('no-referrer')
+    expect(image?.getAttribute('loading')).toBe('lazy')
+    expect(image?.getAttribute('decoding')).toBe('async')
+    expect(image?.getAttribute('alt')).toBe('')
+    expect(root(element).querySelector(`[data-account="${ada.id}"] [part="account-name"]`)?.textContent).toBe('Ada Lovelace')
+    expect(root(element).querySelector(`[data-account="${ada.id}"] [part="account-username"]`)?.textContent).toBe('@ada')
+    expect(root(element).querySelector(`[data-account="${plain.id}"] img`)).toBeNull()
+    expect(root(element).querySelector(`[data-account="${plain.id}"] [part~="avatar-initial"]`)?.textContent).toBe('P')
+    image?.dispatchEvent(new Event('error'))
+    expect(root(element).querySelector(`[data-account="${ada.id}"] img`)).toBeNull()
+    expect(root(element).querySelector(`[data-account="${ada.id}"] [part~="avatar-initial"]`)?.textContent).toBe('A')
+  })
+
+  it('names every piece it draws with a part', async () => {
+    api.account('x', 'kept', { status: 'needs_reconnect' })
+    api.account('x', 'gone')
+    const { element } = await mount()
+    vi.spyOn(window, 'open').mockReturnValue(null)
+    press(element, 'connect-mastodon')
+    press(element, `disconnect-${api.accounts[1]?.id ?? ''}`)
+    press(element, 'connect-linkedin')
+    await vi.waitFor(() => expect(root(element).querySelector('[part="link"]')).not.toBeNull())
+    const unnamed = [...root(element).querySelectorAll('*')].filter((node) => !['STYLE', 'SLOT', 'path'].includes(node.tagName) && !node.hasAttribute('part'))
+    expect(unnamed.map((node) => node.outerHTML.slice(0, 60))).toEqual([])
+    const parts = new Set([...root(element).querySelectorAll('[part]')].flatMap((node) => (node.getAttribute('part') ?? '').split(' ')))
+    for (const part of ['panel', 'list', 'platform', 'platform-x', 'row', 'badge', 'mark', 'title', 'name', 'count', 'count-connected', 'accounts', 'account', 'avatar', 'account-details', 'account-names', 'account-name', 'status', 'actions', 'button', 'button-primary', 'button-secondary', 'button-quiet', 'button-danger', 'button-connect', 'button-reconnect', 'button-disconnect', 'form', 'label', 'input', 'note', 'spinner', 'note-text', 'link', 'confirm', 'confirm-text', 'message', 'footer', 'footer-link', 'footer-mark']) {
+      expect(parts).toContain(part)
+    }
+  })
+
+  it('drops its stylesheet when unstyled, and takes it back', async () => {
+    const { element } = await mount({ token: 'flung_ct_a.b', unstyled: '' })
+    const css = () => root(element).querySelector('style')?.textContent ?? ''
+    expect(css()).not.toContain('--flung-')
+    expect(css()).toContain(':host { display: block; }')
+    expect(root(element).querySelector('[part="panel"]')).not.toBeNull()
+    element.removeAttribute('unstyled')
+    expect(css()).toContain('--flung-focus-color')
+  })
+
+  it('lays the platforms out as a list, a grid or compact', async () => {
+    const { element } = await mount()
+    const layout = () => root(element).querySelector('[part="panel"]')?.getAttribute('data-layout')
+    expect(layout()).toBe('list')
+    element.setAttribute('layout', 'grid')
+    expect(layout()).toBe('grid')
+    element.setAttribute('layout', 'compact')
+    expect(layout()).toBe('compact')
+    element.setAttribute('layout', 'masonry')
+    expect(layout()).toBe('list')
+    const css = root(element).querySelector('style')?.textContent ?? ''
+    expect(css).toContain('.panel[data-layout="grid"] .list { display: grid;')
+    expect(css).toContain(':host([layout="compact"])')
+  })
+
+  it('puts a page\'s own row in place of its own through a named slot, keeping the behaviour', async () => {
+    const gone = api.account('x', 'gone')
+    const { element } = await mount()
+    const mine = document.createElement('button')
+    mine.slot = `account-${gone.id}`
+    mine.textContent = 'Remove'
+    mine.addEventListener('click', () => element.controller?.requestDisconnect(gone.id))
+    element.append(mine)
+    expect(root(element).querySelector<HTMLSlotElement>(`slot[name="account-${gone.id}"]`)?.assignedElements()).toEqual([mine])
+    mine.click()
+    expect(root(element).querySelector('[part="confirm"]')?.textContent).toContain('Disconnect gone?')
+    expect(element.state.platforms[0]?.step.kind).toBe('confirm')
   })
 })

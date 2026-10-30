@@ -14,15 +14,27 @@ export interface PlatformInfo {
 
 export type AccountStatus = 'active' | 'needs_reconnect' | 'disconnected'
 
+/** A connected social account, as `GET /v1/accounts` returns it. */
 export interface Account {
+  /** Flung's id for the account. */
   id: string
+  /** The platform it is on. */
   platform: Platform
+  /** The platform's own id for the user. */
   platformUserId: string
+  /** The handle on the platform, without the `@`, when it has one. */
   username: string | null
+  /** The name the person shows on the platform. Optional: an API older than the field leaves it out. */
+  displayName?: string | null
+  /** The person's profile picture on the platform, an `https` address. Optional: an API older than the field leaves it out. */
+  avatarUrl?: string | null
+  /** The Flung profile it belongs to, or null for the whole workspace. */
   profileId: string | null
+  /** `active`, `needs_reconnect` or `disconnected`. */
   status: AccountStatus
   /** When the person must reconnect by, for platforms whose connections cannot be renewed forever. */
   reconnectBy: string | null
+  /** When it was first connected. */
   createdAt: string
 }
 

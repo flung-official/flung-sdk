@@ -1,31 +1,31 @@
-import { ConnectClient, FlungConnectError } from '../core/client.js'
 import type { TokenSource } from '../core/client.js'
-import { connectInPopup, readRedirectResult, withoutRedirectResult } from '../core/flows.js'
-import { HANDLE_PROMPT, parsePlatformList, PLATFORM_NAMES, tokenPlatforms } from '../core/platforms.js'
-import type { Account, ConnectSession, Platform } from '../core/types.js'
-import { DEFAULT_LABELS, format } from './copy.js'
-import type { ConnectLabels } from './copy.js'
-import { button, displayName, html, mark } from './dom.js'
-import type { ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
+import { createConnectController, initialConnectState } from '../core/controller.js'
+import type { AccountItem, ConnectController, ConnectState, PlatformItem } from '../core/controller.js'
+import { DEFAULT_LABELS, formatLabel as format } from '../core/labels.js'
+import type { ConnectLabels } from '../core/labels.js'
+import { parsePlatformList } from '../core/platforms.js'
+import type { Platform } from '../core/types.js'
+import { avatar, button, html, mark } from './dom.js'
+import type { ChangeDetail, ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
 import { FLUNG_MARK, PLATFORM_MARKS } from './marks.js'
-import { STYLES } from './styles.js'
+import { BASE_STYLES, STYLES } from './styles.js'
 
-/** What one platform's row is doing besides listing its accounts. */
-type RowState =
-  | { kind: 'idle' }
-  | { kind: 'handle' }
-  | { kind: 'waiting'; abort: AbortController; blockedUrl: string | null }
-  | { kind: 'confirm'; account: Account }
+/** How the platforms are laid out: `list` (the default) one under another, `grid` as cards side by side, `compact` tighter. */
+export type FlungConnectLayout = 'list' | 'grid' | 'compact'
 
-/** How soon a reconnect deadline is worth showing. */
-const SOON_MS = 14 * 86_400_000
+const LAYOUTS: readonly FlungConnectLayout[] = ['list', 'grid', 'compact']
 
 /** `<flung-connect>` as a page sees it. */
 export interface FlungConnectElement extends HTMLElement {
   /** A connect token, or a function that fetches a fresh one from your server. The `token` attribute sets a string. */
   token: TokenSource | null
+  /** Every word the panel shows. Setting it fills in the defaults for any left out. */
   get labels(): ConnectLabels
   set labels(value: Partial<ConnectLabels> | undefined)
+  /** The panel's current state, the same snapshot `flung-change` carries. */
+  readonly state: ConnectState
+  /** The headless controller behind the panel, for a page that draws parts of it itself; null until the element is on a page. A new token makes a new one. */
+  readonly controller: ConnectController | null
   /** Reads the accounts again, as after a connect. */
   refresh(): Promise<void>
 }
@@ -33,17 +33,15 @@ export interface FlungConnectElement extends HTMLElement {
 /** Builds the class on first use, so importing the package on a server, where there is no `HTMLElement`, is safe. */
 export function createFlungConnectClass(): new () => FlungConnectElement {
   return class FlungConnect extends HTMLElement implements FlungConnectElement {
-    static readonly observedAttributes = ['token', 'base-url', 'platforms', 'branding']
+    static readonly observedAttributes = ['token', 'base-url', 'platforms', 'branding', 'mode', 'layout', 'unstyled']
 
     readonly #root = this.attachShadow({ mode: 'open' })
     #source: TokenSource | null = null
-    #client: ConnectClient | null = null
     #labels: ConnectLabels = DEFAULT_LABELS
-    #platforms: Platform[] = []
-    #accounts: Account[] = []
-    #rows = new Map<Platform, RowState>()
-    #message: { text: string; error: boolean } = { text: '', error: false }
-    #focus: string | null = null
+    #controller: ConnectController | null = null
+    #unsubscribe: (() => void) | null = null
+    /** Each platform's step when the panel was last drawn, to move focus when one changes. */
+    #steps = new Map<Platform, string>()
     #started = false
 
     get token(): TokenSource | null {
@@ -59,11 +57,20 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     }
     set labels(value: Partial<ConnectLabels> | undefined) {
       this.#labels = { ...DEFAULT_LABELS, ...value }
-      this.#render()
+      if (this.#controller === null) this.#render()
+      else this.#controller.configure({ labels: this.#labels })
+    }
+
+    get state(): ConnectState {
+      return this.#controller?.getState() ?? initialConnectState(this.#source !== null)
+    }
+
+    get controller(): ConnectController | null {
+      return this.#controller
     }
 
     refresh(): Promise<void> {
-      return this.#load()
+      return this.#controller?.refresh() ?? Promise.resolve()
     }
 
     connectedCallback(): void {
@@ -75,130 +82,34 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
 
     attributeChangedCallback(name: string, previous: string | null, next: string | null): void {
       if (previous === next || !this.#started) return
-      if (name === 'token') this.#source = next
-      if (name === 'branding') this.#render()
-      else if (name === 'platforms') void this.#load()
-      else this.#reset()
+      if (name === 'token') {
+        this.#source = next
+        this.#reset()
+      } else if (name === 'base-url') this.#reset()
+      else if (name === 'platforms') this.#controller?.configure({ platforms: parsePlatformList(next) })
+      else if (name === 'mode') this.#controller?.configure({ mode: next === 'redirect' ? 'redirect' : 'popup' })
+      else this.#render()
     }
 
+    /** A new token or API: a new controller, which reads everything again and reports a redirect that came back. */
     #reset(): void {
       if (!this.#started) return
-      for (const row of this.#rows.values()) if (row.kind === 'waiting') row.abort.abort()
-      this.#rows.clear()
-      this.#client = this.#source === null ? null : new ConnectClient({ token: this.#source, baseUrl: this.getAttribute('base-url') ?? undefined })
-      void this.#load().then(() => this.#readReturn())
-    }
-
-    async #load(): Promise<void> {
-      const client = this.#client
-      if (client === null) return this.#say(this.#labels.noToken)
-      if (this.#platforms.length === 0) this.#say(this.#labels.loading)
-      try {
-        const [platforms, accounts] = await Promise.all([client.platforms(), client.accounts()])
-        const asked = parsePlatformList(this.getAttribute('platforms'))
-        const granted = typeof this.#source === 'string' ? tokenPlatforms(this.#source) : null
-        this.#platforms = platforms.map((info) => info.platform).filter((platform) => platforms.find((info) => info.platform === platform)?.connectable === true && (asked ?? [platform]).includes(platform) && (granted ?? [platform]).includes(platform))
-        this.#accounts = accounts.filter((account) => account.status !== 'disconnected' && this.#platforms.includes(account.platform))
-        if (this.#message.text === this.#labels.loading || this.#message.text === this.#labels.noToken) this.#message = { text: this.#platforms.length === 0 ? this.#labels.empty : '', error: false }
-        this.#render()
-        this.#emit<LoadDetail>('flung-load', { accounts: this.#accounts })
-      } catch (error) {
-        this.#fail(error, (message) => format(this.#labels.loadFailed, { message }))
-      }
-    }
-
-    /** A connect that left the page (`mode="redirect"`) and came back: report it, and take Flung's result off the address. */
-    #readReturn(): void {
-      if (typeof location === 'undefined') return
-      const result = readRedirectResult(location.href)
-      if (result === null) return
-      history.replaceState(history.state, '', withoutRedirectResult(location.href))
-      if (result.status === 'connected') {
-        const accounts = this.#accounts.filter((account) => result.accountIds.includes(account.id))
-        const platform = accounts[0]?.platform
-        this.#say(format(this.#labels.connected, { platform: platform === undefined ? 'The account' : PLATFORM_NAMES[platform] }))
-        this.#emit<ConnectDetail>('flung-connect', { session: null, accounts })
-      } else {
-        this.#say(result.error?.message ?? '', true)
-        this.#emit<ErrorDetail>('flung-error', { code: result.error?.code ?? 'platform_error', message: result.error?.message ?? '' })
-      }
-    }
-
-    /** Called straight from a click or a submit: a window can only be opened during one. */
-    #start(platform: Platform, account: Account | null, handle: string | undefined): void {
-      const client = this.#client
-      if (client === null) return
-      const redirect = this.getAttribute('mode') === 'redirect'
-      const redirectUrl = redirect ? withoutRedirectResult(location.href) : undefined
-      const begin = () => (account === null ? client.connect(platform, { handle, redirectUrl }) : client.reconnect(account.id, { redirectUrl }))
-      const abort = new AbortController()
-      const row: RowState = { kind: 'waiting', abort, blockedUrl: null }
-      this.#rows.set(platform, row)
-      this.#say('')
-      if (redirect) {
-        void begin().then(
-          (session) => session.authorizationUrl !== null && location.assign(session.authorizationUrl),
-          (error: unknown) => this.#settle(platform, error),
-        )
-        return
-      }
-      void connectInPopup(client, begin, { signal: abort.signal })
-        .then(async (outcome) => {
-          if (outcome.kind === 'finished') return outcome.session
-          row.blockedUrl = outcome.session.authorizationUrl
-          this.#render()
-          return client.waitForSession(outcome.session.id, { signal: abort.signal })
-        })
-        .then(
-          (session) => this.#finish(platform, session),
-          (error: unknown) => this.#settle(platform, error),
-        )
-    }
-
-    async #finish(platform: Platform, session: ConnectSession): Promise<void> {
-      this.#rows.set(platform, { kind: 'idle' })
-      const name = PLATFORM_NAMES[platform]
-      if (session.status === 'connected') {
-        await this.#load()
-        this.#say(format(this.#labels.connected, { platform: name }))
-        this.#emit<ConnectDetail>('flung-connect', { session, accounts: this.#accounts.filter((account) => session.accountIds.includes(account.id)) })
-      } else if (session.status === 'expired') {
-        this.#say(format(this.#labels.expired, { platform: name }), true)
-        this.#emit<ErrorDetail>('flung-error', { code: 'expired', message: this.#message.text })
-      } else {
-        const message = session.error?.message ?? ''
-        this.#say(format(this.#labels.failed, { platform: name, message }), true)
-        this.#emit<ErrorDetail>('flung-error', { code: session.error?.code ?? 'platform_error', message })
-      }
-    }
-
-    /** A connect that stopped early: cancelled by the person, or refused by the API. */
-    #settle(platform: Platform, error: unknown): void {
-      this.#rows.set(platform, { kind: 'idle' })
-      if (error instanceof DOMException && error.name === 'AbortError') return this.#render()
-      this.#fail(error, (message) => format(this.#labels.failed, { platform: PLATFORM_NAMES[platform], message }))
-    }
-
-    async #disconnect(account: Account): Promise<void> {
-      this.#rows.set(account.platform, { kind: 'idle' })
-      try {
-        const disconnected = await (this.#client as ConnectClient).disconnect(account.id)
-        await this.#load()
-        this.#say(format(this.#labels.disconnected, { account: displayName(account) }))
-        this.#emit<DisconnectDetail>('flung-disconnect', { account: disconnected })
-      } catch (error) {
-        this.#fail(error, (message) => message)
-      }
-    }
-
-    #fail(error: unknown, say: (message: string) => string): void {
-      const detail = error instanceof FlungConnectError ? { code: error.code, message: error.message } : { code: 'unknown', message: String(error) }
-      this.#say(say(detail.message), true)
-      this.#emit<ErrorDetail>('flung-error', detail)
-    }
-
-    #say(text: string, error = false): void {
-      this.#message = { text, error }
+      this.#unsubscribe?.()
+      this.#controller?.destroy()
+      this.#steps.clear()
+      const controller = createConnectController({
+        token: this.#source,
+        baseUrl: this.getAttribute('base-url') ?? undefined,
+        platforms: parsePlatformList(this.getAttribute('platforms')),
+        mode: this.getAttribute('mode') === 'redirect' ? 'redirect' : 'popup',
+        labels: this.#labels,
+        onLoad: (detail) => this.#emit<LoadDetail>('flung-load', detail),
+        onConnect: (detail) => this.#emit<ConnectDetail>('flung-connect', detail),
+        onDisconnect: (detail) => this.#emit<DisconnectDetail>('flung-disconnect', detail),
+        onError: (detail) => this.#emit<ErrorDetail>('flung-error', detail),
+      })
+      this.#controller = controller
+      this.#unsubscribe = controller.subscribe(() => this.#render())
       this.#render()
     }
 
@@ -207,99 +118,120 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     }
 
     #render(): void {
+      const state = this.state
+      const labels = state.labels
+      const layout = LAYOUTS.find((value) => value === this.getAttribute('layout')) ?? 'list'
       const active = this.#root.activeElement instanceof HTMLElement ? (this.#root.activeElement.dataset['key'] ?? null) : null
-      const list = html('ul', { class: 'list', part: 'list' }, ...this.#platforms.map((platform) => this.#platformRow(platform)))
-      const message = html('p', { class: this.#message.error ? 'message error' : 'message', part: 'message', role: 'status', 'aria-live': 'polite' }, this.#message.text)
-      const panel = html('section', { class: 'panel', part: 'panel', 'aria-label': this.#labels.panel }, list, message, this.#footer())
-      this.#root.replaceChildren(html('style', {}, STYLES), panel)
-      const key = this.#focus ?? active
-      this.#focus = null
-      if (key !== null) this.#root.querySelector<HTMLElement>(`[data-key="${key}"]`)?.focus()
+      const list = html('ul', { class: 'list', part: 'list' }, ...state.platforms.map((item) => this.#platformRow(item, labels)))
+      const empty = state.message.text === ''
+      const message = html('p', { class: state.message.error ? 'message error' : 'message', part: state.message.error ? 'message message-error' : 'message', role: 'status', 'aria-live': 'polite', hidden: empty }, state.message.text)
+      const panel = html('section', { class: 'panel', part: 'panel', 'data-layout': layout, 'aria-label': labels.panel }, list, message, this.#footer(labels))
+      this.#root.replaceChildren(html('style', {}, this.hasAttribute('unstyled') ? BASE_STYLES : STYLES), panel)
+      this.#placeFocus(state, active)
+      this.dispatchEvent(new CustomEvent<ChangeDetail>('flung-change', { detail: { state } }))
     }
 
-    #platformRow(platform: Platform): HTMLLIElement {
-      const name = PLATFORM_NAMES[platform]
-      const state = this.#rows.get(platform) ?? { kind: 'idle' }
-      const busy = state.kind === 'waiting'
-      const accounts = this.#accounts.filter((account) => account.platform === platform)
-      const first = accounts.length === 0
-      const connect = button(first ? this.#labels.connect : this.#labels.connectAnother, `connect-${platform}`, () => this.#askOrStart(platform), { primary: first, disabled: busy, label: `${first ? this.#labels.connect : this.#labels.connectAnother} ${name}` })
-      const count = first ? this.#labels.notConnected : format(this.#labels.connectedCount, { count: String(accounts.length) })
-      const title = html('span', { class: 'title' }, html('span', { class: 'name', part: 'name' }, name), html('span', { class: first ? 'count' : 'count on' }, count))
-      const row = html('div', { class: 'row' }, html('span', { class: 'badge', part: 'badge', 'aria-hidden': 'true' }, mark(PLATFORM_MARKS[platform].path)), title, connect)
-      const items = accounts.map((account) => this.#accountRow(account, busy))
-      return html('li', { class: 'platform', part: 'platform', 'data-platform': platform }, row, items.length === 0 ? null : html('ul', { class: 'accounts' }, ...items), this.#rowExtra(platform, state))
+    /**
+     * Keeps focus where the person is: on the field when a question opens, on Keep when a disconnect asks to confirm, and
+     * back on Connect when a question or a wait closes. Otherwise on whatever had it before the panel was drawn again.
+     */
+    #placeFocus(state: ConnectState, active: string | null): void {
+      let wanted = active
+      let fallback: string | null = null
+      for (const item of state.platforms) {
+        const before = this.#steps.get(item.platform) ?? 'idle'
+        const now = item.step.kind
+        if (now === before) continue
+        if (now === 'handle') wanted = `handle-${item.platform}`
+        else if (now === 'confirm') wanted = `keep-${item.platform}`
+        else if (now === 'idle') fallback = `connect-${item.platform}`
+      }
+      this.#steps = new Map(state.platforms.map((item) => [item.platform, item.step.kind]))
+      const find = (key: string | null) => (key === null ? undefined : [...this.#root.querySelectorAll<HTMLElement>('[data-key]')].find((node) => node.dataset['key'] === key))
+      // Falls back to Connect only when focus was inside the panel, so a wait ending never pulls focus from the page.
+      ;(find(wanted) ?? (active !== null ? find(fallback) : undefined))?.focus()
     }
 
-    #accountRow(account: Account, busy: boolean): HTMLLIElement {
-      const due = account.reconnectBy === null ? null : new Date(account.reconnectBy)
-      const status =
-        account.status === 'needs_reconnect' ? this.#labels.needsReconnect : due !== null && due.getTime() - Date.now() < SOON_MS ? format(this.#labels.reconnectBy, { date: due.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) }) : null
-      const reconnect = status === null ? null : button(this.#labels.reconnect, `reconnect-${account.id}`, () => this.#start(account.platform, account, undefined), { warning: true, disabled: busy })
-      const disconnect = button(this.#labels.disconnect, `disconnect-${account.id}`, () => this.#confirm(account), { quiet: true, disabled: busy, label: `${this.#labels.disconnect} ${displayName(account)}` })
+    #platformRow(item: PlatformItem, labels: ConnectLabels): HTMLLIElement {
+      const { platform, name, busy } = item
+      const first = item.accounts.length === 0
+      const text = first ? labels.connect : labels.connectAnother
+      const connect = button(text, `connect-${platform}`, 'connect', () => this.#controller?.connect(platform), { variant: first ? 'primary' : 'secondary', disabled: busy, label: `${text} ${name}` })
+      const count = first ? labels.notConnected : format(labels.connectedCount, { count: String(item.accounts.length) })
+      const title = html('span', { class: 'title', part: 'title' }, html('span', { class: 'name', part: 'name' }, name), html('span', { class: first ? 'count' : 'count on', part: first ? 'count' : 'count count-connected' }, count))
+      const badge = html('span', { class: 'badge', part: 'badge', 'aria-hidden': 'true' }, mark(PLATFORM_MARKS[platform].path))
+      const row = html('div', { class: 'row', part: 'row' }, html('slot', { name: `platform-${platform}` }, badge, title, connect))
+      const items = item.accounts.map((account) => this.#accountRow(account, busy, labels))
+      return html('li', { class: 'platform', part: `platform platform-${platform}`, 'data-platform': platform }, row, items.length === 0 ? null : html('ul', { class: 'accounts', part: 'accounts' }, ...items), this.#rowExtra(item, labels))
+    }
+
+    #accountRow(item: AccountItem, busy: boolean, labels: ConnectLabels): HTMLLIElement {
+      const { account } = item
+      const status = item.reconnect === null ? null : item.reconnect.reason === 'needs_reconnect' ? labels.needsReconnect : format(labels.reconnectBy, { date: new Date(item.reconnect.by).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) })
+      const reconnect = status === null ? null : button(labels.reconnect, `reconnect-${account.id}`, 'reconnect', () => this.#controller?.reconnect(account.id), { disabled: busy, label: `${labels.reconnect} ${item.name}` })
+      const disconnect = button(labels.disconnect, `disconnect-${account.id}`, 'disconnect', () => this.#controller?.requestDisconnect(account.id), { variant: 'quiet', disabled: busy, label: `${labels.disconnect} ${item.name}` })
+      const names = html(
+        'span',
+        { class: 'names', part: 'account-names' },
+        html('span', { class: 'handle', part: 'account-name', title: item.displayName }, item.displayName),
+        item.username === null ? null : html('span', { class: 'username', part: 'account-username', title: `@${item.username}` }, `@${item.username}`),
+      )
+      const who = html('span', { class: 'who', part: 'account-details' }, names, status === null ? null : html('span', { class: 'status', part: 'status' }, status))
       return html(
         'li',
         { class: 'account', part: 'account', 'data-account': account.id },
-        html('span', { class: 'who' }, html('span', { class: 'handle', title: displayName(account) }, displayName(account)), status === null ? null : html('span', { class: 'status', part: 'status' }, status)),
-        html('span', { class: 'actions' }, reconnect, disconnect),
+        html('slot', { name: `account-${account.id}` }, avatar(item), who, html('span', { class: 'actions', part: 'actions' }, reconnect, disconnect)),
       )
     }
 
     /** Flung's mark and name, linking to its docs, unless the page set `branding="none"`. */
-    #footer(): HTMLElement | null {
+    #footer(labels: ConnectLabels): HTMLElement | null {
       if (this.getAttribute('branding') === 'none') return null
-      const link = html('a', { href: 'https://docs.flung.dev', target: '_blank', rel: 'noopener' }, mark(FLUNG_MARK.path, FLUNG_MARK.viewBox, 'flung'), 'Flung')
-      return html('p', { class: 'footer', part: 'footer' }, this.#labels.securedBy, link)
+      const link = html('a', { href: 'https://docs.flung.dev', target: '_blank', rel: 'noopener', part: 'footer-link' }, mark(FLUNG_MARK.path, { viewBox: FLUNG_MARK.viewBox, className: 'flung', part: 'footer-mark', size: 14 }), 'Flung')
+      return html('p', { class: 'footer', part: 'footer' }, labels.securedBy, link)
     }
 
-    #rowExtra(platform: Platform, state: RowState): HTMLElement | null {
-      const name = PLATFORM_NAMES[platform]
-      if (state.kind === 'handle') {
+    #rowExtra(item: PlatformItem, labels: ConnectLabels): HTMLElement | null {
+      const { platform, name, step } = item
+      if (step.kind === 'handle') {
         const id = `handle-${platform}`
-        const required = HANDLE_PROMPT[platform]?.required === true
-        const input = html('input', { id, name: 'handle', 'data-key': id, autocomplete: 'username', spellcheck: 'false', required })
-        const form = html('form', { class: 'form', part: 'form' }, html('label', { for: id }, platform === 'mastodon' ? this.#labels.handleMastodon : this.#labels.handleBluesky), input, html('button', { type: 'submit', class: 'primary', 'data-key': `continue-${platform}` }, this.#labels.continue), button(this.#labels.cancel, `cancel-${platform}`, () => this.#idle(platform)))
+        const input = html('input', { id, name: 'handle', part: 'input', 'data-key': id, autocomplete: 'username', spellcheck: 'false', required: step.required })
+        const submit = html('button', { type: 'submit', class: 'primary', part: 'button button-primary button-continue', 'data-key': `continue-${platform}` }, labels.continue)
+        const form = html(
+          'form',
+          { class: 'form', part: 'form' },
+          html('label', { for: id, part: 'label' }, platform === 'mastodon' ? labels.handleMastodon : labels.handleBluesky),
+          input,
+          submit,
+          button(labels.cancel, `cancel-${platform}`, 'cancel', () => this.#controller?.cancel(platform)),
+        )
         form.addEventListener('submit', (event) => {
           event.preventDefault()
-          const handle = input.value.trim()
-          this.#start(platform, null, handle === '' ? undefined : handle)
+          this.#controller?.submitHandle(platform, input.value)
         })
         return form
       }
-      if (state.kind === 'waiting') {
-        const link = state.blockedUrl === null ? null : html('a', { href: state.blockedUrl, target: '_blank', rel: 'noopener' }, format(this.#labels.openSignIn, { platform: name }))
-        const text = state.blockedUrl === null ? format(this.#labels.waiting, { platform: name }) : `${format(this.#labels.blocked, { platform: name })} `
-        return html('p', { class: 'note', part: 'note' }, html('span', { class: 'spinner', 'aria-hidden': 'true' }), html('span', { class: 'note-text' }, text, link), button(this.#labels.cancel, `cancel-${platform}`, () => (state.abort.abort(), this.#idle(platform))))
+      if (step.kind === 'waiting') {
+        const link = step.blockedUrl === null ? null : html('a', { href: step.blockedUrl, target: '_blank', rel: 'noopener', part: 'link' }, format(labels.openSignIn, { platform: name }))
+        const text = step.blockedUrl === null ? format(labels.waiting, { platform: name }) : `${format(labels.blocked, { platform: name })} `
+        return html(
+          'p',
+          { class: 'note', part: 'note' },
+          html('span', { class: 'spinner', part: 'spinner', 'aria-hidden': 'true' }),
+          html('span', { class: 'note-text', part: 'note-text' }, text, link),
+          button(labels.cancel, `cancel-${platform}`, 'cancel', () => this.#controller?.cancel(platform)),
+        )
       }
-      if (state.kind === 'confirm') {
+      if (step.kind === 'confirm') {
         return html(
           'div',
           { class: 'confirm', part: 'confirm' },
-          html('p', {}, format(this.#labels.confirmDisconnect, { account: displayName(state.account) })),
-          button(this.#labels.disconnect, `confirm-${platform}`, () => void this.#disconnect(state.account), { danger: true }),
-          button(this.#labels.keep, `keep-${platform}`, () => this.#idle(platform)),
+          html('p', { part: 'confirm-text' }, format(labels.confirmDisconnect, { account: step.account.name })),
+          button(labels.disconnect, `confirm-${platform}`, 'confirm', () => void this.#controller?.confirmDisconnect(platform), { variant: 'danger' }),
+          button(labels.keep, `keep-${platform}`, 'keep', () => this.#controller?.cancel(platform)),
         )
       }
       return null
-    }
-
-    #askOrStart(platform: Platform): void {
-      if (HANDLE_PROMPT[platform] === undefined) return this.#start(platform, null, undefined)
-      this.#rows.set(platform, { kind: 'handle' })
-      this.#focus = `handle-${platform}`
-      this.#render()
-    }
-
-    #confirm(account: Account): void {
-      this.#rows.set(account.platform, { kind: 'confirm', account })
-      this.#focus = `keep-${account.platform}`
-      this.#render()
-    }
-
-    #idle(platform: Platform): void {
-      this.#rows.set(platform, { kind: 'idle' })
-      this.#focus = `connect-${platform}`
-      this.#render()
     }
   }
 }
