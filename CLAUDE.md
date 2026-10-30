@@ -13,6 +13,7 @@ The Flung SDK: packages other people's projects install to use Flung. The API it
 | `spec/` | `openapi.json`, copied from flung-app by `pnpm sync:openapi`. Never edited by hand. |
 | `packages/connect/` | `@flung.dev/connect`: the `<flung-connect>` web component, the React component (`/react`), and the client and flows with no element (`/core`). |
 | `packages/sdk/` | `@flung.dev/sdk`: the `/v1` API client. `src/generated/` is written by hey-api from `spec/openapi.json` before every typecheck, test and build, and is not committed. |
+| `packages/flungies/` | `@flung.dev/flungies`: avatars generated from a seed. The SVG core (`.`, no DOM), the WebGL hero (`/gl`), React (`/react`) and `<flung-ie>` (`/element`). A seed's drawing never changes: `src/__tests__/golden.test.ts` and `BUILDING.md`. |
 | `examples/` | Apps that use the packages as a reader would: `vanilla` (the built `dist` and a Node server of a few lines), `nextjs` and `react-vite` (installed from npm with their own lockfiles; the key lives in `.env.local`, read on a server only). CI builds each against the packed packages. |
 | `scripts/` | Repository checks, the OpenAPI sync and the icon sync. Not shipped. |
 | `tools/demo/` | `pnpm demo` and `pnpm demo:shot`: the panel on a page with made-up accounts, and its screenshots. See its README. |
@@ -34,6 +35,7 @@ The Flung SDK: packages other people's projects install to use Flung. The API it
 | A published package has no `dependencies` | Supply chain: the only code a user takes on is ours. React is an optional peer. `scripts/check-no-runtime-dependencies.mjs` fails otherwise. |
 | A new dev dependency needs a reason | Fewer packages, fewer ways in. Prefer `fetch`, Web Crypto and the platform. Pin exact versions; installs run no scripts (`.npmrc`). |
 | Relative imports in `packages/connect` end in `.js` | `tsc` emits them as written, and a browser loads the output without a bundler. |
+| A Flungie seed's output never changes | People recognise their avatar. The golden test fails on any change; new looks ship behind a new `VERSION` option (`packages/flungies/BUILDING.md`). |
 | `marks.ts` is never edited by hand | It is written by `pnpm sync:icons`; change the script or its sources. |
 | The panel never builds markup from text | Names and messages come from the API and platforms. Nodes are made with `createElement`, text with `textContent` (`src/element/dom.ts`). |
 | The panel never uses the browser's `title` tooltip | It cannot be themed and has no keyboard or touch path. Use `data-tooltip` (`src/element/tooltip.ts`); `src/__tests__/tooltip.test.ts` fails on a `title`. |

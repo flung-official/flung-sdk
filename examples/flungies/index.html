@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flungies</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { font: 16px/1.5 system-ui, sans-serif; max-width: 56rem; margin: 6vh auto; padding: 0 16px; background: #f7f6f3; color: #16141c; }
+      body.dark { background: #16141c; color: #f7f6f3; }
+      .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0 32px; }
+      .hero { display: flex; gap: 24px; align-items: center; margin: 24px 0; }
+      input, button { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid #8884; background: transparent; color: inherit; }
+    </style>
+  </head>
+  <body>
+    <h1>Flungies</h1>
+    <p>Each avatar comes from its seed, the same every time. Type a seed to see its Flungie.</p>
+    <p><input id="seed" value="usr_8f3k2" aria-label="Seed"> <button id="theme" type="button">Dark</button></p>
+
+    <div class="hero">
+      <div id="hero"></div>
+      <div id="sizes" class="row"></div>
+    </div>
+
+    <h2>A crowd</h2>
+    <div id="crowd" class="row"></div>
+
+    <h2>The custom element</h2>
+    <div class="row">
+      <flung-ie seed="ws_northwind" size="48" variant="square"></flung-ie>
+      <flung-ie seed="maya@northwind.studio" size="48"></flung-ie>
+      <flung-ie seed="usr_01hzx3k9qv" size="48" theme="dark"></flung-ie>
+    </div>
+
+    <script type="module">
+      import { flungie } from '/flungies/index.js'
+      import { defineFlungie } from '/flungies/element/index.js'
+      import { mountFlungieGL } from '/flungies/gl/index.js'
+
+      defineFlungie()
+      const $ = (id) => document.getElementById(id)
+      let theme = 'light'
+      const hero = mountFlungieGL($('hero'), $('seed').value, { size: 240, theme })
+
+      function draw() {
+        const seed = $('seed').value
+        hero.update(seed, { theme })
+        $('sizes').innerHTML = [16, 24, 32, 48, 64, 96].map((size) => flungie(seed, { size, theme })).join('')
+        $('crowd').innerHTML = Array.from({ length: 24 }, (_, i) => flungie(`${seed}-${i}`, { size: 56, theme })).join('')
+      }
+      $('seed').addEventListener('input', draw)
+      $('theme').addEventListener('click', () => {
+        theme = theme === 'light' ? 'dark' : 'light'
+        document.body.classList.toggle('dark', theme === 'dark')
+        $('theme').textContent = theme === 'light' ? 'Dark' : 'Light'
+        for (const el of document.querySelectorAll('flung-ie')) el.setAttribute('theme', theme)
+        draw()
+      })
+      draw()
+    </script>
+  </body>
+</html>

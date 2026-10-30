@@ -38,6 +38,7 @@
 |---|---|
 | [`@flung.dev/connect`](./packages/connect/README.md) | The `<flung-connect>` web component, the React component (`/react`), and the calls and flows with no element (`/core`). |
 | [`@flung.dev/sdk`](./packages/sdk/README.md) | The `/v1` API client: posts, accounts, media, webhooks, connect tokens, and `verifyWebhook`. Runs on Node 20+, Workers, Deno and Bun. |
+| [`@flung.dev/flungies`](./packages/flungies/README.md) | Avatars generated from a seed: SVG strings anywhere, an animated WebGL hero (`/gl`), React (`/react`) and `<flung-ie>` (`/element`). |
 
 ## Quick start
 
@@ -72,6 +73,7 @@ Published packages have no `dependencies` (`scripts/check-no-runtime-dependencie
 |---|---|
 | `packages/connect/` | `@flung.dev/connect`. |
 | `packages/sdk/` | `@flung.dev/sdk`, generated from `spec/openapi.json`. |
+| `packages/flungies/` | `@flung.dev/flungies`, and `BUILDING.md` on how it is made. |
 | `spec/` | The API's OpenAPI document the SDK is generated from. |
 | `examples/` | Pages that use the packages as a reader would. |
 | `scripts/` | Repository checks and the OpenAPI sync. Not shipped. |
