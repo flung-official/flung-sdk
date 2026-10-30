@@ -63,6 +63,8 @@ if (done.status === 'connected') console.warn('Connected', done.accountIds)
 
 Without a `redirectUrl` the person ends on Flung's own "you can close this tab" page. Pass one to bring them back into your app instead.
 
+LinkedIn company pages connect through their own app: `flung.accounts.connect({ platform: 'linkedin', variant: 'pages' })` connects every page the person administers, one account per page. `flung.platforms.list()` gives each platform's `variants`, `['pages']` for LinkedIn once the pages app is set up.
+
 Each account says how it stays connected: `renewal` is `automatic` (Flung refreshes it), `manual` (only a reconnect renews it) or `not_needed`, with `tokenExpiresAt` and `reconnectBy`. `flung.accounts.list({ reconnectBefore })` finds the ones a person must reconnect soon, `account.reconnect_required_soon` arrives a week ahead, and `flung.accounts.refresh({ id })` renews a token now.
 
 ## Letting people connect from your page

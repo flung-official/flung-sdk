@@ -307,6 +307,7 @@
                   "external_id_taken",
                   "unknown_variable",
                   "rate_limited",
+                  "plan_limit_reached",
                   "unsupported_media",
                   "media_too_large",
                   "unknown_media",
@@ -546,6 +547,21 @@
               "null"
             ]
           },
+          "displayName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name the platform shows for the account (a person, page, channel), when it gave one at connect time."
+          },
+          "avatarUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "The account's picture on the platform, an https address, as it was at connect time. Show it with `referrerpolicy=\"no-referrer\"`."
+          },
           "profileId": {
             "type": [
               "string",
@@ -660,6 +676,8 @@
           "platform",
           "platformUserId",
           "username",
+          "displayName",
+          "avatarUrl",
           "profileId",
           "status",
           "renewal",
@@ -819,6 +837,131 @@
         "required": [
           "data",
           "hasMore"
+        ]
+      },
+      "Billing": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro",
+              "business"
+            ],
+            "description": "The plan: free, pro ($19 a month) or business ($59 a month)."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "free",
+              "subscription",
+              "override"
+            ],
+            "description": "Where the plan comes from: no subscription, a paying Stripe subscription, or set by Flung."
+          },
+          "status": {
+            "type": "string",
+            "description": "The subscription's Stripe status, or none."
+          },
+          "currentPeriodEnd": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancelAtPeriodEnd": {
+            "type": "boolean"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/PlanLimits"
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "accounts": {
+                "type": "integer"
+              },
+              "postsThisMonth": {
+                "type": "integer"
+              },
+              "profiles": {
+                "type": "integer"
+              },
+              "mediaBytes": {
+                "type": "integer"
+              },
+              "webhookEndpoints": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "accounts",
+              "postsThisMonth",
+              "profiles",
+              "mediaBytes",
+              "webhookEndpoints"
+            ],
+            "description": "What counts against each limit now."
+          },
+          "upgradeUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "The workspace's Plan page on the Flung portal, where an owner upgrades."
+          }
+        },
+        "required": [
+          "plan",
+          "source",
+          "status",
+          "currentPeriodEnd",
+          "cancelAtPeriodEnd",
+          "limits",
+          "usage",
+          "upgradeUrl"
+        ]
+      },
+      "PlanLimits": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "integer",
+            "description": "Connected social accounts that are not disconnected."
+          },
+          "postsPerMonth": {
+            "type": "integer",
+            "description": "Posts created in one UTC calendar month; a post counts once however many accounts it goes to."
+          },
+          "profiles": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Profiles; null is no limit."
+          },
+          "requestsPerMinute": {
+            "type": "integer",
+            "description": "Requests a minute for each API key, OAuth app or connect token."
+          },
+          "mediaBytes": {
+            "type": "integer",
+            "description": "Stored media, in bytes."
+          },
+          "webhookEndpoints": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "accounts",
+          "postsPerMonth",
+          "profiles",
+          "requestsPerMinute",
+          "mediaBytes",
+          "webhookEndpoints"
         ]
       },
       "CreatedWebhookEndpoint": {
@@ -1336,13 +1479,23 @@
               "string",
               "null"
             ]
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro",
+              "business"
+            ],
+            "description": "The plan: free, pro ($19 a month) or business ($59 a month)."
           }
         },
         "required": [
           "workspaceId",
           "via",
           "userId",
-          "email"
+          "email",
+          "plan"
         ]
       },
       "MemberList": {
@@ -1918,6 +2071,16 @@
             "type": "boolean",
             "description": "Whether this Flung has the platform's app credentials, so accounts can be connected."
           },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The connect variants set up here, to pass as `variant` when connecting: LinkedIn's `pages` connects company pages.",
+            "example": [
+              "pages"
+            ]
+          },
           "maxTextLength": {
             "type": "integer"
           },
@@ -1955,6 +2118,7 @@
         "required": [
           "platform",
           "connectable",
+          "variants",
           "maxTextLength",
           "requiresMedia",
           "maxImages",
@@ -5363,6 +5527,63 @@
         }
       }
     },
+    "/v1/billing": {
+      "get": {
+        "operationId": "billing.get",
+        "tags": [
+          "Billing"
+        ],
+        "summary": "The workspace's plan",
+        "description": "Which plan this credential's workspace is on, its limits, and what counts against them now. Every API key, OAuth app and connect token of a workspace shares its plan. Upgrading happens on the portal, at upgradeUrl.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The plan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Billing"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/webhook-endpoints": {
       "post": {
         "operationId": "webhookEndpoints.create",
@@ -6060,7 +6281,7 @@
           "Accounts"
         ],
         "summary": "Start connecting an account",
-        "description": "Starts a connect session. Send the person to its `authorizationUrl`, the platform's consent page. When they finish, Flung stores the account and sends them to `redirectUrl`, or shows its own page when there is none; poll `GET /v1/connect-sessions/{id}` or listen for `account.connected`. Facebook connects one account per page the person can post to.",
+        "description": "Starts a connect session. Send the person to its `authorizationUrl`, the platform's consent page. When they finish, Flung stores the account and sends them to `redirectUrl`, or shows its own page when there is none; poll `GET /v1/connect-sessions/{id}` or listen for `account.connected`. Facebook connects one account per page the person can post to; LinkedIn with `variant` set to `pages` connects one account per company page the person administers.",
         "security": [
           {
             "apiKey": []
@@ -6101,6 +6322,14 @@
                     "maxLength": 253,
                     "description": "Bluesky: the handle signing in, such as `alice.bsky.social` (omit to sign in through bsky.social). Mastodon: the instance, such as `mastodon.social` or `@you@mastodon.social` (required).",
                     "example": "alice.bsky.social"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "pages"
+                    ],
+                    "description": "LinkedIn: `pages` connects the company pages the person administers, one account per page posting as the page, through Flung's Community Management app. Omit it to connect the person's own profile. A reconnect keeps the variant the account was connected with.",
+                    "example": "pages"
                   }
                 }
               }

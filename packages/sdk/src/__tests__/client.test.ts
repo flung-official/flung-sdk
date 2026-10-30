@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 
 import { backoffMs, retryingFetch } from '../client'
 import { Flung, FlungError } from '../index'
+import type { AccountsConnectData, PlatformInfo } from '../index'
 
 /** Answers like the API's, from a list, recording every request the client sends. */
 function scripted(...answers: (() => Response)[]) {
@@ -42,6 +43,24 @@ describe('Flung', () => {
     const made = await flung.connectTokens.create({ origins: ['https://app.example'] })
     expect(made.token).toBe('flung_ct_a.b')
     expect(await api.requests[0]?.json()).toEqual({ origins: ['https://app.example'] })
+  })
+
+  it('connects LinkedIn company pages with variant pages, and reads the variants each platform offers', async () => {
+    expectTypeOf<NonNullable<AccountsConnectData['body']>['variant']>().toEqualTypeOf<'pages' | undefined>()
+    expectTypeOf<PlatformInfo['variants']>().toEqualTypeOf<string[]>()
+    const session = { id: 'cs_1', platform: 'linkedin', accountId: null, status: 'pending', authorizationUrl: 'https://www.linkedin.com/oauth', expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [], error: null, createdAt: '2026-10-30T00:00:00.000Z', completedAt: null }
+    const api = scripted(
+      () => Response.json(session, { status: 201 }),
+      () => Response.json({ data: [{ platform: 'linkedin', connectable: true, variants: ['pages'] }] }),
+    )
+    const flung = new Flung({ apiKey: 'flung_sk_test', fetch: api.fetch, maxRetries: 0 })
+    await flung.accounts.connect({ platform: 'linkedin', variant: 'pages' })
+    expect(api.requests[0]?.url).toBe('https://api.flung.dev/v1/connect/linkedin')
+    expect(await api.requests[0]?.json()).toEqual({ variant: 'pages' })
+    const { data } = await flung.platforms.list()
+    expect(data[0]?.variants).toEqual(['pages'])
+    // @ts-expect-error: the API knows no other variant.
+    void (() => flung.accounts.connect({ platform: 'linkedin', variant: 'groups' }))
   })
 
   it('finds a customer\'s profile by external id and lists its accounts', async () => {
