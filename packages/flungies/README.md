@@ -25,6 +25,27 @@ render(traits(user.id, { accessory: 'crown' }), { size: 128 })    // overrides w
 
 Seed with a stable ID, such as a user ID, rather than an email or a name that may change.
 
+### On a server
+
+The core needs no DOM, so a Worker can serve Flungies as images. A seed always gives the same drawing, so the response can be cached forever.
+
+```ts
+import { flungie } from '@flung.dev/flungies'
+
+export default {
+  fetch(request: Request): Response {
+    const url = new URL(request.url)
+    const id = url.searchParams.get('id') ?? ''
+    const size = Math.min(512, Math.max(16, Number(url.searchParams.get('size')) || 64))
+    return new Response(flungie(id, { size }), {
+      headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=31536000, immutable' },
+    })
+  },
+}
+```
+
+Each SVG's internal ids come from a counter by default. When a server renders a Flungie into HTML that a browser then hydrates, pass the `id` option (`flungie(id, { size, id: 'avatar-1' })`) so both sides write the same markup. The React component does this for you with `useId`.
+
 ### React
 
 ```tsx
