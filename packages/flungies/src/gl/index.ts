@@ -147,9 +147,9 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
     under.replaceChildren(toSvgElement(render(t, { ...svgOptions(), layers: ['disc', 'shadow', 'lines', 'back'] })))
     over.replaceChildren(toSvgElement(render(t, { ...svgOptions(), layers: ['face', 'front'] })))
     const b = under.querySelector<SVGGElement>('.fl-breathe')
-    anchor = [Number(b?.dataset.ax ?? 50), Number(b?.dataset.ay ?? 70)]
+    anchor = [Number(b?.dataset['ax'] ?? 50), Number(b?.dataset['ay'] ?? 70)]
     breathers = [...wrap.querySelectorAll('.fl-breathe')]
-    eyes = [...over.querySelectorAll<SVGGElement>('.fl-eye')].map((el) => ({ el, x: Number(el.dataset.x), y: Number(el.dataset.y) }))
+    eyes = [...over.querySelectorAll<SVGGElement>('.fl-eye')].map((el) => ({ el, x: Number(el.dataset['x']), y: Number(el.dataset['y']) }))
     if (!loc) return
     gl.useProgram(prog)
     gl.uniform2f(loc.uRes, canvas.width, canvas.height)
