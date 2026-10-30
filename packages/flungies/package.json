@@ -1,0 +1,77 @@
+{
+  "name": "@flung.dev/flungies",
+  "version": "0.0.0",
+  "description": "Avatars generated from a seed: plush speech bubbles caught mid-throw. SVG strings anywhere (browsers, Node, Workers), an animated WebGL hero, a React component and a custom element, with no runtime dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://flung.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flung-official/flung-sdk.git",
+    "directory": "packages/flungies"
+  },
+  "keywords": [
+    "flung",
+    "avatar",
+    "identicon",
+    "generative",
+    "svg",
+    "webgl",
+    "react",
+    "web-component"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./gl": {
+      "types": "./dist/gl/index.d.ts",
+      "default": "./dist/gl/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./element": {
+      "types": "./dist/element/index.d.ts",
+      "default": "./dist/element/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/__tests__",
+    "README.md",
+    "BUILDING.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.2.3",
+    "jsdom": "30.1.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
