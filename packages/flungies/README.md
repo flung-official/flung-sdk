@@ -94,6 +94,7 @@ traits(user.id, {}, { salt: 'acme' })   // traits(seed, overrides, config)
 - `combinations()`, which returns 907,200 discrete trait sets.
 - The tables `COLOURS`, `DISCS`, `SHAPES`, `EYES`, `MOUTHS`, `ACCESSORIES`, `ACC_COLOURS`, `LINE_PAIRS` and `SIDES`.
 - `colours()` and `geometry()`, for renderers of your own.
+- `toSvgElement(svg)`, which parses an SVG string into an element to append, for pages that may not assign `innerHTML`.
 - `describe()`, the accessible name, which every SVG also carries as its `aria-label`.
 - The colour helpers `contrast`, `distance`, `luminance` and `mix`.
 

@@ -37,7 +37,7 @@ let counter = 0
  *            the body gets its felt texture
  *   theme    'light' or 'dark': picks the disc and checks contrast against the ground
  *   variant  'disc' (default), 'square' (a rounded tile) or 'bare' (no ground)
- *   texture  false turns the felt filter off at any size
+ *   texture  false turns the felt filter off at every size
  *   layers   a subset of disc, shadow, lines, back, body, face, front (the WebGL renderer draws the body itself)
  */
 export function render(t: Traits, options: RenderOptions = {}): string {
@@ -126,6 +126,15 @@ export function flungie(seed: unknown, options: FlungieOptions = {}): string {
 /** An SVG string as a `data:` URI, for an `<img src>` or a CSS `background-image`. */
 export function toDataUri(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+/**
+ * An SVG string from render() as an element of doc, to append. Parsed as XML and imported, so a page whose policy forbids
+ * assigning innerHTML (Trusted Types, a strict lint) can still show one. Needs a DOM.
+ */
+export function toSvgElement(svg: string, doc: Document = document): SVGSVGElement {
+  const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
+  return doc.importNode(parsed, true) as unknown as SVGSVGElement
 }
 
 interface BodyContext {

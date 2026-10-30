@@ -9,7 +9,7 @@
 // which loads the WebGL hero from 160 px. Importing this module registers nothing, so it is safe on a server.
 
 import type { FlungieGL } from '../gl/index.js'
-import { render, type Variant } from '../render.js'
+import { render, toSvgElement, type Variant } from '../render.js'
 import { type Theme, traits } from '../traits.js'
 
 const ANIMATED_MIN_SIZE = 160
@@ -54,14 +54,14 @@ export class FlungieElement extends Base {
     this.style.lineHeight = '0'
     if (!animated) {
       this.#release()
-      this.innerHTML = render(t, { size, theme, variant })
+      this.replaceChildren(toSvgElement(render(t, { size, theme, variant })))
       return
     }
     if (this.#hero) {
       this.#hero.update(t, { size, theme, variant })
       return
     }
-    this.innerHTML = render(t, { size, theme, variant })
+    this.replaceChildren(toSvgElement(render(t, { size, theme, variant })))
     const ticket = ++this.#loading
     import('../gl/index.js').then(({ mountFlungieGL }) => {
       if (ticket !== this.#loading || !this.isConnected) return

@@ -12,7 +12,7 @@
 
 import { colours, type FlungieConfig, type Overrides, palette, type Theme, type Traits, traits } from '../traits.js'
 import { geometry } from '../geometry.js'
-import { render, type Variant } from '../render.js'
+import { render, toSvgElement, type Variant } from '../render.js'
 import { PAPER } from '../data.js'
 import { bodyField, type Field } from './field.js'
 import { FRAG, VERT } from './shader.js'
@@ -108,7 +108,7 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
     webgl = false
     canvas.remove()
     over.replaceChildren()
-    under.innerHTML = render(state.t, svgOptions())
+    under.replaceChildren(toSvgElement(render(state.t, svgOptions())))
   }
 
   let raf = 0
@@ -144,8 +144,8 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
     gl.bindTexture(gl.TEXTURE_2D, tex)
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, field.field.w, field.field.h, 0, gl.RED, gl.FLOAT, field.field.data)
-    under.innerHTML = render(t, { ...svgOptions(), layers: ['disc', 'shadow', 'lines', 'back'] })
-    over.innerHTML = render(t, { ...svgOptions(), layers: ['face', 'front'] })
+    under.replaceChildren(toSvgElement(render(t, { ...svgOptions(), layers: ['disc', 'shadow', 'lines', 'back'] })))
+    over.replaceChildren(toSvgElement(render(t, { ...svgOptions(), layers: ['face', 'front'] })))
     const b = under.querySelector<SVGGElement>('.fl-breathe')
     anchor = [Number(b?.dataset.ax ?? 50), Number(b?.dataset.ay ?? 70)]
     breathers = [...wrap.querySelectorAll('.fl-breathe')]
@@ -264,7 +264,7 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
     if (disposed) return
     place()
     if (!webgl) {
-      under.innerHTML = render(state.t, svgOptions())
+      under.replaceChildren(toSvgElement(render(state.t, svgOptions())))
       return
     }
     build()

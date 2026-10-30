@@ -76,7 +76,7 @@ export const seedKey = (seed: unknown, salt?: string): string => {
   return salt ? `${salt}\u0000${key}` : key
 }
 
-/** The traits a seed picks, with any overrides applied ({ shape: 'tall', accessory: 'crown', ... }). */
+/** The traits a seed picks, with the overrides applied ({ shape: 'tall', accessory: 'crown', ... }). */
 export function traits(seed: unknown, overrides: Overrides = {}, config: FlungieConfig = {}): Traits {
   const key = normalise(seed)
   const h = hash(seedKey(seed, config.salt))

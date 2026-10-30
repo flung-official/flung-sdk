@@ -122,7 +122,7 @@ const rot = ([x, y]: Point, deg: number): Point => {
   return [c * x - s * y, s * x + c * y]
 }
 
-/** A body-frame point in the drawing's frame (before any mirroring). */
+/** A body-frame point in the drawing's frame (before the mirror). */
 export const toWorld = (G: Geometry, p: Point): Point => {
   const q = rot(p, G.tilt)
   return [q[0] + G.cx, q[1] + G.cy]

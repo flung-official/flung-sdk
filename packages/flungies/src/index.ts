@@ -2,10 +2,10 @@
 // face and maybe an accessory, all picked from a string seed. No dependencies and no DOM: it runs in browsers, workers
 // and Node, and only ever returns strings.
 //
-//   import { flungie, traits, render } from '@flung.dev/flungies'
-//   el.innerHTML = flungie('usr_8f3k2', { size: 32, theme: 'dark' })
+//   import { flungie, traits, render, toSvgElement } from '@flung.dev/flungies'
+//   const svg = flungie('usr_8f3k2', { size: 32, theme: 'dark' })   // an SVG string
 //   const t = traits('usr_8f3k2', { accessory: 'crown' })   // overrides win over the seed
-//   el.innerHTML = render(t, { size: 256, variant: 'square' })
+//   el.replaceChildren(toSvgElement(render(t, { size: 256, variant: 'square' })))
 //
 // Every trait draws from its own stream (the seed's hash mixed with the trait's name), so overriding one trait, or
 // adding a new one later, never changes the others. How it is built: BUILDING.md.
@@ -32,7 +32,7 @@ export {
 } from './data.js'
 export { CX, CY, type Geometry, geometry, type Point } from './geometry.js'
 export { hash, mulberry32, normalise } from './random.js'
-export { describe, flungie, type FlungieOptions, type Layer, LAYERS, render, type RenderOptions, toDataUri, type Variant } from './render.js'
+export { describe, flungie, type FlungieOptions, type Layer, LAYERS, render, type RenderOptions, toDataUri, toSvgElement, type Variant } from './render.js'
 export {
   type AccShading,
   colours,

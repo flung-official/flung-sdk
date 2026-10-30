@@ -12,6 +12,7 @@ import {
   palette,
   render,
   toDataUri,
+  toSvgElement,
   TRAITS,
   traits,
 } from '../index.js'
@@ -154,6 +155,15 @@ describe('SVG', () => {
   it('never repeats an id across two drawings of the same seed', () => {
     const id = (s: string) => s.match(/id="([^"]+?)[a-z]"/)?.[1]
     expect(id(flungie('usr_1'))).not.toBe(id(flungie('usr_1')))
+  })
+
+  it('parses into an element to append, with no innerHTML', () => {
+    const el = toSvgElement(flungie('usr_1', { size: 40 }))
+    expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg')
+    expect(el.ownerDocument).toBe(document)
+    document.body.append(el)
+    expect(document.querySelector('svg .fl-face')).not.toBeNull()
+    el.remove()
   })
 
   it('makes a data URI for an img', () => {
