@@ -40,6 +40,20 @@ describe('ConnectClient', () => {
     expect(source).toHaveBeenCalledTimes(2)
   })
 
+  it('asks a token function once for calls made side by side, and once again when they all find it expired', async () => {
+    const api = fakeApi()
+    const tokens = ['flung_ct_old.x', 'flung_ct_new.x']
+    const source = vi.fn(async () => tokens.shift() ?? '')
+    const expiring: typeof fetch = async (input, init) => {
+      const request = new Request(input, init)
+      if (request.headers.get('authorization') === 'Bearer flung_ct_old.x') return Response.json({ error: { code: 'unauthorized', message: 'expired' } }, { status: 401 })
+      return api.fetch(request)
+    }
+    const client = new ConnectClient({ token: source, fetch: expiring })
+    await expect(Promise.all([client.accounts(), client.platforms(), client.accounts()])).resolves.toHaveLength(3)
+    expect(source).toHaveBeenCalledTimes(2)
+  })
+
   it('reports a network failure as network_error', async () => {
     const client = new ConnectClient({ token: 'flung_ct_a.b', fetch: async () => Promise.reject(new TypeError('offline')) })
     await expect(client.accounts()).rejects.toMatchObject({ code: 'network_error', status: 0 })

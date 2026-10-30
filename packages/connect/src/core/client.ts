@@ -36,6 +36,8 @@ export class ConnectClient {
   readonly #fetch: typeof fetch
   readonly #source: TokenSource
   #token: string | null
+  /** The token being fetched, shared by every call that needs one meanwhile, so calls side by side ask the source once. */
+  #pending: Promise<string> | null = null
 
   constructor(options: ConnectClientOptions) {
     this.#baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '')
@@ -85,8 +87,9 @@ export class ConnectClient {
   }
 
   async #call<T>(method: string, path: string, body?: Record<string, string>): Promise<T> {
-    let response = await this.#send(method, path, body, await this.#currentToken(false))
-    if (response.status === 401 && typeof this.#source === 'function') response = await this.#send(method, path, body, await this.#currentToken(true))
+    const used = await this.#currentToken()
+    let response = await this.#send(method, path, body, used)
+    if (response.status === 401 && typeof this.#source === 'function') response = await this.#send(method, path, body, await this.#currentToken(used))
     const text = await response.text()
     const parsed = parse(text)
     if (!response.ok) {
@@ -104,10 +107,20 @@ export class ConnectClient {
     })
   }
 
-  async #currentToken(fresh: boolean): Promise<string> {
-    if (typeof this.#source === 'string') return this.#source
-    if (this.#token === null || fresh) this.#token = await this.#source()
-    return this.#token
+  /**
+   * The token to send. `expired` is one the API refused: a new one is asked for unless another call already replaced it. One
+   * request to the source at a time, shared by every call waiting on it.
+   */
+  async #currentToken(expired?: string): Promise<string> {
+    const source = this.#source
+    if (typeof source === 'string') return source
+    if (this.#token !== null && this.#token !== expired) return this.#token
+    this.#pending ??= source()
+      .then((token) => (this.#token = token))
+      .finally(() => {
+        this.#pending = null
+      })
+    return this.#pending
   }
 }
 
