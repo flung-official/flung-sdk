@@ -1,6 +1,6 @@
 {
   "name": "@flung.dev/flungies",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Avatars generated from a seed: plush speech bubbles caught mid-throw. SVG strings anywhere (browsers, Node, Workers), an animated WebGL hero, a React component and a custom element, with no runtime dependencies.",
   "license": "MIT",
   "type": "module",

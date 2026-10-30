@@ -2,6 +2,20 @@
 
 Every version of `@flung.dev/connect` on npm. From 0.3.0 on, release-please writes each section from the Conventional Commits that change `packages/connect` (see RELEASING.md at the root of the repository). 0.1.3 and 0.2.0 were set in `package.json` but never published; their changes are in 0.3.0.
 
+## [0.3.0](https://github.com/flung-official/flung-sdk/compare/connect-v0.1.2...connect-v0.3.0) (2026-10-30)
+
+
+### Added
+
+* **connect:** a headless controller, a React hook, layouts, parts and custom properties ([784d66d](https://github.com/flung-official/flung-sdk/commit/784d66d05986e093ceba4f8cc73ae0ab6443df78))
+* **connect:** LinkedIn company pages, chosen in the panel or as their own tile ([784d66d](https://github.com/flung-official/flung-sdk/commit/784d66d05986e093ceba4f8cc73ae0ab6443df78))
+
+
+### Fixed
+
+* **connect:** one token request for calls side by side ([784d66d](https://github.com/flung-official/flung-sdk/commit/784d66d05986e093ceba4f8cc73ae0ab6443df78))
+* **connect:** show cut-short account names in the panel's own tooltip ([deb807d](https://github.com/flung-official/flung-sdk/commit/deb807d7782cccc325657f88a7778b0653c61483))
+
 ## [0.1.2](https://github.com/flung-official/flung-sdk/compare/connect-v0.1.1...connect-v0.1.2) (2026-10-29)
 
 ### Added
