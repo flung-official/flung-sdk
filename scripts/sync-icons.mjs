@@ -6,6 +6,7 @@
  * - Platforms come from Simple Icons (CC0 1.0). LinkedIn is not in Simple Icons (removed at LinkedIn's request), so its
  *   mark comes from Boxicons (`bxl-linkedin`, MIT) and its colour from LinkedIn's brand guidelines.
  * - Flung's mark is the one assets.flung.dev serves, so a new logo there is one `pnpm sync:icons` away.
+ * - The icons of the choice between a personal profile and a company page come from Boxicons (`bx-user`, `bx-buildings`, MIT).
  *
  *   pnpm sync:icons          write the file
  *   pnpm sync:icons --check  fail when the file is not what the sources make
@@ -47,6 +48,17 @@ function linkedin() {
   return { path: `${dot}${path[1]}`, hex: '0A66C2', source: 'Boxicons bxl-linkedin (MIT)' }
 }
 
+/** A Boxicons regular icon as one `d`, its paths joined. */
+function boxicon(name) {
+  const svg = readFileSync(require.resolve(`boxicons/svg/regular/${name}.svg`), 'utf8')
+  const paths = [...svg.matchAll(/<path d="([^"]+)"\/>/g)].map((match) => match[1])
+  if (paths.length === 0 || /<(circle|rect|ellipse|polygon)/.test(svg)) throw new Error(`boxicons ${name}.svg is not the shape this script reads.`)
+  return paths.join('')
+}
+
+/** The choice between connecting a person's own profile and the pages they administer, in `ConnectVariant` terms. */
+const CHOICES = { personal: 'bx-user', pages: 'bx-buildings' }
+
 async function flungMark() {
   const response = await fetch(FLUNG_MARK)
   if (!response.ok) throw new Error(`${FLUNG_MARK} answered ${response.status}.`)
@@ -79,6 +91,11 @@ export interface PlatformMark {
 export const PLATFORM_MARKS: Readonly<Record<Platform, PlatformMark>> = {
 ${ORDER.map((platform) => `  // ${marks[platform].source}\n  ${platform}: { hex: '${marks[platform].hex}', path: '${marks[platform].path}' },`).join('\n')}
 }
+
+/** The icons of the choice between a personal profile and a company page, on a 24 by 24 grid (Boxicons, MIT). */
+export const CHOICE_MARKS = {
+${Object.entries(CHOICES).map(([choice, name]) => `  // Boxicons ${name}\n  ${choice}: '${boxicon(name)}',`).join('\n')}
+} as const
 
 /** Flung's mark, from ${FLUNG_MARK}. */
 export const FLUNG_MARK = { viewBox: '${flung.viewBox}', path: '${flung.path}' } as const

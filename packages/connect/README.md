@@ -70,11 +70,13 @@ export function Accounts() {
 | `mode` | | `popup` (the default) opens a small window. `redirect` sends the whole page to the platform and back, for pages that cannot open windows; Flung returns to the same address, and the panel reports the result and tidies the address. |
 | `theme` | | `light` or `dark`. Follows the page's scheme when left out. |
 | `layout` | | `list` (the default), `grid` or `compact`. See [Make it yours](#make-it-yours). |
+| `variants` | | How LinkedIn offers company pages, when your Flung has them set up: `choose` (the default) asks after **Connect**; `tiles` shows **LinkedIn** and **LinkedIn Page** as two platforms. See [LinkedIn company pages](#linkedin-company-pages). |
 | `unstyled` | | Drops Flung's stylesheet, so every part is yours to style. |
 | `branding` | | `none` hides the small "Secured by Flung" line under the list. |
 | | `labels` | Every word the panel shows, to put it in another language. See `DEFAULT_LABELS`. |
 | | `state` | The panel's current state (`ConnectState`), read only. |
 | | `controller` | The headless controller behind the panel (`ConnectController`), for rows a page draws itself. A new token makes a new one. |
+| | `connect(platform, options)` | Starts a connect as the platform's button does; `{ variant: 'pages' }` connects LinkedIn company pages without asking, `{ variant: null }` the person's profile. Call it from a click. |
 | | `refresh()` | Reads the accounts again. |
 
 ## Events
@@ -88,6 +90,28 @@ export function Accounts() {
 | `flung-change` | `{ state }` | Anything the panel shows changed. Does not bubble. |
 
 The first four bubble and cross the shadow root.
+
+## LinkedIn company pages
+
+LinkedIn connects a person's own profile and the company pages they administer through two separate apps. When your Flung has the pages app set up, `GET /v1/platforms` lists `variants: ["pages"]` for LinkedIn and the panel offers both. A person does not need to connect their profile first.
+
+| `variants` | What the person sees |
+|---|---|
+| `choose` (the default) | One LinkedIn row. **Connect** opens a small question under it: **Personal profile** (post as yourself) or **Company page** (post as a page you admin). Arrow keys move between the two, Escape or **Cancel** closes it, and focus goes back to **Connect**. |
+| `tiles` | Two rows, **LinkedIn** and **LinkedIn Page**, each with its own Connect and its own accounts. |
+
+A pages connect stores one account per page the person administers. Each shows under LinkedIn with the page's name and a small **Page** tag (`AccountItem.page` is true). Without the pages app, LinkedIn works as before; with only the pages app, the LinkedIn row connects pages straight away and is named **LinkedIn Page**.
+
+```html
+<flung-connect variants="tiles"></flung-connect>
+<button id="pages">Connect your company page</button>
+<script type="module">
+  // From your own button: a click opens the sign-in window.
+  document.getElementById('pages').onclick = () => document.querySelector('flung-connect').connect('linkedin', { variant: 'pages' })
+</script>
+```
+
+In React, `<FlungConnect variants="tiles" />`; with the hook or the controller, `connect('linkedin', { variant: 'pages' })`. The chooser's words are labels like the rest: `chooseVariant`, `variantPersonal`, `variantPersonalDescription`, `variantPages`, `variantPagesDescription`, `pagesName` and `pageTag`.
 
 ## Make it yours
 
@@ -161,7 +185,11 @@ Every piece the panel draws has a `part` name for `::part()`. Pieces with a kind
 | `account-details`, `account-names`, `account-name`, `account-username` | The display name and the `@handle` under it. |
 | `status` | Needs reconnecting, or the date to reconnect by. |
 | `actions` | The account's buttons. |
-| `button` | Every button. Also `button-primary`, `button-secondary`, `button-quiet` or `button-danger`, and one of `button-connect`, `button-reconnect`, `button-disconnect`, `button-continue`, `button-cancel`, `button-confirm`, `button-keep`. |
+| `button` | Every button. Also `button-primary`, `button-secondary`, `button-quiet` or `button-danger`, and one of `button-connect`, `button-reconnect`, `button-disconnect`, `button-continue`, `button-cancel`, `button-confirm`, `button-keep`, `button-option`. |
+| `platform-linkedin-pages` | With `variants="tiles"`, the LinkedIn Page row, besides `platform` and `platform-linkedin`. Its slot is `platform-linkedin-pages`. |
+| `choose`, `choose-title`, `choose-options` | The question between a LinkedIn profile and a company page. |
+| `button-option`, `button-option-personal`, `button-option-pages` | Its two choices. Each holds `option-icon` (with `option-mark`), `option-text`, `option-name` and `option-description`. |
+| `tag`, `tag-page` | The **Page** tag beside a company page. |
 | `form`, `label`, `input` | The Mastodon server or Bluesky handle question. |
 | `note`, `spinner`, `note-text`, `link` | The wait, and the sign-in link when the browser blocked the window. |
 | `confirm`, `confirm-text` | The question before a disconnect. |
@@ -254,7 +282,7 @@ panel.subscribe(() => draw(panel.getState()))
 |---|---|
 | `getState()` | The current `ConnectState`, frozen; the same object until something changes. |
 | `subscribe(listener)` | Calls `listener` after every change; returns the function that stops it. |
-| `connect(platform)` | Starts a connect, or sets the step to `handle` for Mastodon and Bluesky. |
+| `connect(platform, { variant })` | Starts a connect, or sets the step to `handle` for Mastodon and Bluesky, or to `choose` when LinkedIn offers pages and `variant` is left out. `variant: 'pages'` or `null` (the profile) connects without asking. |
 | `submitHandle(platform, handle)` | Answers the `handle` step and starts the connect. |
 | `reconnect(accountId)` | Reconnects an account. |
 | `requestDisconnect(accountId)` | Sets the step to `confirm`. Nothing is sent. |
@@ -265,13 +293,14 @@ panel.subscribe(() => draw(panel.getState()))
 | `configure({ platforms, mode, labels })` | Changes those options while shown. |
 | `destroy()` | Stops every wait and listener. |
 
-`ConnectState` has `hasToken`, `loading`, `loaded`, `platforms` (each with `name`, `accounts`, `step`, `busy` and `handlePrompt`), `accounts`, `notice` (the last thing that happened, as data), `message` (that notice, or the loading, empty or no-token line, in the labels' words) and `labels`. Each account item has `displayName`, `username` (the handle when it differs), `avatarUrl` (only ever `https`), `initial` and `reconnect`. A step is `idle`, `handle` (with `required`), `waiting` (with `blockedUrl`) or `confirm` (with `account`).
+`ConnectState` has `hasToken`, `loading`, `loaded`, `platforms` (each with `name`, `accounts`, `step`, `busy`, `handlePrompt`, `connectable` and `variants`), `accounts`, `notice` (the last thing that happened, as data), `message` (that notice, or the loading, empty or no-token line, in the labels' words) and `labels`. Each account item has `displayName`, `username` (the handle when it differs), `avatarUrl` (only ever `https`), `initial`, `page` (a LinkedIn company page) and `reconnect`. A step is `idle`, `handle` (with `required`), `choose` (with `variants`), `waiting` (with `blockedUrl` and `variant`) or `confirm` (with `account`).
 
 ## Behaviour worth knowing
 
 - **Popups.** Browsers open a window only straight from a click, so the panel opens it first and fills it in once Flung answers. When a browser blocks it anyway, the panel shows a link to the consent page instead.
 - **Waiting.** The panel waits on the connect session, not the window: some platforms' sign-in pages cut the link back to the page that opened them. Sessions last ten minutes. **Cancel** stops waiting.
 - **Mastodon and Bluesky** ask first: the person's Mastodon server (required), or their Bluesky handle (optional; without it they sign in through bsky.social).
+- **LinkedIn** asks whether to connect a personal profile or a company page when your Flung offers pages. A reconnect of a page goes through the pages app by itself.
 - **Reconnect** appears beside an account that needs it, or whose platform only lets Flung renew it for a limited time and that time ends within two weeks.
 - **Disconnect** asks to confirm. The account then drops from the panel; it stays in the API as `disconnected`.
 - **Accounts** show their picture, display name and `@handle`. A picture is loaded only from an `https` address, sends no referrer, and falls back to the account's initial when it is missing or does not load.
@@ -296,7 +325,7 @@ button.onclick = async () => {
 | Path | Purpose |
 |---|---|
 | `src/core/` | `createConnectController` (the panel's behaviour with no markup), `ConnectClient`, the popup and redirect flows, the panel's words, platform names, and the API shapes it reads. No DOM needed except `window.open` in the popup flow. |
-| `src/element/` | `<flung-connect>`: the element drawn from the controller, its styles, events and node helpers. `marks.ts` is the platforms' marks (Simple Icons; Boxicons for LinkedIn) and Flung's, written by `pnpm sync:icons`. |
+| `src/element/` | `<flung-connect>`: the element drawn from the controller, its styles, events and node helpers. `marks.ts` is the platforms' marks (Simple Icons; Boxicons for LinkedIn), the profile-or-page choice's icons (Boxicons) and Flung's, written by `pnpm sync:icons`. |
 | `src/react/` | `<FlungConnect>`, the element for React, and `useFlungConnect`, the headless hook. |
 | `src/register.ts` | The side-effect entry that registers the element. |
 | `src/__tests__/` | The client, flows, controller, element and React component and hook against a fake of the seven calls (`fake-api.ts`), in jsdom. |

@@ -83,7 +83,7 @@ describe('createConnectController', () => {
     const popup = fakePopup()
     vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
     controller.connect('x')
-    expect(step(controller, 'x')).toEqual({ kind: 'waiting', blockedUrl: null, accountId: null })
+    expect(step(controller, 'x')).toEqual({ kind: 'waiting', blockedUrl: null, accountId: null, variant: null })
     expect(controller.getState().platforms[0]?.busy).toBe(true)
     await vi.waitFor(() => expect(popup.location.href).toBe('https://platform.example/consent'))
     controller.connect('x')

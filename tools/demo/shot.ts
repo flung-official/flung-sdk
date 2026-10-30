@@ -21,7 +21,7 @@ import { PROBE, probeLines, type ProbeReport } from './probe'
 
 const VIEWPORTS = { desktop: { width: 1280, height: 860, scale: 1 }, phone: { width: 390, height: 844, scale: 2 } } as const
 type Viewport = keyof typeof VIEWPORTS
-type Shot = { name: string; set: string; clicks: string[] }
+type Shot = { name: string; set: string; clicks: string[]; query?: string }
 
 /** Every state of the panel: clicks are Playwright selectors, which reach into the panel's open shadow root. */
 const STATES: readonly Shot[] = [
@@ -32,6 +32,9 @@ const STATES: readonly Shot[] = [
   { name: 'empty', set: 'empty', clicks: [] },
   { name: 'few', set: 'few', clicks: [] },
   { name: 'refused', set: 'refused', clicks: [] },
+  { name: 'pages', set: 'pages', clicks: [] },
+  { name: 'choose', set: 'pages', clicks: ['[data-key="connect-linkedin"]'] },
+  { name: 'tiles', set: 'pages', clicks: [], query: '?variants=tiles' },
 ]
 
 const { values } = parseArgs({
@@ -41,6 +44,7 @@ const { values } = parseArgs({
     viewports: { type: 'string', default: 'desktop,phone' },
     click: { type: 'string', multiple: true, default: [] },
     name: { type: 'string' },
+    query: { type: 'string' },
     out: { type: 'string' },
     full: { type: 'boolean', default: false },
     probe: { type: 'boolean', default: false },
@@ -50,7 +54,7 @@ const { values } = parseArgs({
 })
 const themes = values.themes.split(',') as ('light' | 'dark')[]
 const viewports = values.viewports.split(',').filter((name): name is Viewport => name in VIEWPORTS)
-const shots: readonly Shot[] = values.states ? STATES : [{ name: values.name ?? values.set, set: values.set, clicks: values.click }]
+const shots: readonly Shot[] = values.states ? STATES : [{ name: values.name ?? values.set, set: values.set, clicks: values.click, ...(values.query === undefined ? {} : { query: values.query }) }]
 for (const shot of shots) if (FIXTURE_SETS[shot.set] === undefined) throw new Error(`No fixture set named ${shot.set}`)
 const out = path.resolve(values.out ?? path.join(ROOT, 'tools/demo/artifacts/shots'))
 mkdirSync(out, { recursive: true })
@@ -96,7 +100,7 @@ try {
         const notes: string[] = []
         page.on('pageerror', (error) => notes.push(`page error: ${error.message}`))
         page.on('popup', (popup) => void popup.close())
-        await page.goto('http://demo.localhost/', { waitUntil: 'load' })
+        await page.goto(`http://demo.localhost/${shot.query ?? ''}`, { waitUntil: 'load' })
         await page.locator('flung-connect .panel').waitFor()
         await settle(page)
         for (const click of shot.clicks) {

@@ -4,6 +4,6 @@
  * or call `defineFlungConnect()`.
  */
 export { defineFlungConnect, TAG_NAME } from './element/define.js'
-export type { FlungConnectElement, FlungConnectLayout } from './element/flung-connect.js'
+export type { FlungConnectElement, FlungConnectLayout, FlungConnectVariants } from './element/flung-connect.js'
 export type { ChangeDetail, FlungConnectEventMap } from './element/events.js'
 export * from './core/index.js'

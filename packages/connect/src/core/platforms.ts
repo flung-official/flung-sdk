@@ -1,5 +1,5 @@
-import { PLATFORMS } from './types.js'
-import type { Platform } from './types.js'
+import { CONNECT_VARIANTS, PLATFORMS } from './types.js'
+import type { Account, ConnectVariant, Platform } from './types.js'
 
 export const PLATFORM_NAMES: Readonly<Record<Platform, string>> = {
   x: 'X',
@@ -49,4 +49,16 @@ export function tokenPlatforms(token: string): Platform[] | null {
   } catch {
     return null
   }
+}
+
+export function isConnectVariant(value: unknown): value is ConnectVariant {
+  return typeof value === 'string' && (CONNECT_VARIANTS as readonly string[]).includes(value)
+}
+
+/**
+ * Whether an account is a company page rather than a person: a LinkedIn account that posts as an organisation
+ * (`urn:li:organization:<id>`), as the `pages` variant connects them.
+ */
+export function isPageAccount(account: Pick<Account, 'platform' | 'platformUserId'>): boolean {
+  return account.platform === 'linkedin' && account.platformUserId.startsWith('urn:li:organization:')
 }

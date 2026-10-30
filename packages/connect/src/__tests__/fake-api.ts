@@ -4,8 +4,9 @@ import type { Account, ConnectSession, Platform } from '../core/types.js'
  * The seven calls a connect token reaches, answered from memory the way the Flung API answers them, recording each
  * request. `finish()` ends the pending session as the platform's callback would.
  */
-export function fakeApi(options: { connectable?: Platform[] } = {}) {
+export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<Record<Platform, string[]>>; omitVariants?: boolean } = {}) {
   const connectable = options.connectable ?? ['x', 'linkedin', 'mastodon']
+  const variants = options.variants ?? {}
   const accounts: Account[] = []
   const sessions = new Map<string, ConnectSession>()
   const requests: { method: string; path: string; body: unknown; token: string }[] = []
@@ -24,7 +25,10 @@ export function fakeApi(options: { connectable?: Platform[] } = {}) {
     requests.push({ method: request.method, path: url.pathname, body, token: request.headers.get('authorization')?.replace('Bearer ', '') ?? '' })
     const [, , resource, id, action] = url.pathname.split('/')
     if (request.method === 'GET' && resource === 'platforms') {
-      return Response.json({ data: ['x', 'linkedin', 'mastodon', 'tiktok'].map((platform) => ({ platform, connectable: connectable.includes(platform as Platform) })) })
+      // As the API answers since LinkedIn pages: every platform has `variants`, empty unless set up. `omitVariants` is an older API.
+      return Response.json({
+        data: ['x', 'linkedin', 'mastodon', 'tiktok'].map((platform) => ({ platform, connectable: connectable.includes(platform as Platform), ...(options.omitVariants === true ? {} : { variants: variants[platform as Platform] ?? [] }) })),
+      })
     }
     if (request.method === 'GET' && resource === 'accounts') return Response.json({ data: [...accounts].reverse() })
     if (request.method === 'DELETE' && resource === 'accounts') {
@@ -54,8 +58,11 @@ export function fakeApi(options: { connectable?: Platform[] } = {}) {
     return Response.json({ error: { code: 'not_found', message: 'No such route.' } }, { status: 404 })
   }
 
-  /** Ends every pending session: connected with a new account, or failed with the platform's reason. */
-  function finish(outcome: { username: string } | { error: string }) {
+  /**
+   * Ends every pending session: connected with a new account (and `more`, as LinkedIn pages connect one per page, each
+   * with its own `platformUserId`), or failed with the platform's reason.
+   */
+  function finish(outcome: { username: string; platformUserId?: string; more?: { username: string; platformUserId: string }[] } | { error: string }) {
     for (const session of sessions.values()) {
       if (session.status !== 'pending') continue
       session.authorizationUrl = null
@@ -64,7 +71,8 @@ export function fakeApi(options: { connectable?: Platform[] } = {}) {
         session.error = { code: 'access_denied', message: outcome.error }
       } else {
         session.status = 'connected'
-        session.accountIds = [account(session.platform, outcome.username).id]
+        const made = [{ username: outcome.username, platformUserId: outcome.platformUserId }, ...(outcome.more ?? [])].map((one) => account(session.platform, one.username, one.platformUserId === undefined ? {} : { platformUserId: one.platformUserId }))
+        session.accountIds = made.map((one) => one.id)
       }
     }
   }

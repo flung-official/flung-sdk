@@ -8,7 +8,7 @@ import type { ConnectLabels } from '../core/labels.js'
 import type { Platform } from '../core/types.js'
 import { defineFlungConnect, TAG_NAME } from '../element/define.js'
 import type { ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from '../element/events.js'
-import type { FlungConnectElement, FlungConnectLayout } from '../element/flung-connect.js'
+import type { FlungConnectElement, FlungConnectLayout, FlungConnectVariants } from '../element/flung-connect.js'
 
 export { useFlungConnect } from './use-flung-connect.js'
 export type { UseFlungConnectOptions, UseFlungConnectResult } from './use-flung-connect.js'
@@ -53,6 +53,11 @@ export interface FlungConnectProps {
   theme?: 'light' | 'dark' | undefined
   /** `list` (the default), `grid` or `compact`. */
   layout?: FlungConnectLayout | undefined
+  /**
+   * How a platform with a connect variant is offered. `choose` (the default) asks after Connect whether to connect a
+   * LinkedIn personal profile or a company page; `tiles` shows them as two platforms, LinkedIn and LinkedIn Page.
+   */
+  variants?: FlungConnectVariants | undefined
   /** Drops Flung's stylesheet, so every `::part()` is yours to style. */
   unstyled?: boolean | undefined
   /** `none` hides the small "Secured by Flung" line under the list. */
@@ -134,7 +139,7 @@ function FlungConnectInner(props: FlungConnectProps, ref: Ref<FlungConnectElemen
   const actions = useMemo<ConnectActions>(() => {
     const controller = () => element.current?.controller ?? null
     return {
-      connect: (platform) => controller()?.connect(platform),
+      connect: (platform, options) => controller()?.connect(platform, options),
       submitHandle: (platform, handle) => controller()?.submitHandle(platform, handle),
       reconnect: (accountId) => controller()?.reconnect(accountId),
       requestDisconnect: (accountId) => controller()?.requestDisconnect(accountId),
@@ -162,6 +167,7 @@ function FlungConnectInner(props: FlungConnectProps, ref: Ref<FlungConnectElemen
       mode: props.mode,
       theme: props.theme,
       layout: props.layout,
+      variants: props.variants,
       unstyled: props.unstyled === true ? '' : undefined,
       branding: props.branding,
       class: props.className,

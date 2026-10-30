@@ -1,5 +1,5 @@
 /**
- * Every word the panel shows, in English. Pass `labels` to put it in another language; `{platform}`, `{account}`,
+ * Every word the panel shows, in English. Pass `labels` to put it in another language or say it your way; `{platform}`, `{account}`,
  * `{message}`, `{date}` and `{count}` are filled in where a label has them.
  */
 export interface ConnectLabels {
@@ -57,6 +57,20 @@ export interface ConnectLabels {
   empty: string
   /** When the panel has no connect token. */
   noToken: string
+  /** The question above the choice between a profile and a page, when a platform offers both. `{platform}`. */
+  chooseVariant: string
+  /** The choice that connects the person's own profile. */
+  variantPersonal: string
+  /** The line under it. */
+  variantPersonalDescription: string
+  /** The choice that connects the company pages the person administers. */
+  variantPages: string
+  /** The line under it. */
+  variantPagesDescription: string
+  /** The platform's name on its pages tile, with `variants="tiles"`, or when pages are all it can connect. `{platform}`. */
+  pagesName: string
+  /** The small tag beside an account that is a company page, not a person. */
+  pageTag: string
 }
 
 /** The panel's words in English. */
@@ -88,6 +102,13 @@ export const DEFAULT_LABELS: ConnectLabels = {
   loadFailed: 'Could not load accounts: {message}',
   empty: 'There is nothing to connect here.',
   noToken: 'This panel has no connect token yet.',
+  chooseVariant: 'What do you want to connect on {platform}?',
+  variantPersonal: 'Personal profile',
+  variantPersonalDescription: 'Post as yourself.',
+  variantPages: 'Company page',
+  variantPagesDescription: 'Post as a page you admin.',
+  pagesName: '{platform} Page',
+  pageTag: 'Page',
 }
 
 /** Fills a label's `{name}` places from `values`, leaving any it has no value for as they are. The result is text, never markup. */

@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { Account, ConnectSession } from '../../packages/connect/src/core/types'
+import type { Account, ConnectSession, Platform } from '../../packages/connect/src/core/types'
 import type { FixtureSet } from './fixtures'
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url))
@@ -30,12 +30,14 @@ export function createDemoHandler(set: FixtureSet) {
   /* How often each session has been read, and the handle each connect was started with. */
   let polls = new Map<string, number>()
   let handles = new Map<string, string>()
+  let variants = new Map<string, string>()
   let next = 1
   const reset = () => {
     accounts = set.accounts.map((account) => ({ ...account }))
     sessions = new Map()
     polls = new Map()
     handles = new Map()
+    variants = new Map()
     next = 1
   }
   reset()
@@ -47,9 +49,17 @@ export function createDemoHandler(set: FixtureSet) {
     polls.set(session.id, read)
     if (rule === undefined || session.status !== 'pending' || read < rule.afterPolls) return session
     let found = accounts.find((account) => account.id === session.accountId)
+    const number = Number(session.id.slice('cs_demo'.length))
+    if (found === undefined && variants.get(session.id) === 'pages') {
+      // LinkedIn pages: one account per page the person administers, posting as the organisation.
+      const pages = (rule.pages ?? ['Acme']).map((name, index): Account => ({ id: `acct_demo${String(200 + number * 10 + index).padStart(4, '0')}`, platform: session.platform, platformUserId: `urn:li:organization:${2000 + number * 10 + index}`, username: name, displayName: name, profileId: null, status: 'active', reconnectBy: null, createdAt: '2026-10-29T09:00:00.000Z' }))
+      accounts.push(...pages)
+      const done: ConnectSession = { ...session, status: 'connected', authorizationUrl: null, accountIds: pages.map((page) => page.id) }
+      sessions.set(session.id, done)
+      return done
+    }
     if (found === undefined) {
       const name = (rule.usernames?.[session.platform] ?? 'acme').replace('{handle}', handles.get(session.id) ?? '')
-      const number = Number(session.id.slice('cs_demo'.length))
       found = { id: `acct_demo${String(100 + number).padStart(4, '0')}`, platform: session.platform, platformUserId: String(9_100_000 + number), username: name, profileId: null, status: 'active', reconnectBy: null, createdAt: '2026-10-29T09:00:00.000Z' }
       accounts.push(found)
     } else {
@@ -65,7 +75,7 @@ export function createDemoHandler(set: FixtureSet) {
     if (set.refuse !== undefined) return json(set.refuse.status, { error: { code: set.refuse.code, message: set.refuse.message } })
     const [, , resource, id, action] = path.split('/')
     if (method === 'GET' && resource === 'platforms') {
-      return json(200, { data: ['x', 'instagram', 'facebook', 'threads', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'bluesky', 'mastodon', 'discord', 'farcaster'].map((platform) => ({ platform, connectable: (set.connectable as string[]).includes(platform) })) })
+      return json(200, { data: ['x', 'instagram', 'facebook', 'threads', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'bluesky', 'mastodon', 'discord', 'farcaster'].map((platform) => ({ platform, connectable: (set.connectable as string[]).includes(platform), variants: set.variants?.[platform as Platform] ?? [] })) })
     }
     if (method === 'GET' && resource === 'accounts') return json(200, { data: accounts })
     if (method === 'DELETE' && resource === 'accounts') {
@@ -78,8 +88,10 @@ export function createDemoHandler(set: FixtureSet) {
       const platform = resource === 'connect' ? id : accounts.find((account) => account.id === id)?.platform
       const session = { id: `cs_demo${next++}`, platform, accountId: resource === 'connect' ? null : (id ?? null), status: 'pending', authorizationUrl: 'about:blank', expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [], error: null } as ConnectSession
       sessions.set(session.id, session)
-      const handle = readHandle(body)
+      const handle = readBody(body, 'handle')
       if (handle !== undefined) handles.set(session.id, handle)
+      const variant = readBody(body, 'variant')
+      if (variant !== undefined) variants.set(session.id, variant)
       return json(201, session)
     }
     if (method === 'GET' && resource === 'connect-sessions') {
@@ -104,11 +116,11 @@ export function createDemoHandler(set: FixtureSet) {
   return { handle, reset }
 }
 
-/** The `handle` a connect was started with, from its JSON body. */
-function readHandle(body: string | undefined): string | undefined {
+/** A field a connect was started with (its `handle` or `variant`), from its JSON body. */
+function readBody(body: string | undefined, field: 'handle' | 'variant'): string | undefined {
   if (body === undefined || body === '') return undefined
   try {
-    const value = (JSON.parse(body) as { handle?: unknown }).handle
+    const value = (JSON.parse(body) as Record<string, unknown>)[field]
     return typeof value === 'string' ? value : undefined
   } catch {
     return undefined

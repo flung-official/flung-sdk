@@ -6,10 +6,20 @@
 export const PLATFORMS = ['x', 'instagram', 'facebook', 'threads', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'bluesky', 'mastodon', 'discord', 'farcaster'] as const
 export type Platform = (typeof PLATFORMS)[number]
 
+/**
+ * Another way to connect a platform, on an app of its own: LinkedIn's `pages` connects the company pages the person
+ * administers, one account per page, instead of their own profile.
+ */
+export type ConnectVariant = 'pages'
+
+export const CONNECT_VARIANTS: readonly ConnectVariant[] = ['pages']
+
 export interface PlatformInfo {
   platform: Platform
   /** Whether this Flung has the platform's app credentials, so accounts can be connected. */
   connectable: boolean
+  /** The connect variants set up here, such as LinkedIn's `pages`. Optional: an API older than the field leaves it out. */
+  variants?: string[] | undefined
 }
 
 export type AccountStatus = 'active' | 'needs_reconnect' | 'disconnected'

@@ -11,12 +11,13 @@ The connect panel, built from `packages/connect`, on a page with made-up account
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--states` | off | Every state worth looking at, each of the whole page: the list, the Mastodon handle form, a disconnect being confirmed, a connect waiting on its window, nothing connected, three platforms, a refused token. |
+| `--states` | off | Every state worth looking at, each of the whole page: the list, the Mastodon handle form, a disconnect being confirmed, a connect waiting on its window, nothing connected, three platforms, a refused token, and LinkedIn with company pages: the list, the profile-or-page chooser open, and `variants="tiles"`. |
 | `--set <name>` | `demo` | The fixture set, without `--states`. |
 | `--themes light,dark` | both | The page's colour scheme, which the panel follows. |
 | `--viewports desktop,phone` | both | Desktop is 1280 by 860 at 1x; phone 390 by 844 at 2x. |
 | `--click <selector>` | none | Clicked in order once the page has settled; a Playwright selector reaches into the panel's shadow root, such as `[data-key="connect-x"]`. |
 | `--name <word>` | the set | The file's name. |
+| `--query <search>` | none | Added to the page's address. The page sets `variants`, `layout` and `theme` from it, such as `?variants=tiles`. |
 | `--full` | off | The whole page, not only the window. |
 | `--element` | off | The panel alone on a clear background, as the docs show it. |
 | `--probe` | off | Reports what runs past the right edge and text wider than its box (`probe.ts`, from Plotwork's demo tool). |
@@ -30,11 +31,12 @@ The connect panel, built from `packages/connect`, on a page with made-up account
 | `empty` | Nothing connected. |
 | `few` | X, LinkedIn and Bluesky only; X connected, LinkedIn due for a reconnect. |
 | `connects` | X, LinkedIn, Bluesky and Mastodon; X and LinkedIn connected. A connect finishes on the second read of its session, about two seconds after its window opens, and the account is added (Mastodon as `@acme@<server>`). |
+| `pages` | X, LinkedIn and Bluesky, with LinkedIn company pages set up (`variants: ['pages']`); a LinkedIn profile and a page connected. A pages connect finishes after two reads and adds two pages. |
 | `refused` | Every call refused with `forbidden`. |
 
 The sets are in `fixtures.ts`, typed with the panel's own `Account`, so a set cannot drift from what the panel reads. The clock is fixed at 29 October 2026 so dates read the same in every shot.
 
-A connect stays pending unless the set has `finishConnect: { afterPolls, usernames }`: the session then turns `connected` on its `afterPolls`th read of `GET /v1/connect-sessions/:id`, and the account is added, named from `usernames` with `{handle}` filled from what the person typed. The window the panel opens is left blank (`about:blank`); `demo:shot` closes it, and so do the docs' guide films, which use this handler with their own sets (flung-docs `tools/guide-film/`).
+A connect stays pending unless the set has `finishConnect: { afterPolls, usernames, pages }`: the session then turns `connected` on its `afterPolls`th read of `GET /v1/connect-sessions/:id`, and the account is added, named from `usernames` with `{handle}` filled from what the person typed, or, for a LinkedIn connect with `variant: 'pages'`, one page account for each name in `pages`. The window the panel opens is left blank (`about:blank`); `demo:shot` closes it, and so do the docs' guide films, which use this handler with their own sets (flung-docs `tools/guide-film/`).
 
 | File | Purpose |
 |---|---|

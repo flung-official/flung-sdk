@@ -1,4 +1,4 @@
-import type { Account, ConnectSession, Platform, PlatformInfo } from './types.js'
+import type { Account, ConnectSession, ConnectVariant, Platform, PlatformInfo } from './types.js'
 
 export const DEFAULT_BASE_URL = 'https://api.flung.dev'
 const POLL_MS = 2_000
@@ -56,9 +56,12 @@ export class ConnectClient {
     return (await this.#call<{ data: Account[] }>('GET', '/v1/accounts')).data
   }
 
-  /** Starts connecting a new account. `handle` is the Bluesky handle, or the Mastodon instance (required there). */
-  async connect(platform: Platform, options: { handle?: string | undefined; redirectUrl?: string | undefined } = {}): Promise<ConnectSession> {
-    return this.#call<ConnectSession>('POST', `/v1/connect/${encodeURIComponent(platform)}`, compact({ handle: options.handle, redirectUrl: options.redirectUrl }))
+  /**
+   * Starts connecting a new account. `handle` is the Bluesky handle, or the Mastodon instance (required there). `variant`
+   * picks another way to connect the platform: `pages` on LinkedIn connects the company pages the person administers.
+   */
+  async connect(platform: Platform, options: { handle?: string | undefined; redirectUrl?: string | undefined; variant?: ConnectVariant | undefined } = {}): Promise<ConnectSession> {
+    return this.#call<ConnectSession>('POST', `/v1/connect/${encodeURIComponent(platform)}`, compact({ handle: options.handle, redirectUrl: options.redirectUrl, variant: options.variant }))
   }
 
   /** Starts reconnecting an account that needs it; the person must sign in as the same platform user. */

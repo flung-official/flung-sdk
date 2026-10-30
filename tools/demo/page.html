@@ -24,6 +24,8 @@
 
       const panel = document.getElementById('panel')
       panel.setAttribute('base-url', location.origin)
+      // ?variants=tiles, ?layout=grid and so on: the panel's attributes, for shots of each.
+      for (const [name, value] of new URLSearchParams(location.search)) if (['variants', 'layout', 'theme'].includes(name)) panel.setAttribute(name, value)
       panel.token = 'flung_ct_ZGVtbw.demo'
     </script>
   </body>

@@ -32,9 +32,23 @@ export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger'
  * A button that calls `onClick`, with a `data-key` so focus can be put back on it after the panel is drawn again. Its
  * `part` is `button`, `button-<variant>` and `button-<role>`, so a page can style every button, a kind, or one of them.
  */
-export function button(text: string, key: string, role: string, onClick: () => void, options: { variant?: ButtonVariant; disabled?: boolean; label?: string } = {}): HTMLButtonElement {
+export function button(text: string, key: string, role: string, onClick: () => void, options: { variant?: ButtonVariant; disabled?: boolean; label?: string; expanded?: boolean; controls?: string } = {}): HTMLButtonElement {
   const variant = options.variant ?? 'secondary'
-  const element = html('button', { type: 'button', class: variant, part: `button button-${variant} button-${role}`, 'data-key': key, disabled: options.disabled === true, 'aria-label': options.label }, text)
+  const element = html(
+    'button',
+    {
+      type: 'button',
+      class: variant,
+      part: `button button-${variant} button-${role}`,
+      'data-key': key,
+      disabled: options.disabled === true,
+      'aria-label': options.label,
+      // A button that opens a question inside the panel says whether it is open, and which question.
+      'aria-expanded': options.expanded === undefined ? undefined : String(options.expanded),
+      'aria-controls': options.controls,
+    },
+    text,
+  )
   element.addEventListener('click', onClick)
   return element
 }

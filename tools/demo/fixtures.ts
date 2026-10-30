@@ -12,15 +12,18 @@ export interface FixtureSet {
   description: string
   /** Platforms this Flung can connect; the rest are listed as not connectable. */
   connectable: readonly Platform[]
+  /** The connect variants set up, such as LinkedIn's `pages`; none when left out. */
+  variants?: Partial<Record<Platform, readonly string[]>>
   accounts: readonly Account[]
   /** Answer every call with this error instead, as an API that refuses the token. */
   refuse?: { status: number; code: string; message: string }
   /**
    * Let a connect finish, as if the person signed in: the session turns `connected` on the `afterPolls`th read of
    * `GET /v1/connect-sessions/:id` and the account is added. Its name is `usernames[platform]` with `{handle}` filled from
-   * what the person typed (a Mastodon server, a Bluesky handle), or `acme`. Without it, every connect stays pending.
+   * what the person typed (a Mastodon server, a Bluesky handle), or `acme`. A LinkedIn connect with `variant: 'pages'` adds
+   * one page account for each of `pages` instead. Without it, every connect stays pending.
    */
-  finishConnect?: { afterPolls: number; usernames?: Partial<Record<Platform, string>> }
+  finishConnect?: { afterPolls: number; usernames?: Partial<Record<Platform, string>>; pages?: readonly string[] }
 }
 
 const account = (id: number, platform: Platform, username: string | null, extra: Partial<Account> = {}): Account => ({
@@ -57,6 +60,17 @@ export const FIXTURE_SETS: Readonly<Record<string, FixtureSet>> = {
     connectable: ['x', 'linkedin', 'bluesky', 'mastodon'],
     accounts: [account(1, 'x', 'acmestudio'), account(2, 'linkedin', 'Acme Studio', { reconnectBy: '2026-11-08T00:00:00.000Z' })],
     finishConnect: { afterPolls: 2, usernames: { mastodon: '@acme@{handle}', bluesky: '{handle}', x: 'acme_news', linkedin: 'Acme Studio Team' } },
+  },
+  pages: {
+    description: 'Like few, with LinkedIn company pages set up: a personal profile and a page connected, and a pages connect adds two pages',
+    connectable: ['x', 'linkedin', 'bluesky'],
+    variants: { linkedin: ['pages'] },
+    accounts: [
+      account(1, 'x', 'acmestudio'),
+      account(2, 'linkedin', 'Ada Lovelace', { displayName: 'Ada Lovelace' }),
+      account(7, 'linkedin', 'Acme Studio', { platformUserId: 'urn:li:organization:1001', displayName: 'Acme Studio' }),
+    ],
+    finishConnect: { afterPolls: 2, usernames: { x: 'acme_news', linkedin: 'Ada Lovelace', bluesky: '{handle}' }, pages: ['Acme Labs', 'Acme Careers'] },
   },
   refused: { description: 'The API refuses the token', connectable: everything, accounts: [], refuse: { status: 403, code: 'forbidden', message: 'This connect token is not valid for this page.' } },
 }

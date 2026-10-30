@@ -67,7 +67,7 @@ export function useFlungConnect(options: UseFlungConnectOptions): UseFlungConnec
 
   const actions = useMemo<ConnectActions>(
     () => ({
-      connect: (platform) => current.current?.connect(platform),
+      connect: (platform, options) => current.current?.connect(platform, options),
       submitHandle: (platform, handle) => current.current?.submitHandle(platform, handle),
       reconnect: (accountId) => current.current?.reconnect(accountId),
       requestDisconnect: (accountId) => current.current?.requestDisconnect(accountId),

@@ -4,8 +4,8 @@ import type { ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from '.
 import { connectInPopup, readRedirectResult, withoutRedirectResult } from './flows.js'
 import { DEFAULT_LABELS, formatLabel } from './labels.js'
 import type { ConnectLabels } from './labels.js'
-import { HANDLE_PROMPT, PLATFORM_NAMES, tokenPlatforms } from './platforms.js'
-import type { Account, ConnectSession, Platform } from './types.js'
+import { HANDLE_PROMPT, isConnectVariant, isPageAccount, PLATFORM_NAMES, tokenPlatforms } from './platforms.js'
+import type { Account, ConnectSession, ConnectVariant, Platform } from './types.js'
 
 /** How soon a reconnect deadline is worth showing. */
 const SOON_MS = 14 * 86_400_000
@@ -24,6 +24,8 @@ export interface AccountItem {
   readonly avatarUrl: string | null
   /** One letter for a picture that is missing or does not load. */
   readonly initial: string
+  /** True for a company page (a LinkedIn page connected with the `pages` variant), false for a person's own account. */
+  readonly page: boolean
   /** Why a reconnect is offered, or null when none is. `deadline` gives the ISO time it must happen by, within two weeks. */
   readonly reconnect: { readonly reason: 'needs_reconnect' } | { readonly reason: 'deadline'; readonly by: string } | null
 }
@@ -34,8 +36,16 @@ export type PlatformStep =
   | { readonly kind: 'idle' }
   /** Asking for the Mastodon server (required) or Bluesky handle (optional) before a connect: call `submitHandle`. */
   | { readonly kind: 'handle'; readonly required: boolean }
-  /** Waiting on the person to finish signing in. `blockedUrl` is set when the browser refused to open the window: offer it as a link. */
-  | { readonly kind: 'waiting'; readonly blockedUrl: string | null; readonly accountId: string | null }
+  /**
+   * Asking what to connect, when the platform offers its own connect and a variant (LinkedIn: a personal profile or a
+   * company page): call `connect(platform, { variant })` with the answer, `null` for the profile, or `cancel`.
+   */
+  | { readonly kind: 'choose'; readonly variants: readonly ConnectVariant[] }
+  /**
+   * Waiting on the person to finish signing in. `blockedUrl` is set when the browser refused to open the window: offer it
+   * as a link. `variant` is the variant being connected, or null.
+   */
+  | { readonly kind: 'waiting'; readonly blockedUrl: string | null; readonly accountId: string | null; readonly variant: ConnectVariant | null }
   /** Asking whether to disconnect `account`: call `confirmDisconnect` or `cancel`. */
   | { readonly kind: 'confirm'; readonly account: AccountItem }
 
@@ -53,6 +63,13 @@ export interface PlatformItem {
   readonly busy: boolean
   /** Whether a connect asks first for a handle (Bluesky, optional) or a server (Mastodon, required); null when it does not. */
   readonly handlePrompt: { readonly required: boolean } | null
+  /**
+   * Whether the platform's own connect is set up (on LinkedIn, the person's profile). False when only a variant is, and
+   * the platform is offered for that alone.
+   */
+  readonly connectable: boolean
+  /** The other ways it can connect here, such as LinkedIn's `pages`; empty for most platforms. */
+  readonly variants: readonly ConnectVariant[]
 }
 
 /** The last thing that happened, as data. `message` in the state words it. */
@@ -86,10 +103,23 @@ export interface ConnectState {
   readonly labels: ConnectLabels
 }
 
+/** What `connect` takes. */
+export interface ConnectOptions {
+  /**
+   * Which way to connect, without asking: `pages` for LinkedIn company pages, or `null` for the platform's own connect (a
+   * LinkedIn personal profile). Left out, a platform that offers both asks first (the step becomes `choose`), and one
+   * that offers only a variant connects that.
+   */
+  variant?: ConnectVariant | null | undefined
+}
+
 /** What a panel can do. Start a connect straight from a click or submit handler: a browser opens a window only during one. */
 export interface ConnectActions {
-  /** Connects a new account on `platform`, or asks for a handle first (the step becomes `handle`). */
-  connect(platform: Platform): void
+  /**
+   * Connects a new account on `platform`. It asks first when it must: for a handle (the step becomes `handle`), or, when
+   * the platform offers a variant and `options.variant` is left out, what to connect (the step becomes `choose`).
+   */
+  connect(platform: Platform, options?: ConnectOptions): void
   /** Sends the Mastodon server or Bluesky handle the step asked for and starts the connect. Blank means none. */
   submitHandle(platform: Platform, handle: string): void
   /** Reconnects an account that needs it. */
@@ -144,9 +174,21 @@ export interface ConnectControllerOptions {
   onError?: ((detail: ErrorDetail) => void) | undefined
 }
 
-type Step = { kind: 'idle' } | { kind: 'handle'; required: boolean } | { kind: 'waiting'; abort: AbortController; blockedUrl: string | null; accountId: string | null } | { kind: 'confirm'; account: Account }
+type Step =
+  | { kind: 'idle' }
+  | { kind: 'handle'; required: boolean }
+  | { kind: 'choose'; variants: readonly ConnectVariant[] }
+  | { kind: 'waiting'; abort: AbortController; blockedUrl: string | null; accountId: string | null; variant: ConnectVariant | null }
+  | { kind: 'confirm'; account: Account }
+
+/** How the API offers a platform: its own connect, and the variants set up beside it. */
+interface Offer {
+  connectable: boolean
+  variants: readonly ConnectVariant[]
+}
 
 const IDLE: PlatformStep = Object.freeze({ kind: 'idle' })
+const NO_VARIANTS: readonly ConnectVariant[] = Object.freeze([])
 
 /**
  * The connect panel with no markup: it reads the platforms and accounts, runs connects, reconnects and disconnects, and
@@ -170,6 +212,7 @@ class Controller implements ConnectController {
   #mode: 'popup' | 'redirect'
   #labels: ConnectLabels
   #platforms: Platform[] = []
+  #offers = new Map<Platform, Offer>()
   #accounts: Account[] = []
   #steps = new Map<Platform, Step>()
   #notice: ConnectNotice | null = null
@@ -233,23 +276,31 @@ class Controller implements ConnectController {
 
   refresh = (): Promise<void> => this.#load()
 
-  connect = (platform: Platform): void => {
+  connect = (platform: Platform, options: ConnectOptions = {}): void => {
     if (!this.#ready(platform)) return
+    const offer = this.#offers.get(platform)
+    let variant = options.variant ?? null
+    if (options.variant === undefined && offer !== undefined && offer.variants.length > 0) {
+      // Both ways set up: ask. Only a variant set up: that is the connect.
+      if (offer.connectable) return this.#set(platform, { kind: 'choose', variants: offer.variants })
+      variant = offer.variants[0] ?? null
+    }
     const prompt = HANDLE_PROMPT[platform]
-    if (prompt !== undefined) return this.#set(platform, { kind: 'handle', required: prompt.required })
-    this.#start(platform, null, undefined)
+    if (variant === null && prompt !== undefined) return this.#set(platform, { kind: 'handle', required: prompt.required })
+    this.#start(platform, null, undefined, variant)
   }
 
   submitHandle = (platform: Platform, handle: string): void => {
     if (!this.#ready(platform)) return
     const trimmed = handle.trim()
-    this.#start(platform, null, trimmed === '' ? undefined : trimmed)
+    this.#start(platform, null, trimmed === '' ? undefined : trimmed, null)
   }
 
   reconnect = (accountId: string): void => {
     const account = this.#accounts.find((candidate) => candidate.id === accountId)
     if (account === undefined || !this.#ready(account.platform)) return
-    this.#start(account.platform, account, undefined)
+    // The API reconnects through the app the account was connected with, so a page needs no variant here.
+    this.#start(account.platform, account, undefined, null)
   }
 
   requestDisconnect = (accountId: string): void => {
@@ -302,9 +353,11 @@ class Controller implements ConnectController {
       if (this.#destroyed) return
       const asked = this.#asked
       const granted = typeof this.#options.token === 'string' ? tokenPlatforms(this.#options.token) : null
-      this.#platforms = platforms
-        .filter((info) => info.connectable && (asked ?? [info.platform]).includes(info.platform) && (granted ?? [info.platform]).includes(info.platform))
-        .map((info) => info.platform)
+      const offered = platforms
+        .map((info) => ({ platform: info.platform, connectable: info.connectable, variants: (info.variants ?? []).filter(isConnectVariant) }))
+        .filter((info) => (info.connectable || info.variants.length > 0) && (asked ?? [info.platform]).includes(info.platform) && (granted ?? [info.platform]).includes(info.platform))
+      this.#platforms = offered.map((info) => info.platform)
+      this.#offers = new Map(offered.map((info) => [info.platform, Object.freeze({ connectable: info.connectable, variants: Object.freeze(info.variants) })]))
       this.#accounts = accounts.filter((account) => account.status !== 'disconnected' && this.#platforms.includes(account.platform))
       this.#loading = false
       this.#loaded = true
@@ -336,13 +389,13 @@ class Controller implements ConnectController {
   }
 
   /** Called straight from a click or a submit: a window can only be opened during one. */
-  #start(platform: Platform, account: Account | null, handle: string | undefined): void {
+  #start(platform: Platform, account: Account | null, handle: string | undefined, variant: ConnectVariant | null): void {
     const client = this.#client as ConnectClient
     const redirect = this.#mode === 'redirect' && typeof location !== 'undefined'
     const redirectUrl = redirect ? withoutRedirectResult(location.href) : undefined
-    const begin = () => (account === null ? client.connect(platform, { handle, redirectUrl }) : client.reconnect(account.id, { redirectUrl }))
+    const begin = () => (account === null ? client.connect(platform, { handle, redirectUrl, variant: variant ?? undefined }) : client.reconnect(account.id, { redirectUrl }))
     const abort = new AbortController()
-    const step: Step = { kind: 'waiting', abort, blockedUrl: null, accountId: account?.id ?? null }
+    const step: Step = { kind: 'waiting', abort, blockedUrl: null, accountId: account?.id ?? null, variant }
     this.#notice = null
     this.#set(platform, step)
     if (redirect) {
@@ -426,6 +479,7 @@ class Controller implements ConnectController {
     const platforms = this.#platforms.map((platform): PlatformItem => {
       const step = publicStep(this.#steps.get(platform), items, now)
       const prompt = HANDLE_PROMPT[platform]
+      const offer = this.#offers.get(platform)
       return Object.freeze({
         platform,
         name: PLATFORM_NAMES[platform],
@@ -433,6 +487,8 @@ class Controller implements ConnectController {
         step,
         busy: step.kind === 'waiting',
         handlePrompt: prompt === undefined ? null : Object.freeze({ required: prompt.required }),
+        connectable: offer?.connectable ?? true,
+        variants: offer?.variants ?? NO_VARIANTS,
       })
     })
     return Object.freeze({
@@ -451,7 +507,8 @@ class Controller implements ConnectController {
 function publicStep(step: Step | undefined, items: ReadonlyMap<string, AccountItem>, now: number): PlatformStep {
   if (step === undefined || step.kind === 'idle') return IDLE
   if (step.kind === 'handle') return Object.freeze({ kind: 'handle', required: step.required })
-  if (step.kind === 'waiting') return Object.freeze({ kind: 'waiting', blockedUrl: step.blockedUrl, accountId: step.accountId })
+  if (step.kind === 'choose') return Object.freeze({ kind: 'choose', variants: step.variants })
+  if (step.kind === 'waiting') return Object.freeze({ kind: 'waiting', blockedUrl: step.blockedUrl, accountId: step.accountId, variant: step.variant })
   return Object.freeze({ kind: 'confirm', account: items.get(step.account.id) ?? accountItem(step.account, now) })
 }
 
@@ -462,7 +519,7 @@ function accountItem(account: Account, now: number): AccountItem {
   const username = account.username !== null && account.username !== shown ? account.username : null
   const due = account.reconnectBy === null ? null : Date.parse(account.reconnectBy)
   const reconnect = account.status === 'needs_reconnect' ? ({ reason: 'needs_reconnect' } as const) : due !== null && !Number.isNaN(due) && due - now < SOON_MS ? ({ reason: 'deadline', by: account.reconnectBy as string } as const) : null
-  return Object.freeze({ account, name, displayName: shown, username, avatarUrl: safeUrl(account.avatarUrl ?? null, ['https:']), initial: initialOf(shown), reconnect })
+  return Object.freeze({ account, name, displayName: shown, username, avatarUrl: safeUrl(account.avatarUrl ?? null, ['https:']), initial: initialOf(shown), page: isPageAccount(account), reconnect })
 }
 
 function statusLine(notice: ConnectNotice | null, hasToken: boolean, loaded: boolean, offered: number, labels: ConnectLabels): { text: string; error: boolean } {
