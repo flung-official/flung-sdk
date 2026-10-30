@@ -3,7 +3,7 @@ import { clamp, lerp } from './random.js'
 type Rgb = [number, number, number]
 
 const rgb = (hex: string): Rgb => {
-  const n = parseInt(hex.slice(1), 16)
+  const n = Number(`0x${hex.slice(1)}`)
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 const toHex = (c: readonly number[]): string =>

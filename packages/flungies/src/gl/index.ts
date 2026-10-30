@@ -38,7 +38,7 @@ export interface FlungieGL {
 }
 
 const vec3 = (hex: string): [number, number, number] => {
-  const n = parseInt(hex.slice(1), 16)
+  const n = Number(`0x${hex.slice(1)}`)
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]
 }
 
