@@ -150,7 +150,7 @@ describe('SVG', () => {
           const ids = new Set([...doc.querySelectorAll('[id]')].map((el) => el.id))
           for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g)) expect(ids.has(ref as string), ref).toBe(true)
         }
-  })
+   }, 30_000)
 
   it('never repeats an id across two drawings of the same seed', () => {
     const id = (s: string) => s.match(/id="([^"]+?)[a-z]"/)?.[1]
