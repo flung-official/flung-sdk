@@ -7,7 +7,7 @@
 #   <type>(<scope>)!: <subject>      the `(<scope>)` and the `!` are optional
 #
 #   types    feat fix perf refactor revert docs test build ci chore style
-#   scopes   connect sdk deps ci docs examples spec demo release main
+#   scopes   connect sdk flungies deps ci docs examples spec demo release main
 #            (several: `fix(connect,sdk): ...`)
 #   header   at most 72 characters, no full stop at the end
 #
@@ -46,7 +46,7 @@ case "$header" in
 esac
 
 types='feat|fix|perf|refactor|revert|docs|test|build|ci|chore|style'
-scopes='connect|sdk|deps|ci|docs|examples|spec|demo|release|main'
+scopes='connect|sdk|flungies|deps|ci|docs|examples|spec|demo|release|main'
 
 printf '%s\n' "$header" | grep -Eq "^($types)(\\(($scopes)(,($scopes))*\\))?!?: [^ ]" \
   || fail "the first line is not a Conventional Commit with a known type and scope."

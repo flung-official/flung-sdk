@@ -39,6 +39,14 @@
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false
+    },
+    "packages/flungies": {
+      "release-type": "node",
+      "component": "flungies",
+      "package-name": "@flung.dev/flungies",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": false
     }
   }
 }

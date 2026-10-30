@@ -8,11 +8,11 @@
 #   commit `ci: ...`, `docs: ...` ->  nothing
 #
 # A commit counts for a package when it changes a file under that package's
-# folder (packages/connect, packages/sdk); the scope is for people. Only
+# folder (packages/connect, packages/sdk, packages/flungies); the scope is for people. Only
 # `feat`, `fix`, `perf`, `refactor`, `revert` and a breaking change open a
 # release; anything else waits for the next one of those.
 #
-# The packages, their tags (`connect-v<version>`, `sdk-v<version>`) and the
+# The packages, their tags (`connect-v<version>`, `sdk-v<version>`, `flungies-v<version>`) and the
 # changelog sections are in release-please-config.json; the last released
 # version of each is in .release-please-manifest.json. RELEASING.md explains
 # the whole flow.
@@ -163,7 +163,7 @@ jobs:
             for path in $(jq -r '.paths_released | fromjson | .[]' <<<"$outputs"); do
               tag=$(jq -r --arg p "$path" '.[$p + "--tag_name"]' <<<"$outputs")
               url=$(jq -r --arg p "$path" '.[$p + "--html_url"] // ""' <<<"$outputs")
-              case "$tag" in connect-v*|sdk-v*) ;; *) echo "::error::Unexpected tag '$tag' for $path"; exit 1 ;; esac
+              case "$tag" in connect-v*|sdk-v*|flungies-v*) ;; *) echo "::error::Unexpected tag '$tag' for $path"; exit 1 ;; esac
               gh workflow run publish.yml --ref "$tag"
               echo "Released $tag ($url); dispatched publish.yml on $tag" | tee -a "$GITHUB_STEP_SUMMARY"
             done

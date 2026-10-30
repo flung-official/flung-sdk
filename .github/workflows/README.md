@@ -14,7 +14,7 @@ Workflows here follow:
 | Path | Purpose |
 |---|---|
 | `ci.yml` | On a pull request and a push to `main`: install, audit, `pnpm check`, build, and pack every package; then installs each app in `examples/` from its lockfile with the packed packages swapped in, type checks it and builds it. |
-| `release-please.yml` | On a push to `main`, a passing CI run on `main`, and by hand: keeps one release PR current from the Conventional Commits since each package's last release; once CI passes on the tip of `main`, merges it, tags `connect-v<version>` / `sdk-v<version>`, creates the GitHub releases, and dispatches `publish.yml` on each new tag. `AUTO_RELEASE=false` leaves the merge to a person. See [RELEASING.md](../../RELEASING.md). |
+| `release-please.yml` | On a push to `main`, a passing CI run on `main`, and by hand: keeps one release PR current from the Conventional Commits since each package's last release; once CI passes on the tip of `main`, merges it, tags `connect-v<version>` / `sdk-v<version>` / `flungies-v<version>`, creates the GitHub releases, and dispatches `publish.yml` on each new tag. `AUTO_RELEASE=false` leaves the merge to a person. See [RELEASING.md](../../RELEASING.md). |
 | `publish.yml` | On a tag `<package folder>-v<version>` (`connect-v0.1.0`, `sdk-v0.1.0`), pushed or dispatched by `release-please.yml` (or by hand on a tag, to retry): checks the tag against the package's version, runs `pnpm check`, builds, and publishes with OIDC. A version with a `-` (`0.2.0-beta.1`) goes to the `next` dist-tag, any other to `latest`. |
 | `no-ai-coauthors.yml` | On every push and pull request: fails when a commit credits an AI tool. |
 

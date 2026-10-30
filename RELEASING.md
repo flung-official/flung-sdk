@@ -1,6 +1,6 @@
 # Releasing
 
-How a commit on `main` becomes a version of `@flung.dev/connect` or `@flung.dev/sdk` on npm. Nobody bumps a version, writes a changelog or pushes a tag by hand: [release-please](https://github.com/googleapis/release-please) reads the commit messages and does it, in `.github/workflows/release-please.yml`, and `.github/workflows/publish.yml` publishes.
+How a commit on `main` becomes a version of `@flung.dev/connect`, `@flung.dev/sdk` or `@flung.dev/flungies` on npm. Nobody bumps a version, writes a changelog or pushes a tag by hand: [release-please](https://github.com/googleapis/release-please) reads the commit messages and does it, in `.github/workflows/release-please.yml`, and `.github/workflows/publish.yml` publishes.
 
 ## TL;DR
 
@@ -8,8 +8,8 @@ How a commit on `main` becomes a version of `@flung.dev/connect` or `@flung.dev/
 |---|---|
 | How do I release a change? | Commit it as `feat(connect): ...` or `fix(sdk): ...` and push to `main`. When CI passes, the release PR is merged and the package is published. |
 | What decides the version? | The commit types since the last release of that package: `fix` a patch, `feat` a minor, `!` or `BREAKING CHANGE:` a minor while the package is 0.x. |
-| Which package does a commit release? | The one whose folder (`packages/connect`, `packages/sdk`) the commit changes. The scope is for people. |
-| What are the tags? | `connect-v<version>` and `sdk-v<version>`, as before. |
+| Which package does a commit release? | The one whose folder (`packages/connect`, `packages/sdk`, `packages/flungies`) the commit changes. The scope is for people. |
+| What are the tags? | `connect-v<version>`, `sdk-v<version>` and `flungies-v<version>`. |
 | Can I stop a release? | Set the Actions variable `AUTO_RELEASE` to `false`, then merge the release PR yourself when ready. Required reviewers on the `npm` environment hold each publish for approval. |
 
 ## Commit messages
@@ -32,6 +32,7 @@ How a commit on `main` becomes a version of `@flung.dev/connect` or `@flung.dev/
 |---|---|
 | `connect` | `packages/connect` |
 | `sdk` | `packages/sdk` |
+| `flungies` | `packages/flungies` |
 | `deps` | dependency updates (Renovate writes `chore(deps)` and `fix(deps)`) |
 | `ci` | `.github/` |
 | `docs` | READMEs and docs outside a package |
@@ -89,6 +90,20 @@ Delete the stale local tag before you push tags from this clone, or `git push --
 |---|---|---|
 | GitHub: Settings > Actions > General > Workflow permissions | "Allow GitHub Actions to create and approve pull requests" on | release-please opens the release PR with `GITHUB_TOKEN`. |
 | GitHub: Settings > Rules / Branches, `main` | No rule that requires a review or status checks for GitHub Actions, or GitHub Actions on the bypass list | The workflow merges the release PR with `GITHUB_TOKEN`. A PR opened with that token gets no CI run of its own, so a required check would never report. Its commits already passed CI on `main`. |
-| GitHub: Settings > Environments > `npm` | Optional required reviewers; if it limits deployment branches and tags, allow tags `connect-v*` and `sdk-v*` | Each publish waits for approval; the dispatched run's ref is the tag. |
+| GitHub: Settings > Environments > `npm` | Optional required reviewers; if it limits deployment branches and tags, allow tags `connect-v*`, `sdk-v*` and `flungies-v*` | Each publish waits for approval; the dispatched run's ref is the tag. |
 | GitHub: Settings > Secrets and variables > Actions > Variables | `AUTO_RELEASE` = `false` to merge release PRs by hand (unset: merged when CI passes) | The switch. |
-| npm: each package > Settings > Trusted publishing | GitHub Actions, organisation `flung-official`, repository `flung-sdk`, workflow `publish.yml`, environment `npm` | Unchanged: publishing still runs in `publish.yml`. If that file is ever renamed, or publishing moves into another workflow, update this on npmjs.com for both packages first, or every publish fails. |
+| npm: each package > Settings > Trusted publishing | GitHub Actions, organisation `flung-official`, repository `flung-sdk`, workflow `publish.yml`, environment `npm` | Unchanged: publishing still runs in `publish.yml`. If that file is ever renamed, or publishing moves into another workflow, update this on npmjs.com for every package first, or every publish fails. |
+
+## Adding a package
+
+npm trusted publishing cannot make a package's first version: a trusted publisher can only be set on a package that already exists on npm. A new package therefore needs one placeholder publish by an owner of the `@flung.dev` scope, once, before CI can publish it. `@flung.dev/flungies` is the first package added this way.
+
+| # | Who | What |
+|---|---|---|
+| 1 | Here | Add the folder to `release-please-config.json` and `.release-please-manifest.json` at `0.0.0`, the scope to `.githooks/commit-msg` and this file, and its tag to the `case` in `release-please.yml`. Its first `feat` commit carries a `Release-As: 0.1.0` footer, so the first release PR proposes 0.1.0. |
+| 2 | An npm owner, before that commit reaches `main` | Publish a placeholder `0.0.0` from an empty folder, never from the package's folder: a `package.json` with only `name`, `version` `0.0.0` and `license`, and a README of one line. `npm publish --access public`. |
+| 3 | The same owner, on npmjs.com | The package > Settings > Trusted publishing: GitHub Actions, organisation `flung-official`, repository `flung-sdk`, workflow `publish.yml`, environment `npm`. Then set "Publishing access" to require two-factor authentication and disallow tokens, as on the other packages. |
+| 4 | The same owner, on GitHub | If Settings > Environments > `npm` limits tags, allow the new `<folder>-v*`. |
+| 5 | Anyone | Push `main`. The release PR proposes the package at 0.1.0; once it is merged, `publish.yml` publishes it with provenance. Optionally `npm deprecate @flung.dev/<name>@0.0.0 "placeholder"` afterwards. |
+
+If step 2 or 3 is skipped, `publish.yml` fails with a 404 or "not authorized" at `npm publish`. Do steps 2 to 4, then re-run Publish on the tag (see "When something goes wrong").
