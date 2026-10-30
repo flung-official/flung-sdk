@@ -158,6 +158,10 @@ Set any of these on the element. Each has a default for light and dark.
 | `--flung-focus-width` | `2px` | Its width. |
 | `--flung-focus-offset` | `2px` | Its gap from the control. |
 | `--flung-grid-min` | `16rem` | The narrowest card in the `grid` layout. |
+| `--flung-tooltip-background` | `--flung-text` | The tooltip that shows an account name cut short. |
+| `--flung-tooltip-text` | `--flung-surface` | Its words. |
+| `--flung-tooltip-radius` | `--flung-radius-inner` | Its corners. |
+| `--flung-tooltip-shadow` | a soft shadow | Its shadow. |
 
 ```css
 flung-connect {
@@ -195,6 +199,7 @@ Every piece the panel draws has a `part` name for `::part()`. Pieces with a kind
 | `confirm`, `confirm-text` | The question before a disconnect. |
 | `message`, `message-error` | The status line under the list. It has `hidden` when empty. |
 | `footer`, `footer-link`, `footer-mark` | "Secured by Flung". |
+| `tooltip` | The full account name or `@handle`, when the panel is too narrow for it, on hover or a held finger. In the top layer where the browser has popovers. |
 
 ```css
 flung-connect::part(panel) { border: 0; }

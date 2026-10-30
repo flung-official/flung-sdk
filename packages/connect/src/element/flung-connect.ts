@@ -9,6 +9,7 @@ import { avatar, button, html, mark } from './dom.js'
 import type { ChangeDetail, ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
 import { CHOICE_MARKS, FLUNG_MARK, PLATFORM_MARKS } from './marks.js'
 import { BASE_STYLES, STYLES } from './styles.js'
+import { panelTooltip, TOOLTIP_BASE_STYLES, TOOLTIP_STYLES } from './tooltip.js'
 
 /** How the platforms are laid out: `list` (the default) one under another, `grid` as cards side by side, `compact` tighter. */
 export type FlungConnectLayout = 'list' | 'grid' | 'compact'
@@ -69,6 +70,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     static readonly observedAttributes = ['token', 'base-url', 'platforms', 'branding', 'mode', 'layout', 'unstyled', 'variants']
 
     readonly #root = this.attachShadow({ mode: 'open' })
+    readonly #tooltip = panelTooltip(this.#root)
     #source: TokenSource | null = null
     #labels: ConnectLabels = DEFAULT_LABELS
     #controller: ConnectController | null = null
@@ -164,7 +166,10 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       const empty = state.message.text === ''
       const message = html('p', { class: state.message.error ? 'message error' : 'message', part: state.message.error ? 'message message-error' : 'message', role: 'status', 'aria-live': 'polite', hidden: empty }, state.message.text)
       const panel = html('section', { class: 'panel', part: 'panel', 'data-layout': layout, 'aria-label': labels.panel }, list, message, this.#footer(labels))
-      this.#root.replaceChildren(html('style', {}, this.hasAttribute('unstyled') ? BASE_STYLES : STYLES), panel)
+      const styles = this.hasAttribute('unstyled') ? BASE_STYLES + TOOLTIP_BASE_STYLES : STYLES + TOOLTIP_BASE_STYLES + TOOLTIP_STYLES
+      // The element a tooltip points at is about to be replaced, so the tooltip goes with it.
+      this.#tooltip.hide()
+      this.#root.replaceChildren(html('style', {}, styles), panel, this.#tooltip.element)
       this.#placeFocus(state, active)
       this.dispatchEvent(new CustomEvent<ChangeDetail>('flung-change', { detail: { state } }))
     }
@@ -253,8 +258,8 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       const names = html(
         'span',
         { class: 'names', part: 'account-names' },
-        html('span', { class: 'handle', part: 'account-name', title: item.displayName }, item.displayName),
-        item.username === null ? null : html('span', { class: 'username', part: 'account-username', title: `@${item.username}` }, `@${item.username}`),
+        html('span', { class: 'handle', part: 'account-name', 'data-tooltip': item.displayName, 'data-tooltip-truncated': true }, item.displayName),
+        item.username === null ? null : html('span', { class: 'username', part: 'account-username', 'data-tooltip': `@${item.username}`, 'data-tooltip-truncated': true }, `@${item.username}`),
       )
       const tag = item.page ? html('span', { class: 'tag', part: 'tag tag-page' }, labels.pageTag) : null
       const who = html('span', { class: 'who', part: 'account-details' }, names, tag, status === null ? null : html('span', { class: 'status', part: 'status' }, status))

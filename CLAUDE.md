@@ -36,6 +36,7 @@ The Flung SDK: packages other people's projects install to use Flung. The API it
 | Relative imports in `packages/connect` end in `.js` | `tsc` emits them as written, and a browser loads the output without a bundler. |
 | `marks.ts` is never edited by hand | It is written by `pnpm sync:icons`; change the script or its sources. |
 | The panel never builds markup from text | Names and messages come from the API and platforms. Nodes are made with `createElement`, text with `textContent` (`src/element/dom.ts`). |
+| The panel never uses the browser's `title` tooltip | It cannot be themed and has no keyboard or touch path. Use `data-tooltip` (`src/element/tooltip.ts`); `src/__tests__/tooltip.test.ts` fails on a `title`. |
 | An API key never reaches a browser | The panel takes a connect token only. Examples keep the key on the server. |
 | `packages/sdk/src/client.ts`, `errors.ts` and `webhooks.ts` stay equal to flung-app's | flung-app's copy runs contract tests against the API in process. Change both. |
 | The connect token's calls are fixed by the API | The seven routes are in flung-app `apps/api/src/connect-access.ts` (ADR 0010). A new call the panel needs must be added there first. |
