@@ -2,6 +2,14 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.2.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.1.3...sdk-v0.2.0) (2026-10-30)
+
+
+### Added
+
+* **sdk:** account displayName and avatarUrl, billing, and the plan_limit_reached error code ([d3c96c5](https://github.com/flung-official/flung-sdk/commit/d3c96c5e946f5f2946bde6e63328ee3b6c4e9447))
+* **sdk:** LinkedIn company pages: accounts.connect takes variant 'pages', and PlatformInfo has variants ([d3c96c5](https://github.com/flung-official/flung-sdk/commit/d3c96c5e946f5f2946bde6e63328ee3b6c4e9447))
+
 ## [0.1.3](https://github.com/flung-official/flung-sdk/compare/sdk-v0.1.2...sdk-v0.1.3) (2026-10-29)
 
 ### Added
