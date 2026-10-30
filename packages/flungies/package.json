@@ -29,6 +29,10 @@
       "types": "./dist/gl/index.d.ts",
       "default": "./dist/gl/index.js"
     },
+    "./marks": {
+      "types": "./dist/marks/index.d.ts",
+      "default": "./dist/marks/index.js"
+    },
     "./react": {
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"

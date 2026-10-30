@@ -130,6 +130,73 @@ Adding an option to `ACCESSORIES`, `COLOURS` or `SHAPES` changes which option ma
 4. **Look at it.** Run `node examples/flungies/server.mjs` and check it at 16, 24, 32, 48, 64, 96 and 240 px, in light and dark.
 5. **Test it.** Add golden rows that wear it, through overrides or under the new version. Check that the existing rows still pass unchanged.
 
+## Workspace marks
+
+`@flung.dev/flungies/marks` draws workspaces. People get Flungies, which are round characters with a face. Workspaces get marks, which are squared objects, so the two never read as one another:
+
+- **A squircle** with a 22% corner radius, never a circle.
+- **One of the brand's three patterns**, embossed or debossed: tiles, lines or ripples.
+- **A two-tone pair** from the Flungies palette, lit like the brand wash: the ground at the top left, turning toward the tone at the bottom right.
+- **The workspace's initials** in Funnel Display at 750, in a calm zone where the pattern fades out.
+- **Two tiny speed lines** in a corner, sometimes, from 64 px.
+
+### Seeding
+
+Marks use the Flungies seeding unchanged: `normalise`, `hash`, the optional `salt`, and one mulberry32 stream per trait, seeded with `h XOR hash(traitName)`. Their stream names are `pattern`, `pair`, `finish`, `scale`, `angle`, `centre`, `rhythm`, `signature` and `phase`. The `phase` stream draws three numbers, in order, which shift the grid, the rows and the rings. Seed with the workspace's ID, and pass its name for the initials.
+
+### The traits
+
+| Trait | Options | Weighting and notes |
+|---|---|---|
+| Pattern | Tiles, Lines, Ripples (3) | Tiles 1.2. Tiles are rounded squares at 0.78 of the pitch, with corners at 0.29 of the side. Lines are rows of capsules, each row starting at its own place in the rhythm. Ripples are rings of a rounded square that soften into circles as they spread. |
+| Pair | Peach, Sky, Butter, Mint, Lilac, Coral, Sand, Cloud, Ink, Ocean, Moss, Plum, Berry, Rust (14) | Each ground is a Flungies body colour and each tone its neighbour on the wheel. Peach and Sky are 1.3, the deep tones 0.9, and the pale pairs Sand and Cloud 0.4. |
+| Finish | Embossed, Debossed (2) | 1.4 to 1. Pressed features swap the lit and shaded walls. |
+| Scale | Fine, Medium, Bold (3) | The pitch: 19, 25 or 33 units for tiles; 10.5, 13.5 or 17.5 for lines; 8.5, 11 or 15 for ripples. |
+| Angle | 14°, −14°, 0°, 8°, 24° (5) | 14° is the brand's lean, at 1.6. Tiles turn by the full angle, lines by half and ripples by 0.4. |
+| Ripple centre | Centre, four corners, left edge, bottom edge (7) | Ripples only. |
+| Line rhythm | Brand, Dash and dot, Long throws, Even (4) | Lines only. Brand is the social covers' sequence of capsule lengths. |
+| Signature | None, Top right, Bottom left, Bottom right, Top left (5) | None is 2.2, so 36% of marks have no speed lines. |
+
+`markCombinations().discrete` is 25,200, counting only the traits each pattern uses: 2,100 tile sets, 8,400 line sets and 14,700 ripple sets. The phase varies on top.
+
+### The pale pairs
+
+Sand and Cloud are the palest grounds. In the prototype they read as plain initials at 20 to 24 px, because their lit walls were almost white on an almost white ground. Before marks shipped they were changed in two ways:
+
+- They come up at weight 0.4, half the prototype's 0.8, so about 3.4% of marks each.
+- Their colours are deeper: Sand is `#DDB27A` into `#E2885C`, and Cloud `#D2D5EA` into `#93B2E8`. The tone is the deeper of the two, so the gradient across each feature still shows a pattern at 20 px.
+
+The test `keeps the pale pairs patterned` holds their shaded wall at more than 1.6:1 against the ground.
+
+### Colour
+
+- **Letters** are ink or paper, whichever contrasts more with the pair's midpoint. Every pair gives at least 4:1, as a Flungie's eyes do. The mark is decorative: the name always sits beside it.
+- **Walls**: the lit wall is the ground mixed toward white, and the shaded wall the midpoint mixed toward a deep violet. Dark pairs, with a midpoint luminance under 0.12, mix toward black instead.
+- **A rim**: if the midpoint's contrast with the page is under 1.5, a rim is stroked round the tile, lighter on the dark page and darker on the light one. Ink gets one on dark, and Butter on light.
+- **The signature** uses the brand pair, peach over sky, unless another line pair stands further from the tile in OKLab.
+- **`plainMark`**, the fallback with no pattern, tints the pair's ground 68% toward white (light) or 72% toward ink (dark), and holds its letters at 4.5:1.
+
+### Size tiers
+
+| Size | What changes |
+|---|---|
+| Under 24 px | One letter. |
+| Under 32 px | The features are 1.55 times larger, so fewer and bolder. The relief is a gradient across each feature, with no offset walls, and the calm zone is smaller. |
+| 32 px and up | The relief is three draws of one path: a shaded wall, a lit wall, and a face that wears the ground gradient turned back by the pattern's lean, so only the walls show. The letters get a soft pressed shadow. |
+| 64 px and up | The signature and the grain, which is `feTurbulence` specks sized in pixels. `animate` adds the light sweep (`MARK_SWEEP_MIN`). |
+
+The sweep is a soft band, masked to the lit walls, that crosses the tile every 9 seconds in SMIL. A `<style>` inside the SVG hides it under `prefers-reduced-motion`, which leaves the still mark.
+
+### Golden values
+
+`src/__tests__/marks-golden.test.ts` freezes 22 seeds, their traits and the SHA-256 of their SVG at 24 px, at 64 px, and at 128 px dark. Rows include `ws_northwind`, a workspace named from an email address (`maya@northwind.studio's workspace`), a seed on each pale pair, a unicode name, a name with markup in it, and the empty seed. The Flungies rules apply unchanged: rows are only ever added, the tables are append-only through a new stream or a version, and a change to existing output ships behind an option.
+
+| File | What it holds |
+|---|---|
+| `src/marks/data.ts` | The trait tables. |
+| `src/marks/traits.ts` | `markTraits()`, `markInitials()`, `markPalette()` and `markCombinations()`. |
+| `src/marks/render.ts` | `renderMark()`, `workspaceMark()`, `plainMark()` and the pattern geometry. |
+
 ## Files
 
 | File | What it holds |
@@ -142,4 +209,5 @@ Adding an option to `ACCESSORIES`, `COLOURS` or `SHAPES` changes which option ma
 | `src/render.ts` | `render()`, `flungie()`, the body layer, the felt filter and the face. |
 | `src/accessories.ts` | One drawing function per accessory. |
 | `src/gl/` | The WebGL hero: the distance field, the shader and `mountFlungieGL`. |
-| `src/react/`, `src/element/` | `<Flungie>` and `<flung-ie>`. |
+| `src/marks/` | Workspace marks, above. |
+| `src/react/`, `src/element/` | `<Flungie>` and `<WorkspaceMark>`, `<flung-ie>` and `<flung-mark>`. |

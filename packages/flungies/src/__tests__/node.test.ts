@@ -17,3 +17,8 @@ it('imports the element entry without registering or touching a DOM', async () =
   expect(typeof FlungieElement).toBe('function')
   expect(() => defineFlungie()).not.toThrow()
 })
+
+it('renders a workspace mark without a DOM', async () => {
+  const { workspaceMark } = await import('../marks/index.js')
+  expect(workspaceMark('ws_northwind', { size: 64, name: 'Northwind Studio' }).startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true)
+})

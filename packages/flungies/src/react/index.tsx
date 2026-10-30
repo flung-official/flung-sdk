@@ -1,7 +1,8 @@
-// <Flungie>: the SVG Flungie as a React component, and the animated WebGL one at hero sizes.
+// <Flungie>: the SVG Flungie as a React component, and the animated WebGL one at hero sizes. <WorkspaceMark>: a workspace mark.
 //
 //   <Flungie seed={user.id} size={32} theme="dark" />
 //   <Flungie seed={user.id} size={240} animated />   // loads @flung.dev/flungies/gl only when it is shown
+//   <WorkspaceMark seed={workspace.id} name={workspace.name} size={32} />
 //
 // The SVG renders on a server too, with ids from useId, so it hydrates without a mismatch. With `animated` and a size
 // of 160 or more, the SVG shows first and the WebGL hero takes its place once its code has loaded.
@@ -9,6 +10,8 @@
 import { type CSSProperties, useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import type { FlungieGL } from '../gl/index.js'
+import { type MarkOptions, renderMark } from '../marks/render.js'
+import { markTraits } from '../marks/traits.js'
 import { type FlungieOptions, render } from '../render.js'
 import { type Theme, traits } from '../traits.js'
 
@@ -73,4 +76,30 @@ export function Flungie({ seed, size = 64, theme = 'light', variant = 'disc', an
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
     </span>
   )
+}
+
+export interface WorkspaceMarkProps extends Omit<MarkOptions, 'id' | 'animate'> {
+  /** The workspace's stable ID, not its name: a rename keeps the mark. */
+  seed: string
+  /** A slow light sweep across the relief, at MARK_SWEEP_MIN and up. Hidden under prefers-reduced-motion. */
+  animated?: boolean | undefined
+  className?: string | undefined
+  style?: CSSProperties | undefined
+}
+
+/**
+ * A workspace's mark: a squared tile pressed with a seeded pattern, with the workspace's initials. Renders on a server too,
+ * with ids from useId.
+ */
+export function WorkspaceMark({ seed, size = 64, theme = 'light', animated = false, className, style, ...rest }: WorkspaceMarkProps) {
+  const reactId = useId()
+  const config = JSON.stringify([rest.overrides, rest.salt, rest.palette, rest.patterns])
+  // config is the serialised form of the options markTraits() reads, so a new object with the same values is no change.
+  const t = useMemo(() => markTraits(seed, rest.overrides, rest), [seed, config])
+  const svg = useMemo(
+    () => renderMark(t, { size, theme, name: rest.name, initials: rest.initials, grain: rest.grain, palette: rest.palette, animate: animated, id: reactId }),
+    [t, size, theme, rest.name, rest.initials, rest.grain, rest.palette, animated, reactId],
+  )
+  const box: CSSProperties = { display: 'inline-block', width: size, height: size, lineHeight: 0, flex: 'none', ...style }
+  return <span className={className} style={box} dangerouslySetInnerHTML={{ __html: svg }} />
 }

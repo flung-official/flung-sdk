@@ -6,6 +6,7 @@ Avatars generated from a seed. Each Flungie is a plush speech bubble caught mid-
 - **`/gl`** is an animated hero for large sizes. It shades a felt body in WebGL2, then breathes and blinks.
 - **`/react`** is a `<Flungie>` component.
 - **`/element`** is a `<flung-ie>` custom element.
+- **`/marks`** draws workspace marks: squared tiles pressed with a seeded pattern, with the workspace's initials. `/react` and `/element` carry them too.
 
 The package has no runtime dependencies. React is an optional peer.
 
@@ -84,6 +85,77 @@ defineFlungie()   // registers <flung-ie>; defineFlungie('my-avatar') uses anoth
 
 The element takes the attributes `seed`, `size`, `theme`, `variant`, `salt` and `animated`.
 
+## Workspace marks
+
+Flungies are for people. For workspaces, teams and organisations, `@flung.dev/flungies/marks` draws a workspace mark: a squircle pressed with one of three patterns (tiles, lines or ripples), in a two-tone colour pair, with the workspace's initials on top. A person is round and a workspace is square, so the two never read as one another.
+
+```ts
+import { workspaceMark, markTraits, renderMark, markInitials, plainMark } from '@flung.dev/flungies/marks'
+
+workspaceMark(workspace.id, { size: 32, theme: 'dark', name: workspace.name })    // an SVG string
+renderMark(markTraits(workspace.id, { pattern: 'ripples' }), { size: 256, animate: true })
+markInitials("maya@northwind.studio's workspace")                                   // 'M'
+markInitials('Northwind Studio')                                                    // 'NS'
+plainMark(workspace.id, { size: 24, name: workspace.name })                         // initials on a tint, no pattern
+```
+
+Seed with the workspace's ID and pass its name for the initials, so a rename changes the letters but not the mark. Under 24 px a mark shows one letter.
+
+| Option | For | Default |
+|---|---|---|
+| `size` | Pixels. The pattern is bolder under 32 px, and the signature lines and grain appear from 64 px. | `64` |
+| `theme` | `'light'` or `'dark'`. The mark keeps its colours, and gains a rim only where it would melt into the page. | `'light'` |
+| `name` | The workspace's display name, for the initials. Without it, the initials come from the seed. | none |
+| `initials` | `'auto'`, letters of your own, or `false` for none. | `'auto'` |
+| `grain` | `false` turns the grain off. | `true` |
+| `animate` | A slow light sweep across the relief, from 64 px. Hidden under `prefers-reduced-motion`. | `false` |
+| `id` | The prefix for the SVG's internal ids, for a server render that a browser hydrates. | a counter |
+| `overrides` | Traits to set instead of the seed's (`{ pattern: 'lines', pair: 'ocean' }`). | none |
+| `salt`, `palette`, `patterns` | For other products: a salt, your own colour pairs (`{ id, label, ground, tone }`), and `{ include }` or `{ exclude }` for the patterns. | none |
+
+### Marks on a server
+
+```ts
+import { workspaceMark } from '@flung.dev/flungies/marks'
+
+export default {
+  fetch(request: Request): Response {
+    const url = new URL(request.url)
+    const id = url.searchParams.get('id') ?? ''
+    const name = url.searchParams.get('name') ?? undefined
+    const size = Math.min(512, Math.max(16, Number(url.searchParams.get('size')) || 64))
+    const theme = url.searchParams.get('theme') === 'dark' ? 'dark' : 'light'
+    return new Response(workspaceMark(id, { size, name, theme }), {
+      headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' },
+    })
+  },
+}
+```
+
+The initials follow the name, which can change, so cache a mark for a day rather than forever, or put the name in the URL as above.
+
+### Marks in React and as an element
+
+```tsx
+import { WorkspaceMark } from '@flung.dev/flungies/react'
+
+<WorkspaceMark seed={workspace.id} name={workspace.name} size={32} />
+<WorkspaceMark seed={workspace.id} name={workspace.name} size={96} theme="dark" animated />
+```
+
+```ts
+import { defineWorkspaceMark } from '@flung.dev/flungies/element'
+defineWorkspaceMark()   // registers <flung-mark>
+```
+
+```html
+<flung-mark seed="ws_8f3k2" name="Northwind Studio" size="32" theme="dark"></flung-mark>
+```
+
+The element takes the attributes `seed`, `name`, `size`, `theme`, `initials` (letters, or `none`), `salt` and `animated`. On a page that may not assign `innerHTML`, append `toSvgElement(workspaceMark(...))`, which `/marks` exports too.
+
+Also exported from `/marks`: `MARK_TRAITS` and the tables (`MARK_PAIRS`, `MARK_PATTERNS` and the rest), `markCombinations()` (25,200 discrete trait sets), `markPalette()`, `markGeometry()` and `describeMark()`, the accessible name each SVG carries.
+
 ## Options
 
 | Option | For | Default |
@@ -119,7 +191,7 @@ traits(user.id, {}, { salt: 'acme' })   // traits(seed, overrides, config)
 - `describe()`, the accessible name, which every SVG also carries as its `aria-label`.
 - The colour helpers `contrast`, `distance`, `luminance` and `mix`.
 
-[BUILDING.md](./BUILDING.md) explains how a Flungie is made, and how to add a trait without changing anyone's avatar.
+[BUILDING.md](./BUILDING.md) explains how a Flungie and a workspace mark are made, and how to add a trait without changing anyone's avatar.
 
 ## Licence
 

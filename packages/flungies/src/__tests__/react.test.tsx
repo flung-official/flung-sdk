@@ -12,7 +12,7 @@ vi.mock('../gl/index.js', () => ({
   },
 }))
 
-import { Flungie } from '../react/index.js'
+import { Flungie, WorkspaceMark } from '../react/index.js'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 
@@ -59,5 +59,20 @@ describe('<Flungie>', () => {
     expect(options).toMatchObject({ size: 240, theme: 'dark' })
     await act(async () => root.unmount())
     expect(dispose).toHaveBeenCalled()
+  })
+})
+
+describe('<WorkspaceMark>', () => {
+  it('renders the mark with the workspace initials', async () => {
+    const { container } = await show(<WorkspaceMark seed="ws_northwind" name="Northwind Studio" size={32} theme="dark" />)
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('width')).toBe('32')
+    expect(svg?.getAttribute('aria-label')).toMatch(/^Workspace mark NS: /)
+  })
+
+  it('renders on a server, and sweeps when animated', () => {
+    const html = renderToString(<WorkspaceMark seed="ws_northwind" name="Northwind Studio" size={96} animated />)
+    expect(html).toContain('role="img"')
+    expect(html).toContain('animateTransform')
   })
 })

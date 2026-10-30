@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { defineFlungie } from '../element/index.js'
+import { defineFlungie, defineWorkspaceMark } from '../element/index.js'
 import { flungie } from '../index.js'
+import { workspaceMark } from '../marks/index.js'
 
 defineFlungie()
+defineWorkspaceMark()
 
 afterEach(() => document.body.replaceChildren())
 
@@ -31,5 +33,21 @@ describe('<flung-ie>', () => {
     expect(() => defineFlungie()).not.toThrow()
     defineFlungie('my-avatar')
     expect(customElements.get('my-avatar')).toBeDefined()
+  })
+})
+
+describe('<flung-mark>', () => {
+  const plain = (svg: string) => idless(svg).replace(/wm[0-9a-z]+?(?=(c|g|gr|mg|m|p|r|n|e)["\)])/g, 'ID')
+
+  it('draws the mark for its seed and name, and redraws when an attribute changes', () => {
+    const el = document.createElement('flung-mark')
+    el.setAttribute('seed', 'ws_northwind')
+    el.setAttribute('name', 'Northwind Studio')
+    el.setAttribute('size', '40')
+    document.body.append(el)
+    expect(plain(el.innerHTML)).toBe(plain(workspaceMark('ws_northwind', { size: 40, name: 'Northwind Studio' })))
+    expect(el.querySelector('text')?.textContent).toBe('NS')
+    el.setAttribute('initials', 'none')
+    expect(el.querySelector('text')).toBeNull()
   })
 })
