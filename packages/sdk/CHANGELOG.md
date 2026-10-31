@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.4.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.3.0...sdk-v0.4.0) (2026-10-31)
+
+
+### Added
+
+* **sdk:** the one-account-per-platform limit and its error, documented ([0707297](https://github.com/flung-official/flung-sdk/commit/0707297cceaf79d0bab75dbfeb0be8f60d20b2e4))
+
 ## [0.3.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.2.0...sdk-v0.3.0) (2026-10-31)
 
 
