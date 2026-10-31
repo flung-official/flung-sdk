@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.5.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.4.0...sdk-v0.5.0) (2026-10-31)
+
+
+### Added
+
+* **sdk:** Plotwork diagrams in posts, brands and the newest API ([45f45b6](https://github.com/flung-official/flung-sdk/commit/45f45b60450d1519a6a7d4b3b45013421b5c0bda))
+
 ## [0.4.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.3.0...sdk-v0.4.0) (2026-10-31)
 
 
