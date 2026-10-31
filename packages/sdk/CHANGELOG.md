@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.3.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.2.0...sdk-v0.3.0) (2026-10-31)
+
+
+### Added
+
+* **sdk:** schedule at a local time in a time zone ([3edcaf1](https://github.com/flung-official/flung-sdk/commit/3edcaf1d66cf00aa53540c796b1beda6b016b303))
+
 ## [0.2.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.1.3...sdk-v0.2.0) (2026-10-30)
 
 
