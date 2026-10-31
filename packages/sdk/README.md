@@ -84,6 +84,8 @@ Without a `redirectUrl` the person ends on Flung's own "you can close this tab" 
 
 LinkedIn company pages connect through their own app: `flung.accounts.connect({ platform: 'linkedin', variant: 'pages' })` connects every page the person administers, one account per page. `flung.platforms.list()` gives each platform's `variants`, `['pages']` for LinkedIn once the pages app is set up.
 
+Most platforms connect by consent: the person signs in at `authorizationUrl` and lands back on a page. Farcaster connects by approval instead: `flung.platforms.list()` gives it `connectFlow: 'approval'`, `authorizationUrl` opens Warpcast (show it as a link or a QR code, as approval usually happens on a phone), and nothing redirects back, so `waitForConnection` is how you learn it finished. A session nobody approves ends `expired`.
+
 Each account says how it stays connected: `renewal` is `automatic` (Flung refreshes it), `manual` (only a reconnect renews it) or `not_needed`, with `tokenExpiresAt` and `reconnectBy`. `flung.accounts.list({ reconnectBefore })` finds the ones a person must reconnect soon, `account.reconnect_required_soon` arrives a week ahead, and `flung.accounts.refresh({ id })` renews a token now.
 
 ## Letting people connect from your page
