@@ -36,6 +36,7 @@
       "release-type": "node",
       "component": "sdk",
       "package-name": "@flung.dev/sdk",
+      "additional-paths": ["spec"],
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": false

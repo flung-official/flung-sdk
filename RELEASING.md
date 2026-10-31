@@ -39,6 +39,8 @@ How a commit on `main` becomes a version of `@flung.dev/connect`, `@flung.dev/sd
 | `examples`, `spec`, `demo` | `examples/`, `spec/`, `tools/demo/` |
 | `release`, `main` | release housekeeping |
 
+`spec/openapi.json` counts as part of `@flung.dev/sdk` too (`additional-paths` in `release-please-config.json`): the SDK's types are generated from it at build time, so a change there releases the SDK.
+
 The header is at most 72 characters with no full stop. A commit that changes both packages releases both, and `fix(connect,sdk): ...` says so.
 
 `.githooks/commit-msg` checks this, and refuses a line that credits an AI tool, before git records the commit. Install it once per clone:
