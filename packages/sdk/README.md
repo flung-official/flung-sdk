@@ -109,6 +109,18 @@ await flung.posts.create({ content: 'Hello', accountIds: accounts.map((account) 
 
 A profile (a brand, in the Flung portal) holds at most one account on each platform; a LinkedIn page counts apart from a personal profile. `flung.billing.get()` gives the limit as `limits.accountsPerPlatformPerProfile`, and how many profiles the plan allows. Connecting a second account of a platform into the same profile throws `FlungError` with the code `platform_limit_reached`, whose `details` name the platform, the profile and `upgradeUrl`. Reconnecting an account it already holds is never refused.
 
+## Plotwork diagrams
+
+When a workspace has connected Plotwork, its diagrams can go straight into a post: `importDiagram` has Plotwork paint the diagram as a PNG and keeps it as a media file with alt text.
+
+```ts
+const { data: diagrams } = await flung.plotwork.listDiagrams({ q: 'architecture' })
+const media = await flung.plotwork.importDiagram({ id: diagrams[0].id, width: 1600, scheme: 'light' })
+await flung.posts.create({ content: 'How it fits together', accountIds, mediaIds: [media.id] })
+```
+
+`flung.plotwork.get()` says whether Plotwork is connected and by whom.
+
 ## Webhooks
 
 ```ts

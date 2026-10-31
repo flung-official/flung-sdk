@@ -358,6 +358,9 @@
                   "publish_at_in_past",
                   "invalid_time_zone",
                   "idempotency_key_reused",
+                  "plotwork_not_connected",
+                  "plotwork_reconnect",
+                  "plotwork_unavailable",
                   "internal_error"
                 ]
               },
@@ -1720,6 +1723,13 @@
               "null"
             ]
           },
+          "altText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The alt text the file was imported with, such as a Plotwork diagram's name. Null for an upload."
+          },
           "bytes": {
             "type": [
               "integer",
@@ -1800,6 +1810,7 @@
           "id",
           "contentType",
           "filename",
+          "altText",
           "bytes",
           "status",
           "preview",
@@ -2802,6 +2813,148 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "PlotworkConnection": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "active",
+              "needs_reconnect",
+              null
+            ],
+            "description": "`needs_reconnect` once Plotwork ended the grant: a person connects it again in the portal. Null when not connected."
+          },
+          "account": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "email": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "organisation": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "slug": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "slug",
+                  "name"
+                ],
+                "description": "The Plotwork organisation whose library it reads, or null for the person's own."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "email",
+              "organisation"
+            ]
+          },
+          "connectedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "connected",
+          "status",
+          "account",
+          "connectedAt"
+        ]
+      },
+      "PlotworkDiagramList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlotworkDiagram"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pass it as `cursor` for the next page; null on the last."
+          }
+        },
+        "required": [
+          "data",
+          "nextCursor"
+        ]
+      },
+      "PlotworkDiagram": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "folder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scheme": {
+            "type": "string",
+            "description": "The color scheme it was drawn in, such as light, dark or auto."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z",
+            "description": "When it was last published in Plotwork."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "folder",
+          "scheme",
+          "updatedAt"
         ]
       }
     },
@@ -11107,6 +11260,360 @@
           },
           "429": {
             "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plotwork": {
+      "get": {
+        "operationId": "plotwork.get",
+        "tags": [
+          "Plotwork"
+        ],
+        "summary": "Get the Plotwork connection",
+        "description": "Whether the workspace has connected a Plotwork account, and which one. Never a token.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The connection.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlotworkConnection"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plotwork/diagrams": {
+      "get": {
+        "operationId": "plotwork.listDiagrams",
+        "tags": [
+          "Plotwork"
+        ],
+        "summary": "List Plotwork diagrams",
+        "description": "The diagrams the connected Plotwork account can see, newest first, private ones included. `q` keeps to names and folders that hold the words, ignoring case.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 24
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "The nextCursor of the page before."
+            },
+            "required": false,
+            "description": "The nextCursor of the page before.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Only this Plotwork folder and the folders inside it, such as Payments/Checkout."
+            },
+            "required": false,
+            "description": "Only this Plotwork folder and the folders inside it, such as Payments/Checkout.",
+            "name": "folder",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "Words the name or folder holds, ignoring case. Plotwork searches its whole library.",
+              "example": "checkout"
+            },
+            "required": false,
+            "description": "Words the name or folder holds, ignoring case. Plotwork searches its whole library.",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of diagrams.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlotworkDiagramList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Plotwork is not connected (`plotwork_not_connected`), or must be connected again (`plotwork_reconnect`), in the portal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Plotwork could not be reached or refused for a moment (`plotwork_unavailable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Plotwork is not set up on this server (`not_configured`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plotwork/diagrams/{id}/import": {
+      "post": {
+        "operationId": "plotwork.importDiagram",
+        "tags": [
+          "Plotwork"
+        ],
+        "summary": "Import a Plotwork diagram",
+        "description": "Has Plotwork paint the diagram as a PNG, keeps it as a media file with alt text, and answers the file, `ready`: put its id in a post's `mediaIds`.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "A diagram id from the list.",
+              "example": "0b7e3c1a-5d2f-4c88-9a41-6f0e2d9b7c35"
+            },
+            "required": true,
+            "description": "A diagram id from the list.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again."
+            },
+            "required": false,
+            "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scheme": {
+                    "type": "string",
+                    "enum": [
+                      "light",
+                      "dark"
+                    ],
+                    "default": "light",
+                    "description": "Painted light or dark. A picture drawn for one scheme keeps it."
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 800,
+                    "maximum": 2400,
+                    "default": 1600,
+                    "description": "The width in pixels; 1600 suits every network."
+                  },
+                  "altText": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "Defaults to the diagram's name."
+                  }
+                },
+                "example": {
+                  "scheme": "light",
+                  "width": 1600
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The media file, `ready`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such diagram in the connected account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Plotwork is not connected (`plotwork_not_connected`), or must be connected again (`plotwork_reconnect`), in the portal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Plotwork could not be reached or refused for a moment (`plotwork_unavailable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Plotwork is not set up on this server (`not_configured`).",
             "content": {
               "application/json": {
                 "schema": {
