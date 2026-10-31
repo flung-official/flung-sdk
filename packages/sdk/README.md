@@ -107,6 +107,8 @@ await flung.posts.create({ content: 'Hello', accountIds: accounts.map((account) 
 
 `flung.profiles.list({ externalId })` finds a profile again. `flung.profiles.delete({ id })` disconnects its accounts and cancels its scheduled posts.
 
+A profile (a brand, in the Flung portal) holds at most one account on each platform; a LinkedIn page counts apart from a personal profile. `flung.billing.get()` gives the limit as `limits.accountsPerPlatformPerProfile`, and how many profiles the plan allows. Connecting a second account of a platform into the same profile throws `FlungError` with the code `platform_limit_reached`, whose `details` name the platform, the profile and `upgradeUrl`. Reconnecting an account it already holds is never refused.
+
 ## Webhooks
 
 ```ts
