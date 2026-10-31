@@ -24,6 +24,25 @@ Keep the key on a server. The SDK talks to `https://api.flung.dev`; pass `baseUr
 - **Idempotency.** Every POST carries an `Idempotency-Key`, generated unless you pass `'idempotency-key'`, so a retry never schedules a post twice. Pass your own key, such as an order id, to make your own retries safe too.
 - **Pagination.** `for await (const post of flung.paginate((page) => flung.posts.list(page), { limit: 100 }))` walks every page.
 
+## Time zones
+
+Flung stores every time in UTC. Give `publishAt` either as an instant with `Z` or an offset, or as the local time a person said, without an offset, and Flung converts it on the server:
+
+```ts
+// 9am in Athens on 3 November, whatever zone this code runs in.
+const post = await flung.posts.create({
+  content: 'Kalimera.',
+  accountIds,
+  publishAt: '2026-11-03T09:00',
+  timeZone: 'Europe/Athens',
+})
+post.publishAt // '2026-11-03T07:00:00.000Z', in UTC
+post.publishAtLocal // '2026-11-03T09:00:00+02:00'
+post.timeZone // 'Europe/Athens'
+```
+
+Without `timeZone`, a local time is read in the zone of the person behind an OAuth token, else the workspace's default zone (as for an API key), else UTC. `flung.me.get()` says which: `timeZone`, `timeZoneSource` (`user`, `workspace` or `default`) and the time there now as `nowLocal`. A local time the clocks skip in spring moves forward by the gap, and one they pass twice in autumn takes the earlier instant; either adds an entry to `post.warnings` (`local_time_skipped`, `local_time_ambiguous`). A zone that is not an IANA name is refused with the code `invalid_time_zone`. Times with `Z` or an offset work exactly as before.
+
 ## Images and video
 
 ```ts

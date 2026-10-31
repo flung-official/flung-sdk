@@ -162,7 +162,18 @@
           "publishAt": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-11-01T09:00:00.000Z"
+            "example": "2026-11-01T09:00:00.000Z",
+            "description": "When it publishes, in UTC."
+          },
+          "publishAtLocal": {
+            "type": "string",
+            "description": "The same instant as the local time in `timeZone`, with its offset.",
+            "example": "2026-11-03T09:00:00+02:00"
+          },
+          "timeZone": {
+            "type": "string",
+            "description": "The IANA zone of `publishAtLocal`: the one the time was given in, or the caller's for a post from before zones were kept.",
+            "example": "Europe/Athens"
           },
           "createdAt": {
             "type": "string",
@@ -179,6 +190,13 @@
             "items": {
               "$ref": "#/components/schemas/PostTarget"
             }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeWarning"
+            },
+            "description": "Only when creating or changing a post: how a local `publishAt` that the clocks skip or repeat was read."
           }
         },
         "required": [
@@ -189,6 +207,8 @@
           "mediaIds",
           "platformOverrides",
           "publishAt",
+          "publishAtLocal",
+          "timeZone",
           "createdAt",
           "updatedAt",
           "targets"
@@ -283,6 +303,26 @@
           "farcaster"
         ]
       },
+      "TimeWarning": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "local_time_skipped",
+              "local_time_ambiguous"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "description": "A local time that did not name exactly one instant, and how it was read."
+      },
       "Error": {
         "type": "object",
         "properties": {
@@ -313,7 +353,9 @@
                   "unknown_media",
                   "media_not_ready",
                   "text_too_long",
+                  "profane_text",
                   "publish_at_in_past",
+                  "invalid_time_zone",
                   "idempotency_key_reused",
                   "internal_error"
                 ]
@@ -489,7 +531,18 @@
           "publishAt": {
             "type": "string",
             "format": "date-time",
-            "example": "2026-11-01T09:00:00.000Z"
+            "example": "2026-11-01T09:00:00.000Z",
+            "description": "When it publishes, in UTC."
+          },
+          "publishAtLocal": {
+            "type": "string",
+            "description": "The same instant as the local time in `timeZone`, with its offset.",
+            "example": "2026-11-03T09:00:00+02:00"
+          },
+          "timeZone": {
+            "type": "string",
+            "description": "The IANA zone of `publishAtLocal`: the one the time was given in, or the caller's for a post from before zones were kept.",
+            "example": "Europe/Athens"
           },
           "createdAt": {
             "type": "string",
@@ -510,6 +563,8 @@
           "mediaIds",
           "platformOverrides",
           "publishAt",
+          "publishAtLocal",
+          "timeZone",
           "createdAt",
           "updatedAt"
         ]
@@ -1488,6 +1543,31 @@
               "business"
             ],
             "description": "The plan: free, pro ($19 a month) or business ($59 a month)."
+          },
+          "timeZone": {
+            "type": "string",
+            "description": "The IANA zone a local `publishAt` without `timeZone` is read in: the person's for an OAuth token, else the workspace's default, else UTC.",
+            "example": "Europe/Athens"
+          },
+          "timeZoneSource": {
+            "type": "string",
+            "enum": [
+              "user",
+              "workspace",
+              "default"
+            ],
+            "description": "Where `timeZone` came from: the person's profile, the workspace's default, or neither (UTC)."
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z",
+            "description": "The time now, in UTC."
+          },
+          "nowLocal": {
+            "type": "string",
+            "description": "The time now in `timeZone`, with its offset.",
+            "example": "2026-11-03T09:00:00+02:00"
           }
         },
         "required": [
@@ -1495,7 +1575,11 @@
           "via",
           "userId",
           "email",
-          "plan"
+          "plan",
+          "timeZone",
+          "timeZoneSource",
+          "now",
+          "nowLocal"
         ]
       },
       "MemberList": {
@@ -2722,7 +2806,7 @@
           "Posts"
         ],
         "summary": "Schedule a post",
-        "description": "Schedules one post to one or more connected accounts. Send an `Idempotency-Key` header so a retry never posts twice.",
+        "description": "Schedules one post to one or more connected accounts. Send an `Idempotency-Key` header so a retry never posts twice. `publishAt` may be the local time a person said, such as `2026-11-03T09:00`, with `timeZone`: Flung converts it to UTC, and answers with `publishAt` in UTC, `publishAtLocal` and the `timeZone` it used.",
         "security": [
           {
             "apiKey": []
@@ -2778,7 +2862,15 @@
                   "publishAt": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "When to publish. Omit to publish now."
+                    "description": "When to publish. Either an instant with Z or an offset (`2026-11-03T07:00:00Z`, `2026-11-03T09:00:00+02:00`), or the local time a person said, without an offset (`2026-11-03T09:00`), which Flung reads in `timeZone`. A local time the clocks skip moves forward by the gap, and one they pass twice takes the earlier instant; either adds a `warnings` entry. Omit to publish now.",
+                    "example": "2026-11-03T09:00"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "description": "An IANA time zone, such as `Europe/Athens`. Without one, a local `publishAt` is read in the zone of the person behind an OAuth token, else the workspace's default (GET /v1/me says which), else UTC. A zone that is not IANA is refused with `invalid_time_zone`.",
+                    "example": "Europe/Athens"
                   },
                   "profileId": {
                     "type": "string",
@@ -3651,7 +3743,15 @@
                   "publishAt": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "When to publish. Omit to publish now."
+                    "description": "When to publish. Either an instant with Z or an offset (`2026-11-03T07:00:00Z`, `2026-11-03T09:00:00+02:00`), or the local time a person said, without an offset (`2026-11-03T09:00`), which Flung reads in `timeZone`. A local time the clocks skip moves forward by the gap, and one they pass twice takes the earlier instant; either adds a `warnings` entry. Omit to publish now.",
+                    "example": "2026-11-03T09:00"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "description": "An IANA time zone, such as `Europe/Athens`. Without one, a local `publishAt` is read in the zone of the person behind an OAuth token, else the workspace's default (GET /v1/me says which), else UTC. A zone that is not IANA is refused with `invalid_time_zone`.",
+                    "example": "Europe/Athens"
                   },
                   "platformOverrides": {
                     "type": "object",
@@ -5108,7 +5208,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200,
-                    "description": "A name for people to read, such as your customer's name.",
+                    "description": "A name for people to read, such as your customer's name. Letters and digits of every script, spaces, and - _ . ' & ( ) +. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane.",
                     "example": "Acme Studio"
                   },
                   "externalId": {
@@ -5377,7 +5477,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200,
-                    "description": "A name for people to read, such as your customer's name.",
+                    "description": "A name for people to read, such as your customer's name. Letters and digits of every script, spaces, and - _ . ' & ( ) +. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane.",
                     "example": "Acme Studio"
                   },
                   "externalId": {
@@ -6591,6 +6691,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 100,
+                    "description": "Letters and digits of every script, spaces, and - _ . ' & ( ) + : / #. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane.",
                     "example": "Production server"
                   },
                   "expiresAt": {
@@ -6811,7 +6912,7 @@
           "Members"
         ],
         "summary": "Who is calling",
-        "description": "The workspace this credential acts on, and the person behind it for an OAuth token. A cheap way for an app to check a token still works.",
+        "description": "The workspace this credential acts on, and the person behind it for an OAuth token, with the time zone a local `publishAt` is read in and the time there now. A cheap way for an app to check a token still works.",
         "security": [
           {
             "apiKey": []
@@ -8342,7 +8443,8 @@
                   "name": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "description": "Letters and digits of every script, spaces, and - _ . ' & ( ) +. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane."
                   },
                   "accountIds": {
                     "type": "array",
@@ -8566,7 +8668,8 @@
                   "name": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "description": "Letters and digits of every script, spaces, and - _ . ' & ( ) +. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane."
                   },
                   "content": {
                     "type": "string",
@@ -9300,7 +9403,16 @@
                   },
                   "publishAt": {
                     "type": "string",
-                    "format": "date-time"
+                    "format": "date-time",
+                    "description": "When to publish. Either an instant with Z or an offset (`2026-11-03T07:00:00Z`, `2026-11-03T09:00:00+02:00`), or the local time a person said, without an offset (`2026-11-03T09:00`), which Flung reads in `timeZone`. A local time the clocks skip moves forward by the gap, and one they pass twice takes the earlier instant; either adds a `warnings` entry. Omit to publish now.",
+                    "example": "2026-11-03T09:00"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "description": "An IANA time zone, such as `Europe/Athens`. Without one, a local `publishAt` is read in the zone of the person behind an OAuth token, else the workspace's default (GET /v1/me says which), else UTC. A zone that is not IANA is refused with `invalid_time_zone`.",
+                    "example": "Europe/Athens"
                   },
                   "variables": {
                     "type": "object",
@@ -9980,12 +10092,11 @@
             "schema": {
               "type": "string",
               "maxLength": 64,
-              "default": "UTC",
-              "description": "The audience's IANA time zone.",
+              "description": "The audience's IANA time zone. Defaults to the caller's: the person's for an OAuth token, else the workspace's, else UTC.",
               "example": "Australia/Brisbane"
             },
             "required": false,
-            "description": "The audience's IANA time zone.",
+            "description": "The audience's IANA time zone. Defaults to the caller's: the person's for an OAuth token, else the workspace's, else UTC.",
             "name": "timeZone",
             "in": "query"
           },
@@ -10876,7 +10987,8 @@
                   "name": {
                     "type": "string",
                     "minLength": 2,
-                    "maxLength": 40
+                    "maxLength": 40,
+                    "description": "Letters and digits of every script, spaces, and - _ . ' & ( ) +. No emoji, other symbols or invisible characters. Runs of spaces become one and the ends are trimmed. It must hold a letter or a digit, and may not be profane."
                   }
                 },
                 "required": [

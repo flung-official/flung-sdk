@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest'
 
 import { backoffMs, retryingFetch } from '../client'
 import { Flung, FlungError } from '../index'
-import type { AccountsConnectData, PlatformInfo } from '../index'
+import type { AccountsConnectData, FlungErrorCode, Me, PlatformInfo, Post, PostsCreateData } from '../index'
 
 /** Answers like the API's, from a list, recording every request the client sends. */
 function scripted(...answers: (() => Response)[]) {
@@ -35,6 +35,19 @@ describe('Flung', () => {
     const error = await flung.posts.create({ content: 'Hello', accountIds: ['acct_x'] }).catch((caught: unknown) => caught)
     expect(error).toBeInstanceOf(FlungError)
     expect(error).toMatchObject({ status: 422, code: 'unknown_accounts', details: { accountIds: ['acct_x'] } })
+  })
+
+  it('schedules at a local time in a zone, and reads the time back in UTC and local', async () => {
+    expectTypeOf<NonNullable<PostsCreateData['body']>['timeZone']>().toEqualTypeOf<string | undefined>()
+    expectTypeOf<Post['publishAtLocal']>().toEqualTypeOf<string>()
+    expectTypeOf<NonNullable<Post['warnings']>[number]['code']>().toEqualTypeOf<'local_time_skipped' | 'local_time_ambiguous'>()
+    expectTypeOf<Me['timeZoneSource']>().toEqualTypeOf<'user' | 'workspace' | 'default'>()
+    expectTypeOf<'invalid_time_zone'>().toExtend<FlungErrorCode>()
+    const api = scripted(() => Response.json({ id: 'post_1', status: 'scheduled', publishAt: '2026-11-03T07:00:00.000Z', publishAtLocal: '2026-11-03T09:00:00+02:00', timeZone: 'Europe/Athens', targets: [] }, { status: 201 }))
+    const flung = new Flung({ apiKey: 'flung_sk_test', fetch: api.fetch, maxRetries: 0 })
+    const post = await flung.posts.create({ content: 'Kalimera.', accountIds: ['acct_1'], publishAt: '2026-11-03T09:00', timeZone: 'Europe/Athens' })
+    expect(await api.requests[0]?.json()).toMatchObject({ publishAt: '2026-11-03T09:00', timeZone: 'Europe/Athens' })
+    expect(post).toMatchObject({ publishAt: '2026-11-03T07:00:00.000Z', publishAtLocal: '2026-11-03T09:00:00+02:00', timeZone: 'Europe/Athens' })
   })
 
   it('makes a connect token for a page', async () => {
