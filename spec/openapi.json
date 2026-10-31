@@ -348,6 +348,7 @@
                   "unknown_variable",
                   "rate_limited",
                   "plan_limit_reached",
+                  "platform_limit_reached",
                   "unsupported_media",
                   "media_too_large",
                   "unknown_media",
@@ -1008,6 +1009,13 @@
           },
           "webhookEndpoints": {
             "type": "integer"
+          },
+          "accountsPerPlatformPerProfile": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Live accounts of one platform in one profile, the accounts outside every profile counting as one profile; a LinkedIn page counts apart from a LinkedIn profile. Across the workspace a platform also has at most this times `profiles`. A second is refused with `platform_limit_reached`. null is no limit."
           }
         },
         "required": [
@@ -1016,7 +1024,8 @@
           "profiles",
           "requestsPerMinute",
           "mediaBytes",
-          "webhookEndpoints"
+          "webhookEndpoints",
+          "accountsPerPlatformPerProfile"
         ]
       },
       "CreatedWebhookEndpoint": {
@@ -4837,7 +4846,7 @@
           "Accounts"
         ],
         "summary": "Change an account's settings",
-        "description": "Sets the default Pinterest board, whether comments and mentions are read into the inbox, or the profile the account belongs to.",
+        "description": "Sets the default Pinterest board, whether comments and mentions are read into the inbox, or the profile the account belongs to. A live account moves only into a profile with no live account of its platform (a LinkedIn page apart from a LinkedIn profile); otherwise `403 platform_limit_reached`.",
         "security": [
           {
             "apiKey": []
@@ -4898,6 +4907,16 @@
           },
           "401": {
             "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`platform_limit_reached`: the profile already has a live account of this platform.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6381,7 +6400,7 @@
           "Accounts"
         ],
         "summary": "Start connecting an account",
-        "description": "Starts a connect session. Send the person to its `authorizationUrl`, the platform's consent page. When they finish, Flung stores the account and sends them to `redirectUrl`, or shows its own page when there is none; poll `GET /v1/connect-sessions/{id}` or listen for `account.connected`. Facebook connects one account per page the person can post to; LinkedIn with `variant` set to `pages` connects one account per company page the person administers.",
+        "description": "Starts a connect session. Send the person to its `authorizationUrl`, the platform's consent page. When they finish, Flung stores the account and sends them to `redirectUrl`, or shows its own page when there is none; poll `GET /v1/connect-sessions/{id}` or listen for `account.connected`. Facebook connects one account per page the person can post to; LinkedIn with `variant` set to `pages` connects one account per company page the person administers. A profile holds one account of each platform (a LinkedIn page apart from a LinkedIn profile): a second is refused with `403 platform_limit_reached`, here when the profile is already full and at the callback otherwise, and a sign-in that returns several pages keeps the first that fits.",
         "security": [
           {
             "apiKey": []
@@ -6449,6 +6468,16 @@
           },
           "401": {
             "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "`plan_limit_reached`: the workspace has all the accounts its plan allows. `platform_limit_reached`: the profile already has a live account of this platform; `details` names the `platform`, `channel`, `profileId`, `profileName`, `plan`, `max`, `used` and `upgradeUrl`. `forbidden`: a connect token that cannot connect it.",
             "content": {
               "application/json": {
                 "schema": {
