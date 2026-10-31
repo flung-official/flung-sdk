@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/connect` on npm. From 0.3.0 on, release-please writes each section from the Conventional Commits that change `packages/connect` (see RELEASING.md at the root of the repository). 0.1.3 and 0.2.0 were set in `package.json` but never published; their changes are in 0.3.0.
 
+## [0.4.0](https://github.com/flung-official/flung-sdk/compare/connect-v0.3.0...connect-v0.4.0) (2026-10-31)
+
+
+### Added
+
+* **connect:** connect Farcaster by approval in Warpcast, with a QR code ([c0c1f74](https://github.com/flung-official/flung-sdk/commit/c0c1f740acc872873d87247f1c428e4763c9012e))
+
 ## [0.3.0](https://github.com/flung-official/flung-sdk/compare/connect-v0.1.2...connect-v0.3.0) (2026-10-30)
 
 
