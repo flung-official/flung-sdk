@@ -1,10 +1,13 @@
 import type { Account, ConnectSession, Platform } from '../core/types.js'
 
+/** The approval link the API gives for Farcaster: it opens Warpcast. */
+export const WARPCAST_LINK = 'https://client.warpcast.com/deeplinks/signed-key-request?token=0x8f2c41d07a3b9e55'
+
 /**
  * The seven calls a connect token reaches, answered from memory the way the Flung API answers them, recording each
  * request. `finish()` ends the pending session as the platform's callback would.
  */
-export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<Record<Platform, string[]>>; omitVariants?: boolean } = {}) {
+export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<Record<Platform, string[]>>; omitVariants?: boolean; farcaster?: boolean } = {}) {
   const connectable = options.connectable ?? ['x', 'linkedin', 'mastodon']
   const variants = options.variants ?? {}
   const accounts: Account[] = []
@@ -27,7 +30,11 @@ export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<
     if (request.method === 'GET' && resource === 'platforms') {
       // As the API answers since LinkedIn pages: every platform has `variants`, empty unless set up. `omitVariants` is an older API.
       return Response.json({
-        data: ['x', 'linkedin', 'mastodon', 'tiktok'].map((platform) => ({ platform, connectable: connectable.includes(platform as Platform), ...(options.omitVariants === true ? {} : { variants: variants[platform as Platform] ?? [] }) })),
+        data: [
+          ...['x', 'linkedin', 'mastodon', 'tiktok'].map((platform) => ({ platform, connectable: connectable.includes(platform as Platform), ...(options.omitVariants === true ? {} : { variants: variants[platform as Platform] ?? [] }) })),
+          // Farcaster, set up, is approved in Warpcast: `connectFlow: approval`.
+          ...(options.farcaster === true ? [{ platform: 'farcaster', connectable: true, variants: [], connectFlow: 'approval' }] : []),
+        ],
       })
     }
     if (request.method === 'GET' && resource === 'accounts') return Response.json({ data: [...accounts].reverse() })
@@ -38,12 +45,13 @@ export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<
       return Response.json(found)
     }
     if (request.method === 'POST' && (resource === 'connect' || action === 'reconnect')) {
+      const platform = (resource === 'connect' ? id : accounts.find((candidate) => candidate.id === id)?.platform) as Platform
       const session: ConnectSession = {
         id: `cs_${next++}`,
-        platform: (resource === 'connect' ? id : accounts.find((candidate) => candidate.id === id)?.platform) as Platform,
+        platform,
         accountId: resource === 'connect' ? null : (id ?? null),
         status: 'pending',
-        authorizationUrl: 'https://platform.example/consent',
+        authorizationUrl: platform === 'farcaster' ? WARPCAST_LINK : 'https://platform.example/consent',
         expiresAt: '2030-01-01T00:00:00.000Z',
         accountIds: [],
         error: null,
@@ -62,11 +70,13 @@ export function fakeApi(options: { connectable?: Platform[]; variants?: Partial<
    * Ends every pending session: connected with a new account (and `more`, as LinkedIn pages connect one per page, each
    * with its own `platformUserId`), or failed with the platform's reason.
    */
-  function finish(outcome: { username: string; platformUserId?: string; more?: { username: string; platformUserId: string }[] } | { error: string }) {
+  function finish(outcome: { username: string; platformUserId?: string; more?: { username: string; platformUserId: string }[] } | { error: string } | { expired: true }) {
     for (const session of sessions.values()) {
       if (session.status !== 'pending') continue
       session.authorizationUrl = null
-      if ('error' in outcome) {
+      if ('expired' in outcome) {
+        session.status = 'expired'
+      } else if ('error' in outcome) {
         session.status = 'failed'
         session.error = { code: 'access_denied', message: outcome.error }
       } else {

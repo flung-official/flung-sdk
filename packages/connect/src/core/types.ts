@@ -20,7 +20,16 @@ export interface PlatformInfo {
   connectable: boolean
   /** The connect variants set up here, such as LinkedIn's `pages`. Optional: an API older than the field leaves it out. */
   variants?: string[] | undefined
+  /**
+   * How a connect ends: `consent`, a sign-in page that comes back; `approval` (Farcaster), a link that opens the
+   * platform's phone app to approve, after which the session finishes when read. Optional: an API older than the field
+   * leaves it out, which reads as `consent`.
+   */
+  connectFlow?: ConnectFlow | undefined
 }
+
+/** How a platform's connect ends: a sign-in page that sends the person back, or an approval in the platform's phone app. */
+export type ConnectFlow = 'consent' | 'approval'
 
 export type AccountStatus = 'active' | 'needs_reconnect' | 'disconnected'
 

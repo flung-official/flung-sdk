@@ -11,7 +11,7 @@ The connect panel, built from `packages/connect`, on a page with made-up account
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--states` | off | Every state worth looking at, each of the whole page: the list, the Mastodon handle form, a disconnect being confirmed, a connect waiting on its window, nothing connected, three platforms, a refused token, and LinkedIn with company pages: the list, the profile-or-page chooser open, and `variants="tiles"`. |
+| `--states` | off | Every state worth looking at, each of the whole page: the list, the Mastodon handle form, a disconnect being confirmed, a connect waiting on its window, nothing connected, three platforms, a refused token, LinkedIn with company pages: the list, the profile-or-page chooser open, and `variants="tiles"`, and Farcaster waiting on its approval in Warpcast. |
 | `--set <name>` | `demo` | The fixture set, without `--states`. |
 | `--themes light,dark` | both | The page's colour scheme, which the panel follows. |
 | `--viewports desktop,phone` | both | Desktop is 1280 by 860 at 1x; phone 390 by 844 at 2x. |
@@ -32,6 +32,7 @@ The connect panel, built from `packages/connect`, on a page with made-up account
 | `few` | X, LinkedIn and Bluesky only; X connected, LinkedIn due for a reconnect. |
 | `connects` | X, LinkedIn, Bluesky and Mastodon; X and LinkedIn connected. A connect finishes on the second read of its session, about two seconds after its window opens, and the account is added (Mastodon as `@acme@<server>`). |
 | `pages` | X, LinkedIn and Bluesky, with LinkedIn company pages set up (`variants: ['pages']`); a LinkedIn profile and a page connected. A pages connect finishes after two reads and adds two pages. |
+| `farcaster` | X, LinkedIn and Farcaster, Farcaster approved in Warpcast (`connectFlow: 'approval'`): a connect shows Open Warpcast and the QR code of a made-up link, and stays waiting. |
 | `refused` | Every call refused with `forbidden`. |
 
 The sets are in `fixtures.ts`, typed with the panel's own `Account`, so a set cannot drift from what the panel reads. The clock is fixed at 29 October 2026 so dates read the same in every shot.

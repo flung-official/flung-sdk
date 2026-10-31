@@ -35,6 +35,7 @@ const STATES: readonly Shot[] = [
   { name: 'pages', set: 'pages', clicks: [] },
   { name: 'choose', set: 'pages', clicks: ['[data-key="connect-linkedin"]'] },
   { name: 'tiles', set: 'pages', clicks: [], query: '?variants=tiles' },
+  { name: 'approve', set: 'farcaster', clicks: ['[data-key="connect-farcaster"]'] },
 ]
 
 const { values } = parseArgs({

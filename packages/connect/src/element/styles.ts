@@ -90,6 +90,7 @@ export const STYLES = `
   --flung-focus-width: 2px;
   --flung-focus-offset: 2px;
   --flung-grid-min: 16rem;
+  --flung-qr-size: 132px;
   display: block;
   font: var(--flung-font-size)/var(--flung-line-height) var(--flung-font);
   color: var(--flung-text);
@@ -173,6 +174,21 @@ button.option:hover:not(:disabled) { background: var(--flung-surface); border-co
 .option-text { min-width: 0; display: flex; flex-direction: column; }
 .option-name { font-weight: var(--flung-font-weight-strong); line-height: 1.3; }
 .option-description { font-size: var(--flung-font-size-small); font-weight: normal; color: var(--flung-muted); line-height: 1.3; }
+.approve { margin: 10px 0 0 calc(var(--flung-badge-size) + var(--flung-gap)); padding: var(--flung-gap); border-radius: var(--flung-radius-inner); background: var(--flung-raised); display: flex; flex-direction: column; gap: 10px; }
+.approve-text { margin: 0; font-size: calc(var(--flung-font-size) - 1px); }
+.approve.ended .approve-text { color: var(--flung-danger); }
+.approve-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.approve-go { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.approve-open {
+  display: inline-flex; align-items: center; height: var(--flung-button-height); padding: var(--flung-button-padding); border-radius: var(--flung-button-radius);
+  font-size: calc(var(--flung-font-size) - 1px); font-weight: var(--flung-font-weight-medium); text-decoration: none; white-space: nowrap;
+  background: var(--flung-accent); color: var(--flung-accent-text); border: var(--flung-border-width) solid var(--flung-accent);
+}
+.approve-open:hover { background: color-mix(in srgb, var(--flung-accent) 88%, var(--flung-surface)); }
+.approve-scan { display: flex; align-items: center; gap: var(--flung-gap); }
+.qr { flex: none; width: var(--flung-qr-size); height: var(--flung-qr-size); display: block; border-radius: var(--flung-radius-inner); border: var(--flung-border-width) solid var(--flung-border); }
+.approve-hint { margin: 0; font-size: var(--flung-font-size-small); color: var(--flung-muted); max-width: 16rem; }
+.approve .note { margin: 0; }
 .form label { flex-basis: 100%; font-size: var(--flung-font-size-small); color: var(--flung-muted); }
 .form input { flex: 1 1 12rem; min-width: 0; height: var(--flung-button-height); font: inherit; font-size: calc(var(--flung-font-size) - 1px); color: inherit; background: var(--flung-surface); border: var(--flung-border-width) solid var(--flung-border); border-radius: var(--flung-button-radius); padding: 0 10px; }
 button {
@@ -202,7 +218,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: var(--flun
 .footer .flung { width: 14px; height: 14px; fill: currentColor; display: block; }
 .panel[data-layout="grid"] .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--flung-grid-min)), 1fr)); gap: var(--flung-gap); padding: var(--flung-padding); }
 .panel[data-layout="grid"] .platform, .panel[data-layout="grid"] .platform:first-child { border: var(--flung-border-width) solid var(--flung-border); border-radius: var(--flung-radius-inner); box-shadow: var(--flung-card-shadow); padding: var(--flung-gap); }
-.panel[data-layout="grid"] .accounts, .panel[data-layout="grid"] .note, .panel[data-layout="grid"] .confirm, .panel[data-layout="grid"] .form, .panel[data-layout="grid"] .choose { margin-left: 0; }
+.panel[data-layout="grid"] .accounts, .panel[data-layout="grid"] .note, .panel[data-layout="grid"] .confirm, .panel[data-layout="grid"] .form, .panel[data-layout="grid"] .choose, .panel[data-layout="grid"] .approve { margin-left: 0; }
 .panel[data-layout="grid"] .accounts { border-left: 0; border-top: var(--flung-border-width) solid var(--flung-border); margin-top: var(--flung-gap); padding-top: 4px; }
 .panel[data-layout="grid"] .account { padding-left: 0; }
 .panel[data-layout="compact"] .count { display: none; }
@@ -210,7 +226,8 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: var(--flun
 .panel[data-layout="compact"] .account { padding-top: 3px; padding-bottom: 3px; }
 @media (max-width: 420px) {
   .platform { padding: var(--flung-gap); }
-  .accounts, .note, .confirm, .form, .choose { margin-left: 0; }
+  .accounts, .note, .confirm, .form, .choose, .approve { margin-left: 0; }
+  .approve-scan { display: none; }
   .accounts { border-left: 0; border-top: var(--flung-border-width) solid var(--flung-border); margin-top: 10px; }
   .account { padding-left: 0; }
   .row button { padding: 0 12px; }

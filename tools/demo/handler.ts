@@ -75,7 +75,7 @@ export function createDemoHandler(set: FixtureSet) {
     if (set.refuse !== undefined) return json(set.refuse.status, { error: { code: set.refuse.code, message: set.refuse.message } })
     const [, , resource, id, action] = path.split('/')
     if (method === 'GET' && resource === 'platforms') {
-      return json(200, { data: ['x', 'instagram', 'facebook', 'threads', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'bluesky', 'mastodon', 'discord', 'farcaster'].map((platform) => ({ platform, connectable: (set.connectable as string[]).includes(platform), variants: set.variants?.[platform as Platform] ?? [] })) })
+      return json(200, { data: ['x', 'instagram', 'facebook', 'threads', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'bluesky', 'mastodon', 'discord', 'farcaster'].map((platform) => ({ platform, connectable: (set.connectable as string[]).includes(platform), variants: set.variants?.[platform as Platform] ?? [], connectFlow: set.approval?.includes(platform as Platform) === true ? 'approval' : 'consent' })) })
     }
     if (method === 'GET' && resource === 'accounts') return json(200, { data: accounts })
     if (method === 'DELETE' && resource === 'accounts') {
@@ -86,7 +86,7 @@ export function createDemoHandler(set: FixtureSet) {
     }
     if (method === 'POST' && (resource === 'connect' || action === 'reconnect')) {
       const platform = resource === 'connect' ? id : accounts.find((account) => account.id === id)?.platform
-      const session = { id: `cs_demo${next++}`, platform, accountId: resource === 'connect' ? null : (id ?? null), status: 'pending', authorizationUrl: 'about:blank', expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [], error: null } as ConnectSession
+      const session = { id: `cs_demo${next++}`, platform, accountId: resource === 'connect' ? null : (id ?? null), status: 'pending', authorizationUrl: set.approval?.includes(platform as Platform) === true ? 'https://client.warpcast.com/deeplinks/signed-key-request?token=0xdemo8f2c41d07a3b9e5566c1f0a2b4d6e8f0' : 'about:blank', expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [], error: null } as ConnectSession
       sessions.set(session.id, session)
       const handle = readBody(body, 'handle')
       if (handle !== undefined) handles.set(session.id, handle)

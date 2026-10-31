@@ -158,6 +158,7 @@ Set any of these on the element. Each has a default for light and dark.
 | `--flung-focus-width` | `2px` | Its width. |
 | `--flung-focus-offset` | `2px` | Its gap from the control. |
 | `--flung-grid-min` | `16rem` | The narrowest card in the `grid` layout. |
+| `--flung-qr-size` | `132px` | The QR code of an approval link (Farcaster). |
 | `--flung-tooltip-background` | `--flung-text` | The tooltip that shows an account name cut short. |
 | `--flung-tooltip-text` | `--flung-surface` | Its words. |
 | `--flung-tooltip-radius` | `--flung-radius-inner` | Its corners. |
@@ -196,6 +197,7 @@ Every piece the panel draws has a `part` name for `::part()`. Pieces with a kind
 | `tag`, `tag-page` | The **Page** tag beside a company page. |
 | `form`, `label`, `input` | The Mastodon server or Bluesky handle question. |
 | `note`, `spinner`, `note-text`, `link` | The wait, and the sign-in link when the browser blocked the window. |
+| `approve`, `approve-ended`, `approve-text`, `approve-go`, `link-approval`, `approve-scan`, `qr`, `approve-hint`, `approve-actions`, `button-retry` | An approval in the platform's phone app (Farcaster): the line, Open Warpcast, the QR code, and Try again once it ended. |
 | `confirm`, `confirm-text` | The question before a disconnect. |
 | `message`, `message-error` | The status line under the list. It has `hidden` when empty. |
 | `footer`, `footer-link`, `footer-mark` | "Secured by Flung". |
@@ -298,12 +300,13 @@ panel.subscribe(() => draw(panel.getState()))
 | `configure({ platforms, mode, labels })` | Changes those options while shown. |
 | `destroy()` | Stops every wait and listener. |
 
-`ConnectState` has `hasToken`, `loading`, `loaded`, `platforms` (each with `name`, `accounts`, `step`, `busy`, `handlePrompt`, `connectable` and `variants`), `accounts`, `notice` (the last thing that happened, as data), `message` (that notice, or the loading, empty or no-token line, in the labels' words) and `labels`. Each account item has `displayName`, `username` (the handle when it differs), `avatarUrl` (only ever `https`), `initial`, `page` (a LinkedIn company page) and `reconnect`. A step is `idle`, `handle` (with `required`), `choose` (with `variants`), `waiting` (with `blockedUrl` and `variant`) or `confirm` (with `account`).
+`ConnectState` has `hasToken`, `loading`, `loaded`, `platforms` (each with `name`, `accounts`, `step`, `busy`, `handlePrompt`, `connectable`, `variants` and `connectFlow`), `accounts`, `notice` (the last thing that happened, as data), `message` (that notice, or the loading, empty or no-token line, in the labels' words) and `labels`. Each account item has `displayName`, `username` (the handle when it differs), `avatarUrl` (only ever `https`), `initial`, `page` (a LinkedIn company page) and `reconnect`. A step is `idle`, `handle` (with `required`), `choose` (with `variants`), `waiting` (with `blockedUrl` and `variant`), `approve` (with `approvalUrl`, `accountId` and `ended`) or `confirm` (with `account`). `encodeQr(text)` gives the modules of a QR code for an `approve` step's link.
 
 ## Behaviour worth knowing
 
 - **Popups.** Browsers open a window only straight from a click, so the panel opens it first and fills it in once Flung answers. When a browser blocks it anyway, the panel shows a link to the consent page instead.
 - **Waiting.** The panel waits on the connect session, not the window: some platforms' sign-in pages cut the link back to the page that opened them. Sessions last ten minutes. **Cancel** stops waiting.
+- **Farcaster** is approved in Warpcast, its phone app, not on a sign-in page (`connectFlow: 'approval'` in `GET /v1/platforms`). The panel opens no window and does not redirect: it shows **Open Warpcast** and a QR code of the same link for a computer (hidden on a narrow screen, where the button opens the app), and reads the session after two seconds, then half as long again each time, up to every ten. Approved, it reads as connected, like any connect; expired or declined, it says why, with **Try again** for a new link. `--flung-qr-size` sets the code's size; it stays dark on light in a dark theme, as cameras need.
 - **Mastodon and Bluesky** ask first: the person's Mastodon server (required), or their Bluesky handle (optional; without it they sign in through bsky.social).
 - **LinkedIn** asks whether to connect a personal profile or a company page when your Flung offers pages. A reconnect of a page goes through the pages app by itself.
 - **Reconnect** appears beside an account that needs it, or whose platform only lets Flung renew it for a limited time and that time ends within two weeks.

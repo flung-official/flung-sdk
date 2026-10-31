@@ -5,6 +5,7 @@
  */
 
 import type { AccountItem } from '../core/controller.js'
+import { encodeQr } from '../core/qr.js'
 import type { Account } from '../core/types.js'
 
 type Attributes = Readonly<Record<string, string | number | boolean | undefined>>
@@ -68,6 +69,43 @@ export function mark(path: string, options: { viewBox?: string; className?: stri
   const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path')
   shape.setAttribute('d', path)
   svg.append(shape)
+  return svg
+}
+
+/** The light modules kept around a QR code so a camera finds its edges (the standard asks for four; three reads well on a screen). */
+const QR_QUIET = 3
+
+/**
+ * A QR code of `text` as one SVG path of dark modules on a light square, named `label` for a screen reader. It stays dark
+ * on light in a dark theme too, as cameras need; `--flung-qr-size` sets its size.
+ */
+export function qrCode(text: string, label: string): SVGSVGElement {
+  const code = encodeQr(text)
+  const size = code.size + QR_QUIET * 2
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`)
+  svg.setAttribute('class', 'qr')
+  svg.setAttribute('part', 'qr')
+  svg.setAttribute('role', 'img')
+  svg.setAttribute('aria-label', label)
+  svg.setAttribute('shape-rendering', 'crispEdges')
+  // Presentation attributes, as `mark` sets: an unstyled panel still draws a code a camera reads.
+  svg.setAttribute('width', '132')
+  svg.setAttribute('height', '132')
+  const ground = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+  ground.setAttribute('width', String(size))
+  ground.setAttribute('height', String(size))
+  ground.setAttribute('fill', '#ffffff')
+  const modules = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  const runs: string[] = []
+  code.modules.forEach((row, y) => {
+    row.forEach((dark, x) => {
+      if (dark) runs.push(`M${x + QR_QUIET} ${y + QR_QUIET}h1v1h-1z`)
+    })
+  })
+  modules.setAttribute('d', runs.join(''))
+  modules.setAttribute('fill', '#000000')
+  svg.append(ground, modules)
   return svg
 }
 

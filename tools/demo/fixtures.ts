@@ -14,6 +14,8 @@ export interface FixtureSet {
   connectable: readonly Platform[]
   /** The connect variants set up, such as LinkedIn's `pages`; none when left out. */
   variants?: Partial<Record<Platform, readonly string[]>>
+  /** Platforms approved in their phone app (`connectFlow: 'approval'`, Farcaster): a connect gives a Warpcast link and stays pending. */
+  approval?: readonly Platform[]
   accounts: readonly Account[]
   /** Answer every call with this error instead, as an API that refuses the token. */
   refuse?: { status: number; code: string; message: string }
@@ -71,6 +73,12 @@ export const FIXTURE_SETS: Readonly<Record<string, FixtureSet>> = {
       account(7, 'linkedin', 'Acme Studio', { platformUserId: 'urn:li:organization:1001', displayName: 'Acme Studio' }),
     ],
     finishConnect: { afterPolls: 2, usernames: { x: 'acme_news', linkedin: 'Ada Lovelace', bluesky: '{handle}' }, pages: ['Acme Labs', 'Acme Careers'] },
+  },
+  farcaster: {
+    description: 'X, LinkedIn and Farcaster, Farcaster approved in Warpcast: a connect shows Open Warpcast and the QR code, and stays waiting',
+    connectable: ['x', 'linkedin', 'farcaster'],
+    approval: ['farcaster'],
+    accounts: [account(1, 'x', 'acmestudio')],
   },
   refused: { description: 'The API refuses the token', connectable: everything, accounts: [], refuse: { status: 403, code: 'forbidden', message: 'This connect token is not valid for this page.' } },
 }

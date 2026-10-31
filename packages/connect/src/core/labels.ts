@@ -31,6 +31,24 @@ export interface ConnectLabels {
   blocked: string
   /** The link to the consent page when the window was blocked. `{platform}`. */
   openSignIn: string
+  /** Above the approval link and QR code, for a platform approved in its phone app (Farcaster). `{platform}`. */
+  approve: string
+  /** The link that opens the platform's app to approve. `{platform}`. */
+  openApproval: string
+  /** Beside the QR code, for a person on a computer. */
+  scanApproval: string
+  /** The QR code's name for a screen reader. `{platform}`. */
+  approvalQr: string
+  /** While the approval is awaited. */
+  awaitingApproval: string
+  /** Starts a new approval after one expired or failed. */
+  tryAgain: string
+  /** After an approval link ran out of time. `{platform}`. */
+  approvalExpired: string
+  /** After an approval was declined or failed. `{platform}` and `{message}`. */
+  approvalFailed: string
+  /** After an approval was declined, when the platform said nothing more. `{platform}`. */
+  approvalDeclined: string
   /** After a connect. `{platform}`. */
   connected: string
   /** After a connect that failed. `{platform}` and `{message}`. */
@@ -89,6 +107,15 @@ export const DEFAULT_LABELS: ConnectLabels = {
   waiting: 'Finish signing in to {platform} in the window that opened.',
   blocked: 'Your browser did not open the {platform} window.',
   openSignIn: 'Open {platform} sign-in',
+  approve: 'Approve Flung in Warpcast, the {platform} app.',
+  openApproval: 'Open Warpcast',
+  scanApproval: 'On a computer, scan this with your phone’s camera instead.',
+  approvalQr: 'QR code that opens Warpcast to approve {platform}',
+  awaitingApproval: 'Waiting for approval',
+  tryAgain: 'Try again',
+  approvalExpired: 'The {platform} approval link ran out before it was approved.',
+  approvalFailed: '{platform} was not approved: {message}',
+  approvalDeclined: '{platform} was not approved. Try again for a new link.',
   connected: '{platform} is connected.',
   failed: '{platform} was not connected: {message}',
   expired: 'Signing in to {platform} took too long. Try again.',

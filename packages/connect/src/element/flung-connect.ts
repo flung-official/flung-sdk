@@ -5,7 +5,7 @@ import { DEFAULT_LABELS, formatLabel as format } from '../core/labels.js'
 import type { ConnectLabels } from '../core/labels.js'
 import { parsePlatformList } from '../core/platforms.js'
 import type { ConnectVariant, Platform } from '../core/types.js'
-import { avatar, button, html, mark } from './dom.js'
+import { avatar, button, html, mark, qrCode } from './dom.js'
 import type { ChangeDetail, ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
 import { CHOICE_MARKS, FLUNG_MARK, PLATFORM_MARKS } from './marks.js'
 import { BASE_STYLES, STYLES } from './styles.js'
@@ -35,10 +35,19 @@ interface Tile {
  */
 function stepTile(item: PlatformItem, tiles: readonly Tile[]): number {
   const { step } = item
-  const accountId = step.kind === 'confirm' ? step.account.account.id : step.kind === 'waiting' ? step.accountId : null
+  const accountId = step.kind === 'confirm' ? step.account.account.id : step.kind === 'waiting' || step.kind === 'approve' ? step.accountId : null
   if (accountId !== null) return tiles.findIndex((tile) => tile.accounts.some((account) => account.account.id === accountId))
-  if (step.kind === 'waiting') return tiles.findIndex((tile) => tile.variant === step.variant)
+  if (step.kind === 'waiting' || step.kind === 'approve') return tiles.findIndex((tile) => tile.variant === step.variant)
   return 0
+}
+
+/**
+ * A step's kind for moving focus, with an approval split by where it is: making its link, showing it, or ended. Each
+ * change is a new place for focus.
+ */
+function focusKind(step: PlatformItem['step']): string {
+  if (step.kind !== 'approve') return step.kind
+  return step.ended !== null ? 'approve-ended' : step.approvalUrl !== null ? 'approve-link' : 'approve'
 }
 
 /** The key of a tile's Connect button, so focus can come back to it. */
@@ -184,15 +193,17 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
       const fallback: string[] = []
       for (const item of state.platforms) {
         const before = this.#steps.get(item.platform) ?? { kind: 'idle', variant: null }
-        const now = item.step.kind
+        const now = focusKind(item.step)
         if (now === before.kind) continue
         if (now === 'handle') wanted = `handle-${item.platform}`
+        else if (now === 'approve-link') wanted = `approve-open-${item.platform}`
+        else if (now === 'approve-ended') wanted = `approve-retry-${item.platform}`
         else if (now === 'choose') wanted = `choose-${item.platform}-personal`
         else if (now === 'confirm') wanted = `keep-${item.platform}`
         // Back to the Connect that started it: a variant's own tile, else the platform's.
         else if (now === 'idle') fallback.push(connectKey(item.platform, before.variant), connectKey(item.platform, null))
       }
-      this.#steps = new Map(state.platforms.map((item) => [item.platform, { kind: item.step.kind, variant: item.step.kind === 'waiting' ? item.step.variant : null }]))
+      this.#steps = new Map(state.platforms.map((item) => [item.platform, { kind: focusKind(item.step), variant: item.step.kind === 'waiting' || item.step.kind === 'approve' ? item.step.variant : null }]))
       const find = (key: string | null) => (key === null ? undefined : [...this.#root.querySelectorAll<HTMLElement>('[data-key]')].find((node) => node.dataset['key'] === key))
       // Falls back to Connect only when focus was inside the panel, so a wait ending never pulls focus from the page.
       ;(find(wanted) ?? (active !== null ? fallback.map(find).find((node) => node !== undefined) : undefined))?.focus()
@@ -309,6 +320,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
           button(labels.cancel, `cancel-${platform}`, 'cancel', () => this.#controller?.cancel(platform)),
         )
       }
+      if (step.kind === 'approve') return this.#approval(item, step, labels)
       if (step.kind === 'confirm') {
         return html(
           'div',
@@ -319,6 +331,38 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
         )
       }
       return null
+    }
+
+    /**
+     * An approval in the platform's phone app (Farcaster): the line saying so, Open Warpcast, a QR code of the same link
+     * for a computer, and the wait. Ended, why it ended, with Try again and Cancel.
+     */
+    #approval(item: PlatformItem, step: Extract<PlatformItem['step'], { kind: 'approve' }>, labels: ConnectLabels): HTMLElement {
+      const { platform, name } = item
+      const cancel = button(labels.cancel, `cancel-${platform}`, 'cancel', () => this.#controller?.cancel(platform))
+      if (step.ended !== null) {
+        const why = step.ended.status === 'expired' ? format(labels.approvalExpired, { platform: name }) : step.ended.message === '' ? format(labels.approvalDeclined, { platform: name }) : format(labels.approvalFailed, { platform: name, message: step.ended.message })
+        const accountId = step.accountId
+        const retry = button(labels.tryAgain, `approve-retry-${platform}`, 'retry', () => (accountId === null ? this.#controller?.connect(platform) : this.#controller?.reconnect(accountId)), { variant: 'primary' })
+        return html('div', { class: 'approve ended', part: 'approve approve-ended' }, html('p', { class: 'approve-text', part: 'approve-text', role: 'alert' }, why), html('div', { class: 'approve-actions', part: 'approve-actions' }, retry, cancel))
+      }
+      const url = step.approvalUrl
+      const go =
+        url === null
+          ? null
+          : html(
+              'div',
+              { class: 'approve-go', part: 'approve-go' },
+              html('a', { class: 'approve-open', href: url, target: '_blank', rel: 'noopener', part: 'link link-approval', 'data-key': `approve-open-${platform}` }, labels.openApproval),
+              html('div', { class: 'approve-scan', part: 'approve-scan' }, qrCode(url, format(labels.approvalQr, { platform: name })), html('p', { class: 'approve-hint', part: 'approve-hint' }, labels.scanApproval)),
+            )
+      return html(
+        'div',
+        { class: 'approve', part: 'approve' },
+        html('p', { class: 'approve-text', part: 'approve-text' }, format(labels.approve, { platform: name })),
+        go,
+        html('p', { class: 'note', part: 'note', role: 'status' }, html('span', { class: 'spinner', part: 'spinner', 'aria-hidden': 'true' }), html('span', { class: 'note-text', part: 'note-text' }, labels.awaitingApproval), cancel),
+      )
     }
 
     /**

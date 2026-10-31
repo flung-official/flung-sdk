@@ -5,10 +5,12 @@ import { connectInPopup, readRedirectResult, withoutRedirectResult } from './flo
 import { DEFAULT_LABELS, formatLabel } from './labels.js'
 import type { ConnectLabels } from './labels.js'
 import { HANDLE_PROMPT, isConnectVariant, isPageAccount, PLATFORM_NAMES, tokenPlatforms } from './platforms.js'
-import type { Account, ConnectSession, ConnectVariant, Platform } from './types.js'
+import type { Account, ConnectFlow, ConnectSession, ConnectVariant, Platform } from './types.js'
 
 /** How soon a reconnect deadline is worth showing. */
 const SOON_MS = 14 * 86_400_000
+/** How an approval connect reads its session: after two seconds, then half as long again each time, up to every ten. */
+const APPROVAL_POLL = { intervalMs: 2_000, maxIntervalMs: 10_000 } as const
 
 /** What one connected account looks like to a panel: the API's account and what to show for it. */
 export interface AccountItem {
@@ -46,6 +48,19 @@ export type PlatformStep =
    * as a link. `variant` is the variant being connected, or null.
    */
   | { readonly kind: 'waiting'; readonly blockedUrl: string | null; readonly accountId: string | null; readonly variant: ConnectVariant | null }
+  /**
+   * An approval connect (Farcaster, `connectFlow: 'approval'`): no window and no redirect. Show `approvalUrl` as a link
+   * and a QR code (`encodeQr`) while the panel reads the session; it is null while the link is being made. `ended` says
+   * why it stopped, `expired` or `failed` with the platform's `message`: offer Try again (`connect`, or `reconnect` with
+   * `accountId`) and Cancel. A connected approval goes back to `idle` with a `connected` notice, as other connects do.
+   */
+  | {
+      readonly kind: 'approve'
+      readonly approvalUrl: string | null
+      readonly accountId: string | null
+      readonly variant: ConnectVariant | null
+      readonly ended: { readonly status: 'expired' | 'failed'; readonly message: string } | null
+    }
   /** Asking whether to disconnect `account`: call `confirmDisconnect` or `cancel`. */
   | { readonly kind: 'confirm'; readonly account: AccountItem }
 
@@ -70,6 +85,8 @@ export interface PlatformItem {
   readonly connectable: boolean
   /** The other ways it can connect here, such as LinkedIn's `pages`; empty for most platforms. */
   readonly variants: readonly ConnectVariant[]
+  /** How its connect ends: `consent` through a sign-in window or redirect, `approval` in the platform's phone app (Farcaster). */
+  readonly connectFlow: ConnectFlow
 }
 
 /** The last thing that happened, as data. `message` in the state words it. */
@@ -179,12 +196,14 @@ type Step =
   | { kind: 'handle'; required: boolean }
   | { kind: 'choose'; variants: readonly ConnectVariant[] }
   | { kind: 'waiting'; abort: AbortController; blockedUrl: string | null; accountId: string | null; variant: ConnectVariant | null }
+  | { kind: 'approve'; abort: AbortController; approvalUrl: string | null; accountId: string | null; variant: ConnectVariant | null; ended: { status: 'expired' | 'failed'; message: string } | null }
   | { kind: 'confirm'; account: Account }
 
 /** How the API offers a platform: its own connect, and the variants set up beside it. */
 interface Offer {
   connectable: boolean
   variants: readonly ConnectVariant[]
+  connectFlow: ConnectFlow
 }
 
 const IDLE: PlatformStep = Object.freeze({ kind: 'idle' })
@@ -270,7 +289,7 @@ class Controller implements ConnectController {
   destroy(): void {
     if (this.#destroyed) return
     this.#destroyed = true
-    for (const step of this.#steps.values()) if (step.kind === 'waiting') step.abort.abort()
+    for (const step of this.#steps.values()) if (step.kind === 'waiting' || step.kind === 'approve') step.abort.abort()
     this.#listeners.clear()
   }
 
@@ -328,7 +347,7 @@ class Controller implements ConnectController {
   cancel = (platform: Platform): void => {
     const step = this.#steps.get(platform)
     if (step === undefined || step.kind === 'idle') return
-    if (step.kind === 'waiting') step.abort.abort()
+    if (step.kind === 'waiting' || step.kind === 'approve') step.abort.abort()
     this.#set(platform, { kind: 'idle' })
   }
 
@@ -336,9 +355,9 @@ class Controller implements ConnectController {
     if (this.#notice !== null) this.#tell(null)
   }
 
-  /** A connect may start: there is a token, and the platform is not already waiting on one. */
+  /** A connect may start: there is a token, and the platform is not already waiting on one. An approval that ended may start again. */
   #ready(platform: Platform): boolean {
-    return !this.#destroyed && this.#client !== null && this.#steps.get(platform)?.kind !== 'waiting'
+    return !this.#destroyed && this.#client !== null && !waitingStep(this.#steps.get(platform))
   }
 
   async #load(): Promise<void> {
@@ -354,10 +373,10 @@ class Controller implements ConnectController {
       const asked = this.#asked
       const granted = typeof this.#options.token === 'string' ? tokenPlatforms(this.#options.token) : null
       const offered = platforms
-        .map((info) => ({ platform: info.platform, connectable: info.connectable, variants: (info.variants ?? []).filter(isConnectVariant) }))
+        .map((info) => ({ platform: info.platform, connectable: info.connectable, variants: (info.variants ?? []).filter(isConnectVariant), connectFlow: info.connectFlow === 'approval' ? ('approval' as const) : ('consent' as const) }))
         .filter((info) => (info.connectable || info.variants.length > 0) && (asked ?? [info.platform]).includes(info.platform) && (granted ?? [info.platform]).includes(info.platform))
       this.#platforms = offered.map((info) => info.platform)
-      this.#offers = new Map(offered.map((info) => [info.platform, Object.freeze({ connectable: info.connectable, variants: Object.freeze(info.variants) })]))
+      this.#offers = new Map(offered.map((info) => [info.platform, Object.freeze({ connectable: info.connectable, variants: Object.freeze(info.variants), connectFlow: info.connectFlow })]))
       this.#accounts = accounts.filter((account) => account.status !== 'disconnected' && this.#platforms.includes(account.platform))
       this.#loading = false
       this.#loaded = true
@@ -394,6 +413,7 @@ class Controller implements ConnectController {
     const redirect = this.#mode === 'redirect' && typeof location !== 'undefined'
     const redirectUrl = redirect ? withoutRedirectResult(location.href) : undefined
     const begin = () => (account === null ? client.connect(platform, { handle, redirectUrl, variant: variant ?? undefined }) : client.reconnect(account.id, { redirectUrl }))
+    if (this.#offers.get(platform)?.connectFlow === 'approval') return this.#approve(platform, account, begin)
     const abort = new AbortController()
     const step: Step = { kind: 'waiting', abort, blockedUrl: null, accountId: account?.id ?? null, variant }
     this.#notice = null
@@ -416,6 +436,36 @@ class Controller implements ConnectController {
       })
       .then(
         (session) => this.#finish(platform, session),
+        (error: unknown) => this.#settle(platform, step, error),
+      )
+  }
+
+  /**
+   * An approval connect: no window and no redirect. The link to the platform's app is shown in the step while the session
+   * is read, backing off; an approval that expires or fails stays in the step, saying why, until Try again or Cancel.
+   */
+  #approve(platform: Platform, account: Account | null, begin: () => Promise<ConnectSession>): void {
+    const client = this.#client as ConnectClient
+    const step: Step = { kind: 'approve', abort: new AbortController(), approvalUrl: null, accountId: account?.id ?? null, variant: null, ended: null }
+    this.#notice = null
+    this.#set(platform, step)
+    void begin()
+      .then((session) => {
+        if (this.#steps.get(platform) !== step) return null
+        step.approvalUrl = safeUrl(session.authorizationUrl, ['https:'])
+        this.#emit()
+        return client.waitForSession(session.id, { signal: step.abort.signal, ...APPROVAL_POLL })
+      })
+      .then(
+        async (session) => {
+          if (session === null || this.#destroyed || this.#steps.get(platform) !== step) return
+          if (session.status === 'connected') return this.#finish(platform, session)
+          const message = session.error?.message ?? ''
+          step.ended = { status: session.status === 'expired' ? 'expired' : 'failed', message }
+          step.approvalUrl = null
+          this.#emit()
+          this.#options.onError?.({ code: session.status === 'expired' ? 'expired' : (session.error?.code ?? 'platform_error'), message })
+        },
         (error: unknown) => this.#settle(platform, step, error),
       )
   }
@@ -445,7 +495,7 @@ class Controller implements ConnectController {
     if (this.#destroyed) return
     if (this.#steps.get(platform) === step) this.#set(platform, { kind: 'idle' })
     // By name and by the signal, not `instanceof DOMException`: the reason may come from another realm's DOMException.
-    const aborted = (step.kind === 'waiting' && step.abort.signal.aborted) || (typeof error === 'object' && error !== null && (error as { name?: unknown }).name === 'AbortError')
+    const aborted = ((step.kind === 'waiting' || step.kind === 'approve') && step.abort.signal.aborted) || (typeof error === 'object' && error !== null && (error as { name?: unknown }).name === 'AbortError')
     if (aborted) return
     this.#fail(error, 'connect', platform)
   }
@@ -485,10 +535,11 @@ class Controller implements ConnectController {
         name: PLATFORM_NAMES[platform],
         accounts: Object.freeze(this.#accounts.filter((account) => account.platform === platform).map((account) => items.get(account.id) as AccountItem)),
         step,
-        busy: step.kind === 'waiting',
+        busy: step.kind === 'waiting' || (step.kind === 'approve' && step.ended === null),
         handlePrompt: prompt === undefined ? null : Object.freeze({ required: prompt.required }),
         connectable: offer?.connectable ?? true,
         variants: offer?.variants ?? NO_VARIANTS,
+        connectFlow: offer?.connectFlow ?? 'consent',
       })
     })
     return Object.freeze({
@@ -509,7 +560,13 @@ function publicStep(step: Step | undefined, items: ReadonlyMap<string, AccountIt
   if (step.kind === 'handle') return Object.freeze({ kind: 'handle', required: step.required })
   if (step.kind === 'choose') return Object.freeze({ kind: 'choose', variants: step.variants })
   if (step.kind === 'waiting') return Object.freeze({ kind: 'waiting', blockedUrl: step.blockedUrl, accountId: step.accountId, variant: step.variant })
+  if (step.kind === 'approve') return Object.freeze({ kind: 'approve', approvalUrl: step.approvalUrl, accountId: step.accountId, variant: step.variant, ended: step.ended === null ? null : Object.freeze({ ...step.ended }) })
   return Object.freeze({ kind: 'confirm', account: items.get(step.account.id) ?? accountItem(step.account, now) })
+}
+
+/** Whether a step holds the platform: a sign-in window open, or an approval still awaited. */
+function waitingStep(step: Step | undefined): boolean {
+  return step?.kind === 'waiting' || (step?.kind === 'approve' && step.ended === null)
 }
 
 /** What to show for an account. */

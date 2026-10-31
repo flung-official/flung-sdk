@@ -79,13 +79,18 @@ export class ConnectClient {
     return this.#call<ConnectSession>('GET', `/v1/connect-sessions/${encodeURIComponent(id)}`)
   }
 
-  /** Resolves once the session is no longer `pending`. Rejects with an `AbortError` when `signal` aborts. */
-  async waitForSession(id: string, options: { signal?: AbortSignal | undefined; intervalMs?: number | undefined } = {}): Promise<ConnectSession> {
+  /**
+   * Resolves once the session is no longer `pending`. Rejects with an `AbortError` when `signal` aborts. It reads the
+   * session every `intervalMs` (two seconds); with `maxIntervalMs` it waits half as long again after each read, up to that.
+   */
+  async waitForSession(id: string, options: { signal?: AbortSignal | undefined; intervalMs?: number | undefined; maxIntervalMs?: number | undefined } = {}): Promise<ConnectSession> {
+    let wait = options.intervalMs ?? POLL_MS
     for (;;) {
       options.signal?.throwIfAborted()
       const session = await this.session(id)
       if (session.status !== 'pending') return session
-      await delay(options.intervalMs ?? POLL_MS, options.signal)
+      await delay(wait, options.signal)
+      if (options.maxIntervalMs !== undefined) wait = Math.min(options.maxIntervalMs, Math.round(wait * 1.5))
     }
   }
 
