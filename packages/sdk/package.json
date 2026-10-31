@@ -1,6 +1,6 @@
 {
   "name": "@flung.dev/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The typed TypeScript client for the Flung API: schedule and publish social media posts, connect accounts, and verify webhooks.",
   "license": "MIT",
   "type": "module",
