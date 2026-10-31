@@ -2185,6 +2185,14 @@
               "pages"
             ]
           },
+          "connectFlow": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "approval"
+            ],
+            "description": "How a connect ends. `consent`: the `authorizationUrl` is a sign-in page that sends the person back to `redirectUrl`. `approval` (Farcaster): it opens the platform's phone app to approve Flung, nothing comes back to `redirectUrl`, and the session finishes when it is read, so show the link (or a QR code of it) and poll `GET /v1/connect-sessions/{id}`."
+          },
           "maxTextLength": {
             "type": "integer"
           },
@@ -2223,6 +2231,7 @@
           "platform",
           "connectable",
           "variants",
+          "connectFlow",
           "maxTextLength",
           "requiresMedia",
           "maxImages",
