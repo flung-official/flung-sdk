@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.6.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.5.0...sdk-v0.6.0) (2026-10-31)
+
+
+### Added
+
+* **sdk:** connectFlow, consent or approval, on each platform ([e67aaa7](https://github.com/flung-official/flung-sdk/commit/e67aaa73cc1f7c7639600387bb7955b60167be7c))
+
 ## [0.5.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.4.0...sdk-v0.5.0) (2026-10-31)
 
 
