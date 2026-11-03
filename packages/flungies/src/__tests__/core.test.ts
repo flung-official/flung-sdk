@@ -40,7 +40,7 @@ describe('seeding', () => {
 
   it('counts the discrete trait sets', () => {
     expect(combinations().discrete).toBe(907_200)
-    expect(Object.keys(TRAITS)).toEqual(['shape', 'colour', 'eyes', 'mouth', 'blush', 'accessory', 'accColour', 'side', 'lines'])
+    expect(Object.keys(TRAITS)).toEqual(['shape', 'colour', 'eyes', 'mouth', 'blush', 'accessory', 'accColour', 'side', 'lines', 'tattoo', 'pants', 'aura'])
   })
 })
 

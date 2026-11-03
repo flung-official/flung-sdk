@@ -21,6 +21,9 @@ export {
   EYES,
   INK,
   LINE_PAIRS,
+  TATTOOS,
+  PANTS,
+  AURAS,
   type LinePair,
   MOUTHS,
   type Option,
@@ -31,7 +34,31 @@ export {
   TRAITS,
 } from './data.js'
 export { CX, CY, type Geometry, geometry, type Point } from './geometry.js'
+export { type BrowShape, type Expression, type ExpressionExtra, type ExpressionMouth, EXPRESSION_SPECS, type ExpressionSpec, EXPRESSIONS, expressionOf } from './expressions.js'
 export { hash, mulberry32, normalise } from './random.js'
+export {
+  type Availability,
+  availability,
+  balance,
+  DEFAULT_EARN_RULES,
+  DEFAULT_STORE,
+  dress,
+  type EarnFacts,
+  type EarnRules,
+  pointsEarned,
+  preview,
+  RARITIES,
+  type Rarity,
+  STORE_CATEGORIES,
+  STORE_KINDS,
+  type StoreCategory,
+  type StoreItem,
+  storeItems,
+  type StoreKind,
+  type StoreOverride,
+  type Wallet,
+  type Wearable,
+} from './store.js'
 export { describe, flungie, type FlungieOptions, type Layer, LAYERS, render, type RenderOptions, toDataUri, toSvgElement, type Variant } from './render.js'
 export {
   type AccShading,

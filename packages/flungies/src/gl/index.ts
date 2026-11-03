@@ -14,6 +14,7 @@ import { colours, type FlungieConfig, type Overrides, palette, type Theme, type 
 import { geometry } from '../geometry.js'
 import { render, toSvgElement, type Variant } from '../render.js'
 import { PAPER } from '../data.js'
+import type { Expression } from '../expressions.js'
 import { bodyField, type Field } from './field.js'
 import { FRAG, VERT } from './shader.js'
 
@@ -24,6 +25,8 @@ export interface FlungieGLOptions extends FlungieConfig {
   variant?: Variant | undefined
   /** With a seed: traits to set instead of the seed's. */
   overrides?: Overrides | undefined
+  /** The face for the moment (EXPRESSIONS). Default 'neutral', the seed's own. */
+  expression?: Expression | undefined
 }
 
 export interface FlungieGL {
@@ -31,6 +34,8 @@ export interface FlungieGL {
   readonly webgl: boolean
   setTheme(theme: Theme): void
   setSize(size: number): void
+  /** Changes the face for the moment, keeping everything else: an action, an error, a thought. */
+  setExpression(expression: Expression): void
   /** Shows another seed or trait set. */
   update(who: string | Traits, options?: FlungieGLOptions): void
   /** Stops the loop, releases the GL context and empties the host. */
@@ -71,6 +76,7 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
     theme: options.theme ?? ('light' as Theme),
     variant: options.variant ?? ('disc' as Variant),
     palette: options.palette,
+    expression: options.expression,
   }
 
   const wrap = document.createElement('div')
@@ -84,7 +90,7 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
   wrap.append(under, canvas, over)
   host.replaceChildren(wrap)
 
-  const svgOptions = () => ({ size: state.size, theme: state.theme, variant: state.variant, palette: state.palette })
+  const svgOptions = () => ({ size: state.size, theme: state.theme, variant: state.variant, palette: state.palette, expression: state.expression })
   const place = () => {
     wrap.style.cssText = `position:relative;width:${state.size}px;height:${state.size}px;`
     wrap.style.clipPath = state.variant === 'disc' ? 'circle(50%)' : state.variant === 'square' ? 'inset(0 round 22%)' : 'none'
@@ -284,12 +290,17 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
       state.size = size
       refresh()
     },
+    setExpression(expression) {
+      state.expression = expression
+      refresh()
+    },
     update(next, o = {}) {
       state.t = resolve(next, o)
       if (o.size !== undefined) state.size = o.size
       if (o.theme !== undefined) state.theme = o.theme
       if (o.variant !== undefined) state.variant = o.variant
       if (o.palette !== undefined) state.palette = o.palette
+      if (o.expression !== undefined) state.expression = o.expression
       refresh()
     },
     dispose() {

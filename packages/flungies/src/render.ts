@@ -2,7 +2,11 @@ import { ACC_DRAW, type DrawContext, type Drawn } from './accessories.js'
 import { contrast, luminance, mix } from './colour.js'
 import { type Accessory, ACCESSORIES, byId, type Colour, COLOURS, INK, labelOf, PAPER, SHAPES, WHITE } from './data.js'
 import { type Geometry, geometry, toWorld } from './geometry.js'
+import { type Expression, expressionOf } from './expressions.js'
 import { clamp, f } from './random.js'
+import { aura } from './auras.js'
+import { pants } from './pants.js'
+import { tattoo } from './tattoos.js'
 import { colourOf, colours, type FlungieConfig, type Overrides, type Shading, type Theme, type Traits, traits } from './traits.js'
 
 export type Layer = 'disc' | 'shadow' | 'lines' | 'back' | 'body' | 'face' | 'front'
@@ -27,6 +31,10 @@ export interface RenderOptions {
   id?: string | undefined
   /** Body colours to resolve the trait's colour from, as FlungieConfig.palette. */
   palette?: readonly Colour[] | undefined
+  /** What it is feeling: its face for the moment (EXPRESSIONS). 'neutral', the default, is the seed's own face. */
+  expression?: Expression | undefined
+  /** Plays an aura's motion (SMIL, no stylesheet needed). Leave it off where motion is reduced. Default false: a still frame. */
+  animate?: boolean | undefined
 }
 
 let counter = 0
@@ -39,6 +47,7 @@ let counter = 0
  *   variant  'disc' (default), 'square' (a rounded tile) or 'bare' (no ground)
  *   texture  false turns the felt filter off at every size
  *   layers   a subset of disc, shadow, lines, back, body, face, front (the WebGL renderer draws the body itself)
+ *   expression  the face for the moment: happy, cute, mad, sad, thinking, surprised, sleepy (neutral is the seed's own)
  */
 export function render(t: Traits, options: RenderOptions = {}): string {
   const { size = 64, theme = 'light', variant = 'disc', texture = true, layers = LAYERS, ground, palette: list = COLOURS } = options
@@ -66,6 +75,8 @@ export function render(t: Traits, options: RenderOptions = {}): string {
   const inner: string[] = []
   // Ground shadow: the Flungie is in the air, so it is soft and a little behind.
   const bottom = toWorld(G, [0, G.hh])
+  // An aura, behind everything but the ground: a glow, bubbles, a ring.
+  if (has('disc') && t.aura !== 'none') inner.push(aura(t.aura, G.cx, G.cy, id, defs, P.base, detail, options.animate === true))
   if (has('shadow') && !tiny) {
     const sc = theme === 'dark' ? '#000000' : mix(groundHex, '#2A1F45', 0.7)
     defs.push(`<radialGradient id="${id}s"><stop offset="0" stop-color="${sc}" stop-opacity="${theme === 'dark' ? 0.5 : 0.28}"/><stop offset="1" stop-color="${sc}" stop-opacity="0"/></radialGradient>`)
@@ -87,13 +98,13 @@ export function render(t: Traits, options: RenderOptions = {}): string {
   }
 
   // Everything that breathes: accessories, body, face. Drawn in the body frame.
-  const ctx = { G, P, A, A2, detail, sw, id, defs, t, eyeR: 0, eyeAt: { x: 0, y: 0, s: 0, eyes: t.eyes } }
+  const ctx = { G, P, A, A2, detail, sw, id, defs, t, expression: options.expression, eyeR: 0, eyeAt: { x: 0, y: 0, s: 0, eyes: t.eyes } }
   const face = faceParts(ctx)
   const acc: Drawn = A ? ACC_DRAW[t.accessory]?.(ctx as DrawContext) || {} : {}
   const body: string[] = []
   if (has('back') && acc.back) body.push(acc.back)
   if (has('body')) body.push(bodyLayer(ctx, { felt, size, groundHex }))
-  if (has('face')) body.push(face)
+  if (has('face')) body.push(tattoo(t.tattoo, G, P, detail) + pants(t.pants, G, id, defs, detail, options.animate === true) + face)
   if (has('front') && acc.front) body.push(acc.front)
   inner.push(`<g class="fl-breathe" data-ax="${f(bottom[0])}" data-ay="${f(bottom[1])}"><g transform="translate(${f(G.cx)} ${f(G.cy)}) rotate(${f(G.tilt)})">${body.join('')}</g></g>`)
 
@@ -103,6 +114,43 @@ export function render(t: Traits, options: RenderOptions = {}): string {
   if (clip) g = `<g clip-path="url(#${clip})">${g}</g>`
   out.push(g)
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" role="img" aria-label="${describe(t, list)}" data-mirror="${mirror ? 1 : 0}"><defs>${defs.join('')}</defs>${out.join('')}</svg>`
+}
+
+/** Brows over both eyes: angry slopes down to the middle, worried up to it, raised arcs high, quizzical lifts the front one. */
+function brows(shape: string, back: number, front: number, ey: number, R: number, ink: string, sw: (u: number, minPx?: number) => number): string {
+  const y = ey - R * 2
+  const w = R * 1.15
+  const st = `fill="none" stroke="${ink}" stroke-width="${sw(1.1)}" stroke-linecap="round"`
+  const line = (x1: number, y1: number, x2: number, y2: number) => `<path d="M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}" ${st}/>`
+  const arcOver = (x: number, lift: number) => `<path d="M${f(x - w)} ${f(y - lift + 0.6)}Q${f(x)} ${f(y - lift - 1.2)} ${f(x + w)} ${f(y - lift + 0.6)}" ${st}/>`
+  let inner = ''
+  if (shape === 'angry') inner = line(back - w, y - 1, back + w * 0.8, y + 1.1) + line(front - w * 0.8, y + 1.1, front + w, y - 1)
+  if (shape === 'worried') inner = line(back - w, y + 0.9, back + w * 0.8, y - 1) + line(front - w * 0.8, y - 1, front + w, y + 0.9)
+  if (shape === 'raised') inner = arcOver(back, 1.4) + arcOver(front, 1.4)
+  if (shape === 'quizzical') inner = line(back - w, y + 0.3, back + w, y + 0.3) + arcOver(front, 1.8)
+  return `<g class="fl-brows">${inner}</g>`
+}
+
+/** The expression's one small extra, in the body's frame: a tear, a flush, sparkles, a thought, or a sleepy z. */
+function extra(kind: string, back: number, front: number, ey: number, R: number, G: Geometry, sw: (u: number, minPx?: number) => number): string {
+  const top = -G.hh
+  switch (kind) {
+    case 'tear':
+      return `<path class="fl-tear" d="M${f(back - 0.6)} ${f(ey + R + 0.6)}q-1.7 2.6 0 3.6q1.7 -1 0 -3.6Z" fill="#86C0FF"/>`
+    case 'flush':
+      // Three short marks of heat over the front brow.
+      return `<g class="fl-flush" stroke="#FF4A4A" stroke-width="${sw(0.9)}" stroke-linecap="round">${[-1.6, 0, 1.6].map((dx, i) => `<path d="M${f(front + R * 1.6 + dx)} ${f(top + 4 + (i === 1 ? -0.8 : 0))}l0 2.2"/>`).join('')}</g>`
+    case 'sparkle': {
+      const star = (x: number, y: number, r: number) => `<path d="M${f(x)} ${f(y - r)}Q${f(x)} ${f(y)} ${f(x + r)} ${f(y)}Q${f(x)} ${f(y)} ${f(x)} ${f(y + r)}Q${f(x)} ${f(y)} ${f(x - r)} ${f(y)}Q${f(x)} ${f(y)} ${f(x)} ${f(y - r)}Z" fill="#FFD66E"/>`
+      return `<g class="fl-sparkle">${star(front + R * 2.4, ey - R * 2.2, 1.8)}${star(back - R * 2.2, ey - R * 1.4, 1.2)}</g>`
+    }
+    case 'thought':
+      return `<g class="fl-thought" fill="#FFFFFF" stroke="#16141C" stroke-width="${sw(0.5)}"><circle cx="${f(front + R * 2.2)}" cy="${f(top + 2.5)}" r="1"/><circle cx="${f(front + R * 3.1)}" cy="${f(top - 0.6)}" r="1.5"/><circle cx="${f(front + R * 4.4)}" cy="${f(top - 4.6)}" r="2.2"/></g>`
+    case 'zzz':
+      return `<g class="fl-zzz" fill="none" stroke="#86C0FF" stroke-width="${sw(0.8)}" stroke-linecap="round" stroke-linejoin="round"><path d="M${f(front + R * 2)} ${f(top + 1)}h2.2l-2.2 2.4h2.2"/><path d="M${f(front + R * 3.2)} ${f(top - 3)}h1.6l-1.6 1.8h1.6"/></g>`
+    default:
+      return ''
+  }
 }
 
 /** The accessible name of a Flungie: "Flungie avatar: Peach classic with crown". */
@@ -195,6 +243,7 @@ function bodyLayer({ G, P, detail, sw, id, defs, t }: BodyContext, { felt, size,
 }
 
 interface FaceContext extends BodyContext {
+  expression?: Expression | undefined
   eyeR: number
   eyeAt: { x: number; y: number; s: number; eyes: string }
 }
@@ -203,7 +252,9 @@ function faceParts(ctx: FaceContext): string {
   const { G, P, detail, sw, t } = ctx
   const acc = byId(ACCESSORIES, t.accessory) ?? (ACCESSORIES[0] as Accessory)
   const tiny = detail === 0
-  let eyes = t.eyes
+  const mood = expressionOf(ctx.expression)
+  let eyes: string = mood.eyes ?? t.eyes
+  const mouth = mood.mouth ?? t.mouth
   if (tiny && eyes === 'wide') eyes = 'dots'
   const R = (eyes === 'wide' ? 3 : 3.1) * (tiny ? 1.55 : 1)
   const E = P.eye
@@ -231,6 +282,9 @@ function faceParts(ctx: FaceContext): string {
         )
       case 'arc':
         return arc(x, y)
+      case 'look':
+        // Glancing up and to the front, as a Flungie thinking does.
+        return blinkable(x, y, `<circle cx="${f(x + R * 0.35)}" cy="${f(y - R * 0.35)}" r="${f(R * 0.92)}" fill="${E}"/>${hl(x + R * 0.35, y - R * 0.35, R * 0.92)}`)
       case 'wide': {
         const rs = R * 1.38
         const ring = E === INK ? ` stroke="${INK}" stroke-width="${sw(0.9)}"` : ''
@@ -253,22 +307,32 @@ function faceParts(ctx: FaceContext): string {
     else if (eyes === 'happy') out.push(eye(back, ey, 'arc'), eye(front, ey, 'arc'))
     else out.push(eye(back, ey, eyes), eye(front, ey, eyes))
   }
-  if (t.blush && !tiny) {
+  if (mood.cheeks === undefined && t.blush && !tiny) {
+    // The seed's own blush, drawn exactly as before expressions, so a neutral Flungie keeps its drawing.
     const by = ey + R + 1.9
     out.push(`<g fill="${P.blush}" opacity="${P.blushOpacity}"><ellipse cx="${f(back - 3)}" cy="${f(by)}" rx="2.9" ry="1.6"/><ellipse cx="${f(front + 3)}" cy="${f(by)}" rx="2.9" ry="1.6"/></g>`)
   }
-  if (!tiny && t.mouth !== 'none') {
+  if (mood.cheeks !== undefined && !tiny) {
+    const by = ey + R + 1.9
+    const { colour, opacity, size: k } = mood.cheeks
+    out.push(`<g class="fl-cheeks" fill="${colour}" opacity="${opacity}"><ellipse cx="${f(back - 3)}" cy="${f(by)}" rx="${f(2.9 * k)}" ry="${f(1.6 * k)}"/><ellipse cx="${f(front + 3)}" cy="${f(by)}" rx="${f(2.9 * k)}" ry="${f(1.6 * k)}"/></g>`)
+  }
+  if (!tiny && mood.brows !== 'none') out.push(brows(mood.brows, back, front, ey, R, E, sw))
+  if (!tiny && mouth !== 'none') {
     const mx = ex + 0.6
     const my = ey + R + 3.3
     const st = `fill="none" stroke="${E}" stroke-width="${sw(1.25)}" stroke-linecap="round" stroke-linejoin="round"`
-    if (t.mouth === 'smile') out.push(`<path d="M${f(mx - 2.4)} ${f(my)}Q${f(mx)} ${f(my + 2.6)} ${f(mx + 2.4)} ${f(my)}" ${st}/>`)
-    if (t.mouth === 'o') out.push(`<ellipse cx="${f(mx)}" cy="${f(my + 0.8)}" rx="1.3" ry="1.6" fill="${E}"/>`)
-    if (t.mouth === 'cat') out.push(`<path d="M${f(mx - 2.8)} ${f(my)}Q${f(mx - 1.4)} ${f(my + 2)} ${f(mx)} ${f(my)}Q${f(mx + 1.4)} ${f(my + 2)} ${f(mx + 2.8)} ${f(my)}" ${st}/>`)
-    if (t.mouth === 'grin')
+    if (mouth === 'smile') out.push(`<path d="M${f(mx - 2.4)} ${f(my)}Q${f(mx)} ${f(my + 2.6)} ${f(mx + 2.4)} ${f(my)}" ${st}/>`)
+    if (mouth === 'o') out.push(`<ellipse cx="${f(mx)}" cy="${f(my + 0.8)}" rx="1.3" ry="1.6" fill="${E}"/>`)
+    if (mouth === 'cat') out.push(`<path d="M${f(mx - 2.8)} ${f(my)}Q${f(mx - 1.4)} ${f(my + 2)} ${f(mx)} ${f(my)}Q${f(mx + 1.4)} ${f(my + 2)} ${f(mx + 2.8)} ${f(my)}" ${st}/>`)
+    if (mouth === 'frown') out.push(`<path d="M${f(mx - 2.4)} ${f(my + 1.8)}Q${f(mx)} ${f(my - 0.9)} ${f(mx + 2.4)} ${f(my + 1.8)}" ${st}/>`)
+    if (mouth === 'flat') out.push(`<path d="M${f(mx - 1.9)} ${f(my + 0.9)}L${f(mx + 1.5)} ${f(my + 0.4)}" ${st}/>`)
+    if (mouth === 'grin')
       out.push(
         `<path d="M${f(mx - 2.9)} ${f(my - 0.4)}H${f(mx + 2.9)}Q${f(mx + 2.9)} ${f(my + 3.4)} ${f(mx)} ${f(my + 3.4)}Q${f(mx - 2.9)} ${f(my + 3.4)} ${f(mx - 2.9)} ${f(my - 0.4)}Z" fill="${E}"/>` +
           (detail >= 1 ? `<ellipse cx="${f(mx + 0.3)}" cy="${f(my + 2.4)}" rx="1.5" ry="0.85" fill="#FF7A8A"/>` : ''),
       )
   }
+  if (!tiny && mood.extra !== 'none') out.push(extra(mood.extra, back, front, ey, R, G, sw))
   return `<g class="fl-face">${out.join('')}</g>`
 }

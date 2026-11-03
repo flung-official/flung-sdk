@@ -142,6 +142,51 @@ export const SIDES: readonly Option[] = [
   { id: 'right', label: 'Tail right, flying left' },
 ]
 
+/**
+ * Tattoos: a small mark on the body, behind the face. A seed never picks one (every Flungie has none until one is put on, from
+ * the store or an override), so adding a tattoo changes no one's drawing. Drawn from 32 px.
+ */
+export const TATTOOS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'heart', label: 'Heart' },
+  { id: 'star', label: 'Star' },
+  { id: 'bolt', label: 'Lightning' },
+  { id: 'flower', label: 'Flower' },
+  { id: 'note', label: 'Music note' },
+  { id: 'flame', label: 'Flame' },
+  { id: 'anchor', label: 'Anchor' },
+]
+
+/**
+ * Pants: a little garment over the bottom of the body and the tail, the spike of the speech bubble. Never picked by a seed, as
+ * tattoos are, so adding a pair changes no one. Each has its own colours. Drawn from 32 px.
+ */
+export const PANTS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'shorts', label: 'Shorts' },
+  { id: 'stripes', label: 'Sailor stripes' },
+  { id: 'polka', label: 'Polka dots' },
+  { id: 'jeans', label: 'Jeans' },
+  { id: 'plaid', label: 'Plaid' },
+  { id: 'tutu', label: 'Tutu' },
+  { id: 'gold', label: 'Gold lamé' },
+]
+
+/**
+ * Auras: something that moves behind the Flungie, a glow, bubbles, sparkles or a ring. Never picked by a seed. Still unless
+ * the render asks for `animate`, and none under 32 px.
+ */
+export const AURAS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'glow', label: 'Soft glow' },
+  { id: 'bubbles', label: 'Bubbles' },
+  { id: 'hearts', label: 'Hearts' },
+  { id: 'sparkles', label: 'Sparkles' },
+  { id: 'orbit', label: 'Orbit' },
+  { id: 'halo', label: 'Rainbow halo' },
+  { id: 'prism', label: 'Prism ring' },
+]
+
 /** Every trait with its options, for pickers and inspectors. */
 export const TRAITS = {
   shape: SHAPES,
@@ -156,6 +201,9 @@ export const TRAITS = {
   accColour: ACC_COLOURS,
   side: SIDES,
   lines: LINE_PAIRS,
+  tattoo: TATTOOS,
+  pants: PANTS,
+  aura: AURAS,
 } as const
 
 export const byId = <T extends { readonly id: unknown }>(list: readonly T[], id: unknown): T | undefined => list.find((x) => x.id === id)

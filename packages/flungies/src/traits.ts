@@ -37,6 +37,12 @@ export interface Traits {
   accColour: string | null
   side: string
   lines: string
+  /** A mark on the body (TATTOOS). Never picked by the seed: 'none' unless put on. */
+  tattoo: string
+  /** Pants over the bottom and the tail (PANTS). Never picked by the seed: 'none' unless put on. */
+  pants: string
+  /** What moves behind it (AURAS). Never picked by the seed: 'none' unless put on. */
+  aura: string
   rolls: { acc: number; acc2: number; disc: number }
   jitter: {
     w: number
@@ -95,6 +101,9 @@ export function traits(seed: unknown, overrides: Overrides = {}, config: Flungie
     accColour: null,
     side: weighted(s('side'), SIDES).id,
     lines: weighted(s('lines'), LINE_PAIRS).id,
+    tattoo: 'none',
+    pants: 'none',
+    aura: 'none',
     rolls: { acc: s('acc-colour')(), acc2: s('acc-colour-2')(), disc: s('disc')() },
     jitter: {
       w: j(),

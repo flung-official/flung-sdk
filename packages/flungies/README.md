@@ -14,6 +14,74 @@ The package has no runtime dependencies. React is an optional peer.
 npm install @flung.dev/flungies
 ```
 
+
+## Expressions
+
+A Flungie's face for the moment: what it is feeling while it works. An expression never changes who a Flungie is, so the same
+seed can show every one, and `neutral` (the default) draws the seed's own face exactly as before.
+
+| Expression | Face |
+|---|---|
+| `neutral` | The seed's own eyes, mouth and blush |
+| `happy` | Closed happy eyes, a grin, warm cheeks |
+| `cute` | Big shining eyes, a cat mouth, deep pink cheeks and two sparkles |
+| `mad` | Angry brows, a frown, a red flush and marks of heat |
+| `sad` | Worried brows, a frown, cool cheeks and a tear |
+| `thinking` | Eyes glancing up, one brow raised, a flat mouth and a thought |
+| `surprised` | Wide eyes, raised brows, an O mouth |
+| `sleepy` | Half-closed eyes, a small mouth and a z |
+
+```ts
+render(traits('sacha@flung.dev'), { size: 128, expression: 'thinking' })
+flungie('sacha@flung.dev', { expression: 'mad' })
+const hero = mountFlungieGL(el, 'sacha@flung.dev', { expression: 'happy' })
+hero.setExpression('surprised')
+```
+
+Under 32 px only the eyes and mouth change: no brows, cheeks or extras. `EXPRESSIONS` lists them and `EXPRESSION_SPECS` says how
+each is drawn; a new expression is one entry there.
+
+## Store
+
+What a person can dress their Flungie in, and the rules for earning it. Plain data and pure functions: the service keeps the
+wallets and its own overrides, and passes them in, so the server, a staff console and the app all read the same rules.
+
+| Export | What it is |
+|---|---|
+| `DEFAULT_STORE` | Every accessory in each of its colours, and every eyes, mouth, tattoo, body colour, trail and shape, as `StoreItem`s with an id (`crown:gold`, `tattoo:heart`), a `kind`, a `category`, a rarity, a level and a price |
+| `STORE_CATEGORIES` | The shelf's sections: `headwear`, `glasses`, `gear`, `eyes`, `mouths`, `tattoos`, `colours`, `trails`, `shapes` |
+| `storeItems(overrides)` | The shelf with a service's changes (`level`, `price`, `rarity`, `enabled`) laid over the defaults |
+| `pointsEarned(facts, rules)` | Points for published posts, levels above the first and achievements (`DEFAULT_EARN_RULES`: 5, 50, 25) |
+| `balance(wallet)` | Earned plus staff's adjustment, less spent; never below 0 |
+| `availability(item, wallet, level)` | `owned`, `available`, or what stands in the way: `level`, `points` or `off` |
+| `dress(traits, items)` / `preview(traits, items)` | The traits, or an SVG, of a Flungie wearing one item or several (one of each kind); every other trait its own |
+
+```ts
+const shelf = storeItems({ 'crown:gold': { price: 1500 } })
+const svg = preview(traits('usr_8f3k2'), shelf.find((item) => item.id === 'crown:gold') ?? null)
+```
+
+By default an item opens at level 1, 5, 10 or 20 and costs 100, 300, 750 or 2,000 points by its rarity. Each accessory's first
+colour is its signature, one rarity higher. A new item is one entry in its trait table; a new kind is one entry in `KINDS` in
+`src/store.ts`.
+
+### Tattoos
+
+`TATTOOS` (heart, star, lightning, flower, music note, flame, anchor) is a trait no seed picks: every Flungie has none until one
+is put on, so tattoos change no one's drawing. A tattoo sits on the lower back of the body, in an ink that reads on its colour,
+from 32 px: `traits(id, { tattoo: 'heart' })` or `dress(t, { kind: 'tattoo', value: 'heart', colour: null })`.
+
+### Pants and auras
+
+`PANTS` (shorts, sailor stripes, polka dots, jeans, plaid, a tutu and gold lamé) dress the bottom of the body and the tail, the
+spike of the speech bubble, each in its own colours. `AURAS` (a soft glow, bubbles, hearts, sparkles, an orbit, a rainbow halo
+and a prism ring) sit behind the Flungie. Neither is picked by a seed. An aura is a still frame unless the render passes
+`animate: true`, which plays it with SMIL and needs no stylesheet; leave it off where the reader asked for reduced motion.
+
+```ts
+render(dress(traits(id), [{ kind: 'pants', value: 'tutu', colour: null }, { kind: 'aura', value: 'halo', colour: null }]), { size: 160, animate: true })
+```
+
 ## Use
 
 ```ts
