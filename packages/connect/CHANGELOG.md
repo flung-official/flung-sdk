@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/connect` on npm. From 0.3.0 on, release-please writes each section from the Conventional Commits that change `packages/connect` (see RELEASING.md at the root of the repository). 0.1.3 and 0.2.0 were set in `package.json` but never published; their changes are in 0.3.0.
 
+## [0.5.0](https://github.com/flung-official/flung-sdk/compare/connect-v0.4.0...connect-v0.5.0) (2026-11-04)
+
+
+### Added
+
+* **connect:** the panel in Flung's new look ([8fe748b](https://github.com/flung-official/flung-sdk/commit/8fe748b7950760c6c7715f6a39ed5d9f28988055))
+
 ## [0.4.0](https://github.com/flung-official/flung-sdk/compare/connect-v0.3.0...connect-v0.4.0) (2026-10-31)
 
 
