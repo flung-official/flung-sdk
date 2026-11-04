@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/flung-official/flung-sdk/compare/flungies-v0.1.0...flungies-v0.2.0) (2026-11-04)
+
+
+### Added
+
+* **flungies:** expressions, and a store with tattoos, pants and auras ([54754ba](https://github.com/flung-official/flung-sdk/commit/54754ba3b73a70e92c3bd0075bf00b88888c455d))
+
+
+### Fixed
+
+* **flungies:** pass animate and expression through the React Flungie ([8012764](https://github.com/flung-official/flung-sdk/commit/8012764fa64f5206fd86fb483ef09d59ffec1cdd))
+
 ## 0.1.0 (2026-10-30)
 
 
