@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connected accounts · Demo</title>
     <style>
-      :root { color-scheme: light dark; --bg: #fafafa; --text: #18181b; --muted: #52525b; }
-      @media (prefers-color-scheme: dark) { :root { --bg: #09090b; --text: #f4f4f5; --muted: #a1a1aa; } }
-      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      /* Flung's own typeface, as its docs and apps load it; the panel picks it up from the page. */
+      @font-face { font-family: 'Rethink Sans'; font-weight: 400 800; font-display: swap; src: url('https://assets.flung.dev/fonts/rethink-sans-5.3.0/rethink-sans-latin-wght-normal.woff2') format('woff2'); }
+      :root { color-scheme: light dark; --bg: #f7f6f3; --text: #16141c; --muted: #6b6573; }
+      @media (prefers-color-scheme: dark) { :root { --bg: #0e0d12; --text: #f5f3f0; --muted: #a39dac; } }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 'Rethink Sans', system-ui, -apple-system, "Segoe UI", sans-serif; }
       main { max-width: 40rem; margin: 0 auto; padding: 48px 16px; }
       h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
       p { margin: 0 0 24px; color: var(--muted); }

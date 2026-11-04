@@ -8,7 +8,7 @@
  * a connect waiting on its window, nothing connected, and a refused token, each of the whole page.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { parseArgs } from 'node:util'
@@ -57,6 +57,8 @@ const themes = values.themes.split(',') as ('light' | 'dark')[]
 const viewports = values.viewports.split(',').filter((name): name is Viewport => name in VIEWPORTS)
 const shots: readonly Shot[] = values.states ? STATES : [{ name: values.name ?? values.set, set: values.set, clicks: values.click, ...(values.query === undefined ? {} : { query: values.query }) }]
 for (const shot of shots) if (FIXTURE_SETS[shot.set] === undefined) throw new Error(`No fixture set named ${shot.set}`)
+/** assets.flung.dev's files, in the flung-assets checkout beside this repository. */
+const ASSETS_PUBLIC = path.resolve(ROOT, '../flung-assets/public')
 const out = path.resolve(values.out ?? path.join(ROOT, 'tools/demo/artifacts/shots'))
 mkdirSync(out, { recursive: true })
 
@@ -90,6 +92,9 @@ try {
         const refused = new Set<string>()
         await context.route('**/*', async (route) => {
           const url = new URL(route.request().url())
+          // Flung's fonts, from the flung-assets checkout beside this repository when there is one: nothing leaves the machine.
+          const font = url.origin === 'https://assets.flung.dev' && url.pathname.startsWith('/fonts/') ? path.join(ASSETS_PUBLIC, url.pathname) : null
+          if (font !== null && font.startsWith(ASSETS_PUBLIC) && existsSync(font)) return route.fulfill({ status: 200, headers: { 'content-type': 'font/woff2', 'access-control-allow-origin': '*' }, body: readFileSync(font) })
           const answer = url.origin === 'http://demo.localhost' ? handler.handle(route.request().method(), url, route.request().postData() ?? undefined) : null
           if (answer === null) {
             refused.add(url.origin)
