@@ -123,38 +123,41 @@ Set any of these on the element. Each has a default for light and dark.
 
 | Property | Default | What |
 |---|---|---|
-| `--flung-font` | `system-ui, ...` | The typeface. |
+| `--flung-font` | `"Rethink Sans", system-ui, ...` | The typeface. Rethink Sans is Flung's; the panel uses it when the page loads it, and the system font otherwise. |
 | `--flung-font-size` | `15px` | Body text; most other sizes are worked out from it. |
 | `--flung-font-size-small` | `13px` | Counts, handles, labels and the footer. |
 | `--flung-line-height` | `1.45` | Body line height. |
 | `--flung-font-weight-medium` | `500` | Buttons and account names. |
 | `--flung-font-weight-strong` | `600` | Platform names and initials. |
-| `--flung-text` | `#18181b` | Text. |
-| `--flung-muted` | `#71717a` | Secondary text. |
+| `--flung-text` | `#16141c` | Text. |
+| `--flung-muted` | `#6b6573` | Secondary text. |
 | `--flung-surface` | `#ffffff` | The panel's background. |
-| `--flung-raised` | `#f4f4f5` | Questions, the message line, button hover. |
-| `--flung-border` | `#e4e4e7` | Every border. |
-| `--flung-accent` | `#18181b` | Primary buttons. |
-| `--flung-accent-text` | `#ffffff` | Text on primary buttons. |
+| `--flung-raised` | `#f3f1ee` | Questions, the message line, button hover. |
+| `--flung-border` | `#e7e4df` | Rows, the panel and cards. |
+| `--flung-border-strong` | `#dad6cf` | Buttons and the handle field. |
+| `--flung-accent` | `#ffa584` | Primary buttons. |
+| `--flung-accent-hover` | `#ff9670` | Primary buttons on hover. |
+| `--flung-accent-text` | `#16141c` | Text on primary buttons. |
+| `--flung-link` | `#8f4325` | Links and the focus ring. |
 | `--flung-danger` | `#dc2626` | Errors, Disconnect on hover, the confirm button. |
-| `--flung-warning` | `#b45309` | The reconnect status. |
-| `--flung-success` | `#15803d` | The connected dot. |
-| `--flung-radius` | `12px` | The panel's corners. |
-| `--flung-radius-inner` | radius less 4px | Tiles, cards, questions and fields. |
+| `--flung-warning` | `#b45309` | The reconnect status's icon. |
+| `--flung-success` | `#15803d` | The connected count's icon. |
+| `--flung-radius` | `10px` | The panel's corners. |
+| `--flung-radius-inner` | `6px` | Cards, questions and fields. |
 | `--flung-button-radius` | `--flung-radius-inner` | Buttons. |
 | `--flung-border-width` | `1px` | Every border. `0` for none. |
 | `--flung-shadow` | `none` | The panel's shadow. |
 | `--flung-card-shadow` | `none` | Each card in the `grid` layout. |
 | `--flung-padding` | `16px` | Space at the panel's edges. |
 | `--flung-gap` | `12px` | Space between pieces and rows. |
-| `--flung-badge-size` | `40px` | The platform tile. |
-| `--flung-mark-size` | `20px` | The platform mark inside it. |
+| `--flung-badge-size` | `32px` | The space the platform mark sits in. |
+| `--flung-mark-size` | `24px` | The platform mark. |
 | `--flung-mark-strength` | `100%` | How much of each platform's brand colour its mark keeps. |
-| `--flung-tint-strength` | `8%` | How much of it the tile and the initial circle take. |
+| `--flung-tint-strength` | `8%` | How much of it the initial circle and a choice's tile take. |
 | `--flung-avatar-size` | `32px` | Account pictures. |
 | `--flung-button-height` | `36px` | Every button and the handle field. |
 | `--flung-button-padding` | `0 14px` | Inside buttons. |
-| `--flung-focus-color` | `--flung-accent` | The focus ring. |
+| `--flung-focus-color` | `--flung-link` | The focus ring. |
 | `--flung-focus-width` | `2px` | Its width. |
 | `--flung-focus-offset` | `2px` | Its gap from the control. |
 | `--flung-grid-min` | `16rem` | The narrowest card in the `grid` layout. |

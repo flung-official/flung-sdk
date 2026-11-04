@@ -5,7 +5,7 @@ import { DEFAULT_LABELS, formatLabel as format } from '../core/labels.js'
 import type { ConnectLabels } from '../core/labels.js'
 import { parsePlatformList } from '../core/platforms.js'
 import type { ConnectVariant, Platform } from '../core/types.js'
-import { avatar, button, html, mark, qrCode } from './dom.js'
+import { avatar, button, glyph, html, mark, qrCode } from './dom.js'
 import type { ChangeDetail, ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
 import { CHOICE_MARKS, FLUNG_MARK, PLATFORM_MARKS } from './marks.js'
 import { BASE_STYLES, STYLES } from './styles.js'
@@ -247,7 +247,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
         ...(chooser ? { expanded: choosing, controls: `choose-${platform}` } : {}),
       })
       const count = first ? labels.notConnected : format(labels.connectedCount, { count: String(tile.accounts.length) })
-      const title = html('span', { class: 'title', part: 'title' }, html('span', { class: 'name', part: 'name' }, name), html('span', { class: first ? 'count' : 'count on', part: first ? 'count' : 'count count-connected' }, count))
+      const title = html('span', { class: 'title', part: 'title' }, html('span', { class: 'name', part: 'name' }, name), html('span', { class: first ? 'count' : 'count on', part: first ? 'count' : 'count count-connected' }, first ? null : glyph('connected', 'count-icon'), count))
       const badge = html('span', { class: 'badge', part: 'badge', 'aria-hidden': 'true' }, mark(PLATFORM_MARKS[platform].path))
       const row = html('div', { class: 'row', part: 'row' }, html('slot', { name: options.slot }, badge, title, connect))
       const items = tile.accounts.map((account) => this.#accountRow(account, busy, labels))
@@ -273,7 +273,7 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
         item.username === null ? null : html('span', { class: 'username', part: 'account-username', 'data-tooltip': `@${item.username}`, 'data-tooltip-truncated': true }, `@${item.username}`),
       )
       const tag = item.page ? html('span', { class: 'tag', part: 'tag tag-page' }, labels.pageTag) : null
-      const who = html('span', { class: 'who', part: 'account-details' }, names, tag, status === null ? null : html('span', { class: 'status', part: 'status' }, status))
+      const who = html('span', { class: 'who', part: 'account-details' }, names, tag, status === null ? null : html('span', { class: 'status', part: 'status' }, glyph('warning', 'status-icon'), status))
       return html(
         'li',
         { class: 'account', part: 'account', 'data-account': account.id },
@@ -284,7 +284,17 @@ export function createFlungConnectClass(): new () => FlungConnectElement {
     /** Flung's mark and name, linking to its docs, unless the page set `branding="none"`. */
     #footer(labels: ConnectLabels): HTMLElement | null {
       if (this.getAttribute('branding') === 'none') return null
-      const link = html('a', { href: 'https://docs.flung.dev', target: '_blank', rel: 'noopener', part: 'footer-link' }, mark(FLUNG_MARK.path, { viewBox: FLUNG_MARK.viewBox, className: 'flung', part: 'footer-mark', size: 14 }), 'Flung')
+      const logo = mark(FLUNG_MARK.path, { viewBox: FLUNG_MARK.viewBox, className: 'flung', part: 'footer-mark', size: 16 })
+      // The mark's two speed lines, drawn as strokes in their own colours: peach above, sky below.
+      for (const [d, tone] of [['M3 12.2H7.4', 'peach'], ['M2.2 18H5.4', 'sky']] as const) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        line.setAttribute('d', d)
+        line.setAttribute('class', `speed speed-${tone}`)
+        line.setAttribute('stroke-width', '3.4')
+        line.setAttribute('stroke-linecap', 'round')
+        logo.append(line)
+      }
+      const link = html('a', { href: 'https://docs.flung.dev', target: '_blank', rel: 'noopener', part: 'footer-link' }, logo, 'Flung')
       return html('p', { class: 'footer', part: 'footer' }, labels.securedBy, link)
     }
 

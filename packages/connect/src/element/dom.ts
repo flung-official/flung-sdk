@@ -72,6 +72,17 @@ export function mark(path: string, options: { viewBox?: string; className?: stri
   return svg
 }
 
+/** The glyphs a state is shown with, Phosphor Light's (MIT), the set Flung's own apps use: a state is an icon and a word, never a dot. */
+export const GLYPHS = {
+  connected: 'M172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76ZM230,128A102,102,0,1,1,128,26,102.12,102.12,0,0,1,230,128Zm-12,0a90,90,0,1,0-90,90A90.1,90.1,0,0,0,218,128Z',
+  warning: 'M128,26A102,102,0,1,0,230,128,102.12,102.12,0,0,0,128,26Zm0,192a90,90,0,1,1,90-90A90.1,90.1,0,0,1,128,218Zm-6-82V80a6,6,0,0,1,12,0v56a6,6,0,0,1-12,0Zm16,36a10,10,0,1,1-10-10A10,10,0,0,1,138,172Z',
+} as const
+
+/** A state's glyph, inline before its word in the word's colour. */
+export function glyph(name: keyof typeof GLYPHS, part: string): SVGSVGElement {
+  return mark(GLYPHS[name], { viewBox: '0 0 256 256', className: `glyph glyph-${name}`, part, size: 14 })
+}
+
 /** The light modules kept around a QR code so a camera finds its edges (the standard asks for four; three reads well on a screen). */
 const QR_QUIET = 3
 
