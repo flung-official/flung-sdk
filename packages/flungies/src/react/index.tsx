@@ -32,7 +32,11 @@ export function Flungie({ seed, size = 64, theme = 'light', variant = 'disc', an
   const config = JSON.stringify([rest.overrides, rest.salt, rest.palette, rest.accessories])
   // config is the serialised form of the options traits() reads, so a new object with the same values is no change.
   const t = useMemo(() => traits(seed, rest.overrides, rest), [seed, config])
-  const svg = useMemo(() => render(t, { size, theme, variant, texture: rest.texture, ground: rest.ground, palette: rest.palette, id: reactId }), [t, size, theme, variant, rest.texture, rest.ground, rest.palette, reactId])
+  // An aura moves (`animate`) and a face shows how it feels (`expression`); both are the caller's, as `render` takes them.
+  const svg = useMemo(
+    () => render(t, { size, theme, variant, texture: rest.texture, ground: rest.ground, palette: rest.palette, id: reactId, animate: rest.animate, expression: rest.expression }),
+    [t, size, theme, variant, rest.texture, rest.ground, rest.palette, reactId, rest.animate, rest.expression],
+  )
   const gl = animated && size >= ANIMATED_MIN_SIZE
   const host = useRef<HTMLDivElement>(null)
   const hero = useRef<FlungieGL | null>(null)
