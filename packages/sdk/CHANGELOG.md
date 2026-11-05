@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.7.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.6.0...sdk-v0.7.0) (2026-11-05)
+
+
+### Added
+
+* **sdk:** notifications, series, tags, composers and brand style ([2cb4aa7](https://github.com/flung-official/flung-sdk/commit/2cb4aa7e9299f0fe169a3ef41e257d8a0fc9dd78))
+
 ## [0.6.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.5.0...sdk-v0.6.0) (2026-10-31)
 
 
