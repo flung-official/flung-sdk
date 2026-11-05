@@ -40,7 +40,7 @@ describe('Flung', () => {
   it('schedules at a local time in a zone, and reads the time back in UTC and local', async () => {
     expectTypeOf<NonNullable<PostsCreateData['body']>['timeZone']>().toEqualTypeOf<string | undefined>()
     expectTypeOf<Post['publishAtLocal']>().toEqualTypeOf<string>()
-    expectTypeOf<NonNullable<Post['warnings']>[number]['code']>().toEqualTypeOf<'local_time_skipped' | 'local_time_ambiguous'>()
+    expectTypeOf<NonNullable<Post['warnings']>[number]['code']>().toEqualTypeOf<'local_time_skipped' | 'local_time_ambiguous' | 'repeat_duplicate_text' | 'will_be_resized'>()
     expectTypeOf<Me['timeZoneSource']>().toEqualTypeOf<'user' | 'workspace' | 'default'>()
     expectTypeOf<'invalid_time_zone'>().toExtend<FlungErrorCode>()
     const api = scripted(() => Response.json({ id: 'post_1', status: 'scheduled', publishAt: '2026-11-03T07:00:00.000Z', publishAtLocal: '2026-11-03T09:00:00+02:00', timeZone: 'Europe/Athens', targets: [] }, { status: 201 }))
