@@ -29,6 +29,18 @@ describe('Flung', () => {
     expect(request?.headers.get('idempotency-key')).toMatch(/^[0-9a-f-]{36}$/)
   })
 
+  it('sends a long post as a thread, and lists posts by what they did', async () => {
+    const api = scripted(
+      () => Response.json({ id: 'post_2', status: 'scheduled' }, { status: 201 }),
+      () => Response.json({ data: [], nextCursor: null }),
+    )
+    const flung = new Flung({ apiKey: 'test-key', baseUrl: 'https://api.flung.example/', fetch: api.fetch, maxRetries: 0 })
+    await flung.posts.create({ content: 'A long story in parts.', accountIds: ['acct_1'], thread: true })
+    expect(await api.requests[0]?.json()).toMatchObject({ thread: true })
+    await flung.posts.list({ sort: 'likes' })
+    expect(new URL(api.requests[1]?.url ?? '').searchParams.get('sort')).toBe('likes')
+  })
+
   it('throws FlungError with the stable code and details', async () => {
     const api = scripted(() => Response.json({ error: { code: 'unknown_accounts', message: 'No such accounts.', details: { accountIds: ['acct_x'] } } }, { status: 422 }))
     const flung = new Flung({ apiKey: 'flung_sk_test', fetch: api.fetch, maxRetries: 0 })
