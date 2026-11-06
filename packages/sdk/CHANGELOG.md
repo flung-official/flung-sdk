@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.9.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.8.0...sdk-v0.9.0) (2026-11-06)
+
+
+### Added
+
+* **sdk:** drives, photos and linked files ([5b1bfbf](https://github.com/flung-official/flung-sdk/commit/5b1bfbf1d67761eb1f848d89a10c806c51c21c5d))
+
 ## [0.8.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.7.0...sdk-v0.8.0) (2026-11-06)
 
 
