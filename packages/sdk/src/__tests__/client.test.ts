@@ -41,6 +41,19 @@ describe('Flung', () => {
     expect(new URL(api.requests[1]?.url ?? '').searchParams.get('sort')).toBe('likes')
   })
 
+  it('lists a brand\'s drives and imports a file, which a drive that asks first answers as a pending request', async () => {
+    const api = scripted(
+      () => Response.json({ data: [{ id: 'drv_1', provider: 'onedrive', profileId: null, status: 'active', account: { id: 'm', name: null, email: null }, permissions: { agentBrowse: true, agentImport: true, apiKeys: true, askBeforeImport: true }, connectedAt: '2026-11-06T00:00:00.000Z' }] }),
+      () => Response.json({ id: 'dri_1', status: 'pending', mediaId: null }, { status: 202 }),
+    )
+    const flung = new Flung({ apiKey: 'test-key', baseUrl: 'https://api.flung.example/', fetch: api.fetch, maxRetries: 0 })
+    const { data } = await flung.drives.list()
+    expect(data[0]?.provider).toBe('onedrive')
+    await flung.drives.importFile({ id: 'drv_1', fileId: 'PHOTO1' })
+    expect(api.requests[1]?.url).toBe('https://api.flung.example/v1/drives/drv_1/files/PHOTO1/import')
+    expect(api.requests[1]?.headers.get('idempotency-key')).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
   it('throws FlungError with the stable code and details', async () => {
     const api = scripted(() => Response.json({ error: { code: 'unknown_accounts', message: 'No such accounts.', details: { accountIds: ['acct_x'] } } }, { status: 422 }))
     const flung = new Flung({ apiKey: 'flung_sk_test', fetch: api.fetch, maxRetries: 0 })

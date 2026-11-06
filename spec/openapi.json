@@ -640,6 +640,13 @@
                   "plotwork_not_connected",
                   "plotwork_reconnect",
                   "plotwork_unavailable",
+                  "drive_not_connected",
+                  "drive_reconnect",
+                  "drive_unavailable",
+                  "drive_agent_browse_off",
+                  "drive_agent_import_off",
+                  "drive_api_keys_off",
+                  "drive_import_decided",
                   "internal_error"
                 ]
               },
@@ -1670,6 +1677,17 @@
           "threadParts": {
             "type": "integer",
             "description": "Parts one thread may have on X, Bluesky, Threads and Mastodon (`thread: true` on a post). A longer one is refused with `plan_limit_reached`."
+          },
+          "chatChannels": {
+            "type": "integer",
+            "description": "Slack and Discord channels the workspace sends post and channel alerts to. 0: alerts go by email and the bell."
+          },
+          "drives": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Google Drives and OneDrives connected across the workspace and its brands. 0: not on this plan. null is no limit."
           },
           "performanceDays": {
             "type": "integer",
@@ -8961,6 +8979,293 @@
           "folder",
           "scheme",
           "updatedAt"
+        ]
+      },
+      "DriveList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Drive"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "Drive": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "drv_8f3k2m9q4t7v1x5z0b6n3c8d"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "google_drive",
+              "google_photos",
+              "onedrive",
+              "sharepoint"
+            ]
+          },
+          "profileId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The brand it belongs to, or null for the whole workspace."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "needs_reconnect"
+            ],
+            "description": "`needs_reconnect` once the service ended the grant: a person connects it again in the portal."
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "email": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "email"
+            ]
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/DrivePermissions"
+          },
+          "connectedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "profileId",
+          "status",
+          "account",
+          "permissions",
+          "connectedAt"
+        ]
+      },
+      "DrivePermissions": {
+        "type": "object",
+        "properties": {
+          "agentBrowse": {
+            "type": "boolean",
+            "description": "Agents and MCP may list its files."
+          },
+          "agentImport": {
+            "type": "boolean",
+            "description": "Agents and MCP may import its files into media."
+          },
+          "apiKeys": {
+            "type": "boolean",
+            "description": "A workspace API key, with no person behind it, may use it at all."
+          },
+          "askBeforeImport": {
+            "type": "boolean",
+            "description": "An agent's import waits for a person to approve it in the portal."
+          }
+        },
+        "required": [
+          "agentBrowse",
+          "agentImport",
+          "apiKeys",
+          "askBeforeImport"
+        ]
+      },
+      "DriveFileList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DriveFile"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pass it as `cursor` for the next page; null on the last."
+          }
+        },
+        "required": [
+          "data",
+          "nextCursor"
+        ]
+      },
+      "DriveFile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "folder"
+            ],
+            "description": "A folder (OneDrive and SharePoint, where a site and a library are folders too) is passed as `folder` to list what it holds."
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bytes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "thumbnail": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "mimeType",
+          "bytes",
+          "updatedAt",
+          "thumbnail"
+        ]
+      },
+      "DriveImport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "dri_8f3k2m9q4t7v1x5z0b6n3c8d"
+          },
+          "driveId": {
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "altText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requestedBy": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "api_key"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "imported",
+              "denied",
+              "expired",
+              "failed"
+            ],
+            "description": "`pending` until a person decides in the portal; `imported` with `mediaId` once copied."
+          },
+          "mediaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Put it in a post's `mediaIds` once `imported`."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-01T09:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "driveId",
+          "fileId",
+          "name",
+          "mimeType",
+          "bytes",
+          "altText",
+          "requestedBy",
+          "status",
+          "mediaId",
+          "error",
+          "createdAt",
+          "decidedAt",
+          "expiresAt"
         ]
       },
       "WebSearchResults": {
@@ -23699,6 +24004,485 @@
           },
           "503": {
             "description": "Plotwork is not set up on this server (`not_configured`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/drives": {
+      "get": {
+        "operationId": "drives.list",
+        "tags": [
+          "Drives"
+        ],
+        "summary": "List connected drives",
+        "description": "The Google Drives, Google Photos, OneDrives and SharePoints connected to the workspace and its brands, each with the switches the person set on what agents may do. Never a token.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The drives.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriveList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/drives/{id}/files": {
+      "get": {
+        "operationId": "drives.listFiles",
+        "tags": [
+          "Drives"
+        ],
+        "summary": "List a drive's files",
+        "description": "The pictures and videos of a drive Flung can post. For Google Drive and Google Photos, the files people picked for Flung; for OneDrive, a folder (the top one by default, or `folder`) or a search with `q`; for SharePoint, the sites first, then a site's document libraries, then their folders, each passed as `folder`. Needs the drive's \"Agents and MCP may browse\".",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "description": "A drive id from `GET /v1/drives`."
+            },
+            "required": true,
+            "description": "A drive id from `GET /v1/drives`.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 600,
+              "description": "OneDrive and SharePoint: a folder id from the list (for SharePoint also a site or a library), to list what it holds."
+            },
+            "required": false,
+            "description": "OneDrive and SharePoint: a folder id from the list (for SharePoint also a site or a library), to list what it holds.",
+            "name": "folder",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "Words the file name holds.",
+              "example": "launch"
+            },
+            "required": false,
+            "description": "Words the file name holds.",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 4000,
+              "description": "The nextCursor of the page before."
+            },
+            "required": false,
+            "description": "The nextCursor of the page before.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of files.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriveFileList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The drive's switches do not allow this caller: `drive_agent_browse_off`, `drive_agent_import_off` or `drive_api_keys_off`. A person turns them on in the portal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such drive (`drive_not_connected`), or no such file it may read (`not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The drive must be connected again in the portal (`drive_reconnect`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The drive could not be reached (`drive_unavailable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is not set up on this server (`not_configured`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/drives/{id}/files/{fileId}/import": {
+      "post": {
+        "operationId": "drives.importFile",
+        "tags": [
+          "Drives"
+        ],
+        "summary": "Import a drive file",
+        "description": "Copies a picture or a video from the drive into media, `ready` for a post's `mediaIds` (201). Where the drive asks first, nothing is copied yet: the answer is an import request, `pending` (202), which a person approves in the portal; read it with `GET /v1/drives/imports/{id}`. Needs the drive's \"Agents may import into posts\".",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "description": "A drive id from `GET /v1/drives`."
+            },
+            "required": true,
+            "description": "A drive id from `GET /v1/drives`.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "description": "A file id from the drive's list."
+            },
+            "required": true,
+            "description": "A file id from the drive's list.",
+            "name": "fileId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again."
+            },
+            "required": false,
+            "description": "Any unique string, such as a UUID. A retry with the same key and body within 24 hours gets the first answer instead of running again.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "altText": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "description": "The picture's description, for people who cannot see it."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The media file, `ready`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "The import request, waiting for a person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriveImport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The drive's switches do not allow this caller: `drive_agent_browse_off`, `drive_agent_import_off` or `drive_api_keys_off`. A person turns them on in the portal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such drive (`drive_not_connected`), or no such file it may read (`not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The drive must be connected again in the portal (`drive_reconnect`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The drive could not be reached (`drive_unavailable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The service is not set up on this server (`not_configured`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/drives/imports/{id}": {
+      "get": {
+        "operationId": "drives.getImport",
+        "tags": [
+          "Drives"
+        ],
+        "summary": "Get an import request",
+        "description": "Whether a person approved an import yet: `pending`, `imported` with its `mediaId`, `denied`, `expired` (24 hours unanswered) or `failed` with the reason.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "description": "An import id from `POST /v1/drives/{id}/files/{fileId}/import`."
+            },
+            "required": true,
+            "description": "An import id from `POST /v1/drives/{id}/files/{fileId}/import`.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The import request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriveImport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, unknown, revoked or expired API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such import request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this credential; wait for `retry-after` seconds.",
             "content": {
               "application/json": {
                 "schema": {
