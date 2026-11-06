@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.8.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.7.0...sdk-v0.8.0) (2026-11-06)
+
+
+### Added
+
+* **sdk:** send a post as a thread, and list posts by their counts ([c6ea822](https://github.com/flung-official/flung-sdk/commit/c6ea822dc6091451d0786bd08b12b4cf1a0a45c8))
+
 ## [0.7.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.6.0...sdk-v0.7.0) (2026-11-05)
 
 
