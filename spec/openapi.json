@@ -69,6 +69,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -80,6 +86,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -91,6 +103,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -102,6 +120,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -113,6 +137,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -124,6 +154,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -135,6 +171,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -146,6 +188,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -157,6 +205,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -168,6 +222,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -179,6 +239,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -190,10 +256,61 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
+          },
+          "performance": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "views": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "likes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "comments": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "reposts": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "readAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-11-01T09:00:00.000Z"
+              }
+            },
+            "required": [
+              "views",
+              "likes",
+              "comments",
+              "reposts",
+              "readAt"
+            ],
+            "description": "The counts Flung keeps for a published post, summed over its accounts: read an hour, a day, a week and a month after it goes out on plans with `performanceDays`, and whenever its metrics are read. A count no platform reports is null; null until first read."
           },
           "tagIds": {
             "type": "array",
@@ -374,6 +491,31 @@
               "null"
             ],
             "description": "Why the first comment failed. The post itself is unaffected."
+          },
+          "thread": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "ids",
+              "error"
+            ],
+            "description": "A thread's later parts on the platform, in order (`platformPostId` is the first), and why the rest could not be posted; null when the post is not a thread."
           },
           "publishedAt": {
             "type": [
@@ -675,6 +817,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -686,6 +834,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -697,6 +851,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -708,6 +868,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -719,6 +885,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -730,6 +902,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -741,6 +919,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -752,6 +936,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -763,6 +953,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -774,6 +970,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -785,6 +987,12 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -796,10 +1004,61 @@
                   },
                   "firstComment": {
                     "type": "string"
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
+          },
+          "performance": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "views": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "likes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "comments": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "reposts": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "readAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-11-01T09:00:00.000Z"
+              }
+            },
+            "required": [
+              "views",
+              "likes",
+              "comments",
+              "reposts",
+              "readAt"
+            ],
+            "description": "The counts Flung keeps for a published post, summed over its accounts: read an hour, a day, a week and a month after it goes out on plans with `performanceDays`, and whenever its metrics are read. A count no platform reports is null; null until first read."
           },
           "tagIds": {
             "type": "array",
@@ -1407,6 +1666,14 @@
               "null"
             ],
             "description": "Recurring posts (`/v1/series`) active or paused at once; one ended or stopped frees its slot. null is no limit."
+          },
+          "threadParts": {
+            "type": "integer",
+            "description": "Parts one thread may have on X, Bluesky, Threads and Mastodon (`thread: true` on a post). A longer one is refused with `plan_limit_reached`."
+          },
+          "performanceDays": {
+            "type": "integer",
+            "description": "Days after publishing that Flung keeps reading a post's views, likes, comments and reposts, so posts can be listed by them (`sort`). 0: not kept; one post's counts are still read with GET /v1/posts/{id}/metrics."
           }
         },
         "required": [
@@ -3542,6 +3809,12 @@
               },
               "citeSources": {
                 "type": "boolean"
+              },
+              "thread": {
+                "type": "boolean"
+              },
+              "threadNumbered": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -3789,6 +4062,12 @@
             "additionalProperties": false
           },
           "citeSources": {
+            "type": "boolean"
+          },
+          "thread": {
+            "type": "boolean"
+          },
+          "threadNumbered": {
             "type": "boolean"
           }
         },
@@ -4179,6 +4458,10 @@
           "firstComment": {
             "type": "boolean",
             "description": "Posts here can take `platformOverrides.<platform>.firstComment`."
+          },
+          "threads": {
+            "type": "boolean",
+            "description": "A long text goes here as a thread with `thread: true`: each part a reply to the one before, within `maxTextLength` as the platform counts it."
           }
         },
         "required": [
@@ -4195,7 +4478,8 @@
           "postsPerHour",
           "tokensExpire",
           "destinations",
-          "firstComment"
+          "firstComment",
+          "threads"
         ]
       },
       "PostingTimes": {
@@ -4889,6 +5173,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -4989,6 +5284,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -5091,6 +5397,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -5191,6 +5508,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -5293,6 +5621,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -5393,6 +5732,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -5495,6 +5845,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -5595,6 +5956,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -5697,6 +6069,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -5797,6 +6180,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -5899,6 +6293,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -5999,6 +6404,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -6109,6 +6525,14 @@
             "example": [
               "tag_aaaaaaaaaaaaaaaaaaaaaaaa"
             ]
+          },
+          "thread": {
+            "type": "boolean",
+            "description": "Post a text longer than a platform takes as a thread there: on x, bluesky, threads, mastodon the content is cut into parts within each platform's limit (X counts a link as 23 and CJK as 2; Bluesky counts graphemes), between paragraphs, then sentences, then words, a line of `---` always starting a part. Every other platform gets the whole text as one post, `---` lines removed, within its own limit. The plan limits the parts (`threadParts`); a platform's own `platformOverrides.<platform>.thread` is kept as given."
+          },
+          "threadNumbered": {
+            "type": "boolean",
+            "description": "With `thread`: ends each part with ` 1/4`, counted within the limit."
           },
           "variables": {
             "type": "object",
@@ -6237,6 +6661,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -6337,6 +6772,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -6439,6 +6885,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -6539,6 +6996,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -6641,6 +7109,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -6741,6 +7220,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -6843,6 +7333,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -6943,6 +7444,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -7045,6 +7557,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -7145,6 +7668,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -7247,6 +7781,17 @@
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                   },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                  },
                   "boardId": {
                     "type": "string",
                     "minLength": 1,
@@ -7347,6 +7892,17 @@
                     "minLength": 1,
                     "maxLength": 2000,
                     "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                  },
+                  "thread": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000
+                    },
+                    "minItems": 2,
+                    "maxItems": 25,
+                    "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                   },
                   "boardId": {
                     "type": "string",
@@ -8585,6 +9141,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -8685,6 +9252,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -8787,6 +9365,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -8887,6 +9476,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -8989,6 +9589,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -9089,6 +9700,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -9191,6 +9813,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -9291,6 +9924,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -9393,6 +10037,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -9493,6 +10148,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -9595,6 +10261,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -9695,6 +10372,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -9805,6 +10493,14 @@
                     "example": [
                       "tag_aaaaaaaaaaaaaaaaaaaaaaaa"
                     ]
+                  },
+                  "thread": {
+                    "type": "boolean",
+                    "description": "Post a text longer than a platform takes as a thread there: on x, bluesky, threads, mastodon the content is cut into parts within each platform's limit (X counts a link as 23 and CJK as 2; Bluesky counts graphemes), between paragraphs, then sentences, then words, a line of `---` always starting a part. Every other platform gets the whole text as one post, `---` lines removed, within its own limit. The plan limits the parts (`threadParts`); a platform's own `platformOverrides.<platform>.thread` is kept as given."
+                  },
+                  "threadNumbered": {
+                    "type": "boolean",
+                    "description": "With `thread`: ends each part with ` 1/4`, counted within the limit."
                   },
                   "variables": {
                     "type": "object",
@@ -9966,6 +10662,23 @@
             "required": false,
             "description": "Only posts with this tag.",
             "name": "tagId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "newest",
+                "views",
+                "likes",
+                "comments",
+                "reposts"
+              ],
+              "description": "The order: `newest` (the default) by creation; `views`, `likes`, `comments` or `reposts` most first by the counts Flung keeps (`performance`), posts with none last. A count sort needs a plan with `performanceDays` and pages with `startingAfter` as usual."
+            },
+            "required": false,
+            "description": "The order: `newest` (the default) by creation; `views`, `likes`, `comments` or `reposts` most first by the counts Flung keeps (`performance`), posts with none last. A count sort needs a plan with `performanceDays` and pages with `startingAfter` as usual.",
+            "name": "sort",
             "in": "query"
           }
         ],
@@ -10159,6 +10872,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -10259,6 +10983,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -10361,6 +11096,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -10461,6 +11207,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -10563,6 +11320,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -10663,6 +11431,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -10765,6 +11544,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -10865,6 +11655,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -10967,6 +11768,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -11067,6 +11879,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -11169,6 +11992,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -11270,6 +12104,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -11359,6 +12204,14 @@
                         }
                       }
                     }
+                  },
+                  "thread": {
+                    "type": "boolean",
+                    "description": "Post a text longer than a platform takes as a thread there: on x, bluesky, threads, mastodon the content is cut into parts within each platform's limit (X counts a link as 23 and CJK as 2; Bluesky counts graphemes), between paragraphs, then sentences, then words, a line of `---` always starting a part. Every other platform gets the whole text as one post, `---` lines removed, within its own limit. The plan limits the parts (`threadParts`); a platform's own `platformOverrides.<platform>.thread` is kept as given."
+                  },
+                  "threadNumbered": {
+                    "type": "boolean",
+                    "description": "With `thread`: ends each part with ` 1/4`, counted within the limit."
                   }
                 }
               }
@@ -14990,6 +15843,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -15090,6 +15954,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -15192,6 +16067,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -15292,6 +16178,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -15394,6 +16291,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -15494,6 +16402,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -15596,6 +16515,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -15696,6 +16626,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -15798,6 +16739,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -15898,6 +16850,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -16000,6 +16963,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -16100,6 +17074,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -16526,6 +17511,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -16626,6 +17622,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -16728,6 +17735,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -16828,6 +17846,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -16930,6 +17959,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -17030,6 +18070,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -17132,6 +18183,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -17232,6 +18294,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -17334,6 +18407,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -17434,6 +18518,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
@@ -17536,6 +18631,17 @@
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
                           },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
+                          },
                           "boardId": {
                             "type": "string",
                             "minLength": 1,
@@ -17636,6 +18742,17 @@
                             "minLength": 1,
                             "maxLength": 2000,
                             "description": "Commented on the post, as the account, right after it publishes. Only on linkedin, threads, instagram, youtube, bluesky, mastodon, farcaster, facebook. If it fails the post stays published, and the target's `firstCommentError` says why."
+                          },
+                          "thread": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 10000
+                            },
+                            "minItems": 2,
+                            "maxItems": 25,
+                            "description": "Only on x, bluesky, threads, mastodon: the post as a thread, each part a reply to the one before, the files on the first. Each part within the platform's limit as it counts text; the plan limits the parts (`threadParts`). Usually left to `thread: true`, which cuts the text for each platform."
                           },
                           "boardId": {
                             "type": "string",
