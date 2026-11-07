@@ -5,9 +5,14 @@ import { type Geometry, geometry, toWorld } from './geometry.js'
 import { type Expression, expressionOf } from './expressions.js'
 import { clamp, f } from './random.js'
 import { aura } from './auras.js'
+import { outfit } from './outfits/index.js'
 import { pants } from './pants.js'
+import { faceTattoo, piercing } from './face-marks.js'
+import { hair } from './hair.js'
+import { pattern } from './patterns.js'
+import { pet } from './pets.js'
 import { tattoo } from './tattoos.js'
-import { colourOf, colours, type FlungieConfig, type Overrides, type Shading, type Theme, type Traits, traits } from './traits.js'
+import { colourOf, colours, type FlungieConfig, type Overrides, type Shading, type Theme, type Traits, traits, wornAccessories } from './traits.js'
 
 export type Layer = 'disc' | 'shadow' | 'lines' | 'back' | 'body' | 'face' | 'front'
 export type Variant = 'disc' | 'square' | 'bare'
@@ -31,9 +36,9 @@ export interface RenderOptions {
   id?: string | undefined
   /** Body colours to resolve the trait's colour from, as FlungieConfig.palette. */
   palette?: readonly Colour[] | undefined
-  /** What it is feeling: its face for the moment (EXPRESSIONS). 'neutral', the default, is the seed's own face. */
+  /** What it is feeling: its face for the moment (EXPRESSIONS). Left out: its `mood`, which is 'neutral', the seed's own face, until one is put on. */
   expression?: Expression | undefined
-  /** Plays an aura's motion (SMIL, no stylesheet needed). Leave it off where motion is reduced. Default false: a still frame. */
+  /** Plays an aura's motion, and an outfit's or accessory's (SMIL, no stylesheet needed). Leave it off where motion is reduced. Default false: a still frame. */
   animate?: boolean | undefined
 }
 
@@ -98,15 +103,33 @@ export function render(t: Traits, options: RenderOptions = {}): string {
   }
 
   // Everything that breathes: accessories, body, face. Drawn in the body frame.
-  const ctx = { G, P, A, A2, detail, sw, id, defs, t, expression: options.expression, eyeR: 0, eyeAt: { x: 0, y: 0, s: 0, eyes: t.eyes } }
+  const expression = options.expression ?? (t.mood !== undefined && t.mood !== 'neutral' ? (t.mood as Expression) : undefined)
+  const ctx = { G, P, A, A2, detail, sw, id, defs, t, expression, animate: options.animate === true, eyeR: 0, eyeAt: { x: 0, y: 0, s: 0, eyes: t.eyes } }
   const face = faceParts(ctx)
-  const acc: Drawn = A ? ACC_DRAW[t.accessory]?.(ctx as DrawContext) || {} : {}
+  // Every accessory worn, one in each slot (a hat, glasses, something held), each in its own colours; head first, so what is
+  // held is drawn in front of the rest.
+  const worn: Drawn[] = K.worn.map((one) => ACC_DRAW[one.id]?.({ ...ctx, A: one.A, A2: one.A2 } as DrawContext) || {})
+  const acc: Drawn = { back: worn.map((one) => one.back ?? '').join(''), front: worn.map((one) => one.front ?? '').join('') }
   const body: string[] = []
+  // An outfit goes over pants and under the face, except a ghost's sheet or a mummy's wrappings, which go over the face with
+  // eye holes of their own; a cape goes behind the body.
+  const dressed = has('face') || has('back') ? outfit(t.outfit ?? 'none', G, id, defs, detail, { x: ctx.eyeAt.x, y: ctx.eyeAt.y, s: ctx.eyeAt.s, r: ctx.eyeR }, options.animate === true) : null
+  if (has('back') && dressed?.back) body.push(dressed.back)
   if (has('back') && acc.back) body.push(acc.back)
   if (has('body')) body.push(bodyLayer(ctx, { felt, size, groundHex }))
-  if (has('face')) body.push(tattoo(t.tattoo, G, P, detail) + pants(t.pants, G, id, defs, detail, options.animate === true) + face)
+  // Tattoos are in the skin: a face tattoo goes with the body tattoo, under pants, outfits, the eyes and every accessory, so
+  // anything worn sits over it. A piercing goes over the face and under what covers it (a scarf, a ghost's sheet).
+  const faceAt = { x: ctx.eyeAt.x, y: ctx.eyeAt.y, s: ctx.eyeAt.s, r: ctx.eyeR }
+  // A pattern is the felt itself, under the tattoos. Hair sits on the head over the outfit and under the face, the hats and the
+  // glasses; something on the head hides its top.
+  const skin = pattern(t.pattern ?? 'none', G, P, faceAt, id, defs, detail) + tattoo(t.tattoo, G, P, detail) + faceTattoo(t.faceTattoo ?? 'none', faceAt, P, detail)
+  const head = K.worn.find((one) => one.slot === 'head')?.id
+  const hairdo = hair(t.hair ?? 'none', G, P, faceAt, detail, head !== undefined && head !== 'halo')
+  if (has('face')) body.push(skin + pants(t.pants, G, id, defs, detail, options.animate === true) + (dressed?.under ?? '') + hairdo + face + piercing(t.piercing ?? 'none', faceAt, detail) + (dressed?.over ?? ''))
   if (has('front') && acc.front) body.push(acc.front)
   inner.push(`<g class="fl-breathe" data-ax="${f(bottom[0])}" data-ay="${f(bottom[1])}"><g transform="translate(${f(G.cx)} ${f(G.cy)}) rotate(${f(G.tilt)})">${body.join('')}</g></g>`)
+  // A pet floats beside it, ahead, or behind when a balloon is up ahead.
+  if (has('front') && (t.pet ?? 'none') !== 'none') inner.push(pet(t.pet, G, detail, options.animate === true, t.held === 'balloon' || t.accessory === 'balloon' ? -1 : 1))
 
   let g = inner.join('')
   if (mirror) g = `<g transform="matrix(-1 0 0 1 100 0)">${g}</g>`
@@ -250,7 +273,10 @@ interface FaceContext extends BodyContext {
 
 function faceParts(ctx: FaceContext): string {
   const { G, P, detail, sw, t } = ctx
-  const acc = byId(ACCESSORIES, t.accessory) ?? (ACCESSORIES[0] as Accessory)
+  // What is worn changes the face: a hat lowers the eyes, round glasses spread them, sunglasses hide them.
+  const on = wornAccessories(t)
+  const headAcc = byId(ACCESSORIES, on.find((one) => one.slot === 'head')?.id) ?? (ACCESSORIES[0] as Accessory)
+  const wears = (id: string) => on.some((one) => one.id === id)
   const tiny = detail === 0
   const mood = expressionOf(ctx.expression)
   let eyes: string = mood.eyes ?? t.eyes
@@ -261,8 +287,8 @@ function faceParts(ctx: FaceContext): string {
   const ex = G.eye.x
   let ey = G.eye.y
   let s = G.eye.s
-  if (acc.hat) ey = Math.max(ey, -G.hh + 9 + R * 1.4)
-  if (acc.id === 'glasses') s = Math.max(s, R * (eyes === 'wide' ? 1.38 : 1) + 3.4)
+  if (headAcc.hat) ey = Math.max(ey, -G.hh + 9 + R * 1.4)
+  if (wears('glasses')) s = Math.max(s, R * (eyes === 'wide' ? 1.38 : 1) + 3.4)
   if (tiny) s = Math.max(s, R + 2.6)
   ctx.eyeR = R
   ctx.eyeAt = { x: ex, y: ey, s, eyes }
@@ -302,7 +328,7 @@ function faceParts(ctx: FaceContext): string {
   }
   const back = ex - s
   const front = ex + s
-  if (acc.id !== 'sunglasses') {
+  if (!wears('sunglasses')) {
     if (eyes === 'wink') out.push(eye(back, ey, 'dots'), eye(front, ey, 'arc'))
     else if (eyes === 'happy') out.push(eye(back, ey, 'arc'), eye(front, ey, 'arc'))
     else out.push(eye(back, ey, eyes), eye(front, ey, eyes))

@@ -12,6 +12,8 @@ import {
   LINE_PAIRS,
   type LinePair,
   MOUTHS,
+  slotOfAccessory,
+  type AccessorySlot,
   PAPER,
   SHAPES,
   SIDES,
@@ -39,10 +41,35 @@ export interface Traits {
   lines: string
   /** A mark on the body (TATTOOS). Never picked by the seed: 'none' unless put on. */
   tattoo: string
+  /** A mark on the face (FACE_TATTOOS), worn with any body tattoo and outfit. Never picked by the seed: 'none' unless put on. */
+  faceTattoo: string
+  /** A piercing on the face (PIERCINGS), worn with anything else. Never picked by the seed: 'none' unless put on. */
+  piercing: string
   /** Pants over the bottom and the tail (PANTS). Never picked by the seed: 'none' unless put on. */
   pants: string
+  /** An outfit over more of the body (OUTFITS). Never picked by the seed: 'none' unless put on. */
+  outfit: string
   /** What moves behind it (AURAS). Never picked by the seed: 'none' unless put on. */
   aura: string
+  /**
+   * Glasses worn with whatever `accessory` is (an accessory in the face slot). Never picked by the seed: 'none' unless put on.
+   * The seed's own glasses stay in `accessory`.
+   */
+  eyewear: string
+  /** null: picked to stand clear of the body. */
+  eyewearColour: string | null
+  /** Something held (an accessory in the hand slot), worn with whatever `accessory` is. 'none' unless put on. */
+  held: string
+  /** null: picked to stand clear of the body. */
+  heldColour: string | null
+  /** A hairdo (HAIRS). Never picked by the seed: 'none' unless put on. */
+  hair: string
+  /** A print on the body (PATTERNS). Never picked by the seed: 'none' unless put on. */
+  pattern: string
+  /** A small friend beside it (PETS). Never picked by the seed: 'none' unless put on. */
+  pet: string
+  /** Its own face (MOODS, an expression): what it shows when no expression is asked for. 'neutral' unless put on. */
+  mood: string
   rolls: { acc: number; acc2: number; disc: number }
   jitter: {
     w: number
@@ -102,8 +129,19 @@ export function traits(seed: unknown, overrides: Overrides = {}, config: Flungie
     side: weighted(s('side'), SIDES).id,
     lines: weighted(s('lines'), LINE_PAIRS).id,
     tattoo: 'none',
+    faceTattoo: 'none',
+    piercing: 'none',
     pants: 'none',
+    outfit: 'none',
     aura: 'none',
+    eyewear: 'none',
+    eyewearColour: null,
+    held: 'none',
+    heldColour: null,
+    hair: 'none',
+    pattern: 'none',
+    pet: 'none',
+    mood: 'neutral',
     rolls: { acc: s('acc-colour')(), acc2: s('acc-colour-2')(), disc: s('disc')() },
     jitter: {
       w: j(),
@@ -122,14 +160,16 @@ export function traits(seed: unknown, overrides: Overrides = {}, config: Flungie
 
 /** The number of distinct trait sets, counting discrete traits only (sizes, tilts and wobbles vary on top of these). */
 export function combinations() {
-  const discrete = SHAPES.length * COLOURS.length * EYES.length * MOUTHS.length * 2 * ACCESSORIES.length * SIDES.length * LINE_PAIRS.length
+  // Only what a seed can pick: an accessory weighted 0 is worn only when put on.
+  const seeded = ACCESSORIES.filter((accessory) => (accessory.weight ?? 1) > 0).length
+  const discrete = SHAPES.length * COLOURS.length * EYES.length * MOUTHS.length * 2 * seeded * SIDES.length * LINE_PAIRS.length
   return {
     shapes: SHAPES.length,
     colours: COLOURS.length,
     eyes: EYES.length,
     mouths: MOUTHS.length,
     blush: 2,
-    accessories: ACCESSORIES.length,
+    accessories: seeded,
     sides: SIDES.length,
     lines: LINE_PAIRS.length,
     discrete,
@@ -211,6 +251,28 @@ function pickAccColour(list: readonly string[], roll: number, avoid: readonly st
   return best
 }
 
+/** One accessory a Flungie wears, in its slot, with its colours. */
+export interface WornAccessory {
+  slot: AccessorySlot
+  id: string
+  A: AccShading
+  A2: AccShading | null
+}
+
+/**
+ * The accessories a trait set wears, at most one in each slot, head first: `accessory` in its own slot, then `eyewear` and
+ * `held`, which take their slot from `accessory` when both name one.
+ */
+export function wornAccessories(t: Pick<Traits, 'accessory' | 'eyewear' | 'held'>): { slot: AccessorySlot; id: string; trait: 'accessory' | 'eyewear' | 'held' }[] {
+  const out = new Map<AccessorySlot, { slot: AccessorySlot; id: string; trait: 'accessory' | 'eyewear' | 'held' }>()
+  if (t.accessory !== 'none' && byId(ACCESSORIES, t.accessory)) out.set(slotOfAccessory(t.accessory), { slot: slotOfAccessory(t.accessory), id: t.accessory, trait: 'accessory' })
+  for (const trait of ['eyewear', 'held'] as const) {
+    const id = t[trait] ?? 'none'
+    if (id !== 'none' && byId(ACCESSORIES, id)) out.set(slotOfAccessory(id), { slot: slotOfAccessory(id), id, trait })
+  }
+  return (['head', 'face', 'hand'] as const).flatMap((slot) => out.get(slot) ?? [])
+}
+
 export interface Resolved {
   body: string
   P: Shading
@@ -221,6 +283,8 @@ export interface Resolved {
   A: AccShading | null
   A2: AccShading | null
   pair: LinePair
+  /** Every accessory worn, at most one in each slot, head first, each with its own colours. */
+  worn: WornAccessory[]
 }
 
 const SECOND = ['butter', 'coral', 'sky', 'mint', 'paper', 'rose', 'lilac', 'gold']
@@ -240,5 +304,16 @@ export function colours(t: Traits, theme: Theme = 'light', list: readonly Colour
   const acc2Id = A ? pickAccColour(SECOND, t.rolls.acc2, [A.base, body], 0.2, 0.12) : null
   const A2 = acc2Id ? accSet(ACC[acc2Id] as string) : null
   const pair = byId(LINE_PAIRS, t.lines) ?? (LINE_PAIRS[0] as LinePair)
-  return { body, P, disc, discL, discD, accId, A, A2, pair }
+  // The seed's accessory keeps the colours above exactly; one put on in another slot picks its own the same way.
+  const worn = wornAccessories(t).flatMap(({ slot, id, trait }): WornAccessory[] => {
+    if (trait === 'accessory') return A ? [{ slot, id, A, A2 }] : []
+    const one = byId(ACCESSORIES, id) as Accessory
+    const asked = trait === 'eyewear' ? t.eyewearColour : t.heldColour
+    const colourId = asked && ACC[asked] ? asked : pickAccColour(one.colours, t.rolls.acc, one.above ? [body, discL, discD] : [body])
+    if (!colourId) return []
+    const base = accSet(ACC[colourId] as string)
+    const second = pickAccColour(SECOND, t.rolls.acc2, [base.base, body], 0.2, 0.12)
+    return [{ slot, id, A: base, A2: second ? accSet(ACC[second] as string) : null }]
+  })
+  return { body, P, disc, discL, discD, accId, A, A2, pair, worn }
 }

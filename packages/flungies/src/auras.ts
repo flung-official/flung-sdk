@@ -5,6 +5,7 @@
  */
 import { mix } from './colour.js'
 import { f } from './random.js'
+import { seasonalAura } from './seasonal-auras.js'
 
 const RAINBOW = ['#FF7E6E', '#FFA584', '#FFD66E', '#8EDDB5', '#86C0FF', '#BFA4FF']
 
@@ -95,6 +96,6 @@ export function aura(kind: string, cx: number, cy: number, id: string, defs: str
       return `<g class="fl-aura"><g fill="none" stroke-width="3" stroke-linecap="round" opacity="0.85">${arcs}${a(spin(cx, cy, 10))}</g><g>${inner}${a(spin(cx, cy, 16, true))}</g></g>`
     }
     default:
-      return ''
+      return seasonalAura(kind, cx, cy, detail, animate) ?? ''
   }
 }

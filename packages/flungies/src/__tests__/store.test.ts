@@ -1,17 +1,98 @@
 import { describe, expect, it } from 'vitest'
 
-import { ACCESSORIES, AURAS, availability, balance, COLOURS, DEFAULT_STORE, dress, EYES, LINE_PAIRS, MOUTHS, PANTS, pointsEarned, preview, render, SHAPES, STORE_CATEGORIES, storeItems, TATTOOS, traits } from '../index.js'
+import { ACCESSORIES, AURAS, HAIRS, MOODS, PATTERNS, PETS, availability, balance, COLOURS, DEFAULT_STORE, dress, EYES, FACE_TATTOOS, LINE_PAIRS, MOUTHS, OUTFITS, PANTS, PIERCINGS, pointsEarned, preview, render, SHAPES, STORE_CATEGORIES, STORE_EVENTS, type StoreItem, storeItems, TATTOOS, traits } from '../index.js'
 
 const wallet = (over: Partial<Parameters<typeof balance>[0]> = {}) => ({ earned: 0, adjustment: 0, spent: 0, owned: [], ...over })
+
+describe('outfits', () => {
+  it('are never picked by a seed, and the costume hats never either', () => {
+    for (const seed of ['a', 'usr_8f3k2', 'sacha@flung.dev']) {
+      expect(traits(seed).outfit).toBe('none')
+      for (const id of ['santaHat', 'witchHat', 'horns', 'bunnyEars', 'antlers', 'boppers', 'leprechaun', 'cakeHat', 'pirateHat', 'lantern']) expect(traits(seed).accessory).not.toBe(id)
+    }
+  })
+
+  it('draw every outfit from 32 px and nothing under it; a ghost covers the face with eye holes over it', () => {
+    for (const option of OUTFITS.filter((o) => o.id !== 'none')) {
+      const t = { ...traits('usr_a'), outfit: option.id }
+      expect(render(t, { size: 64 })).toContain('fl-outfit')
+      expect(render(t, { size: 24 })).not.toContain('fl-outfit')
+    }
+    const ghost = render({ ...traits('usr_a'), outfit: 'ghost' }, { size: 96 })
+    expect(ghost.indexOf('fl-ghost')).toBeGreaterThan(ghost.indexOf('fl-eye'))
+    const mummy = render({ ...traits('usr_a'), outfit: 'mummy' }, { size: 96 })
+    expect(mummy.indexOf('fl-mummy')).toBeGreaterThan(mummy.indexOf('fl-eye'))
+    // A cape hangs behind the body: in the back layer, not the face's.
+    const vampire = { ...traits('usr_a'), outfit: 'vampire' }
+    expect(render(vampire, { size: 96, layers: ['back'] })).toContain('fl-cape')
+    expect(render(vampire, { size: 96, layers: ['face', 'front'] })).not.toContain('fl-cape')
+    // A dinosaur's spikes and a shark's fin poke out from behind the body; a pirate's patch goes over the eye.
+    expect(render({ ...traits('usr_a'), outfit: 'dinosaur' }, { size: 96, layers: ['back'] })).toContain('fl-spikes')
+    expect(render({ ...traits('usr_a'), outfit: 'shark' }, { size: 96, layers: ['face', 'front'] })).not.toContain('fl-fin')
+    const pirate = render({ ...traits('usr_a'), outfit: 'pirate' }, { size: 96 })
+    expect(pirate.indexOf('fl-patch')).toBeGreaterThan(pirate.indexOf('fl-eye'))
+  })
+
+  it('move only when asked: wings, capes and boppers play with animate and are still without it', () => {
+    for (const look of [{ outfit: 'bee' }, { outfit: 'fairy' }, { outfit: 'superhero' }, { accessory: 'boppers', accColour: 'red' }, { outfit: 'dinosaur' }, { outfit: 'cat' }, { outfit: 'shark' }, { outfit: 'penguin' }, { outfit: 'unicorn' }, { outfit: 'pirate' }, { outfit: 'astronaut' }, { outfit: 'newYearJacket' }, { outfit: 'dragon' }, { accessory: 'cakeHat', accColour: 'rose' }, { accessory: 'lantern', accColour: 'red' }, { aura: 'snow' }, { aura: 'bats' }, { aura: 'fireworks' }]) {
+      const t = { ...traits('usr_a'), ...look }
+      expect(render(t, { size: 96, animate: true })).toMatch(/<animate/)
+      expect(render(t, { size: 96 })).not.toMatch(/<animate/)
+    }
+  })
+
+  it('tag seasonal items with their event, and leave the rest untagged', () => {
+    const byId = (id: string) => DEFAULT_STORE.find((item) => item.id === id)
+    expect(byId('outfit:pumpkin')?.event).toBe('halloween')
+    expect(byId('antlers:rust')?.event).toBe('christmas')
+    expect(byId('aura:fireworks')?.event).toBe('newYear')
+    expect(byId('outfit:frog')).not.toHaveProperty('event')
+    expect(byId('outfit:dragon')?.event).toBe('lunarNewYear')
+    expect(byId('lantern:red')?.event).toBe('lunarNewYear')
+    expect(byId('cakeHat:rose')?.event).toBe('birthday')
+    expect(byId('outfit:dinosaur')).not.toHaveProperty('event')
+    for (const item of DEFAULT_STORE) if (item.event !== undefined) expect(STORE_EVENTS).toContain(item.event)
+  })
+
+  it('are sold in their own category with a rarity, a level and a price', () => {
+    expect(DEFAULT_STORE.find((item) => item.id === 'outfit:jumper')).toMatchObject({ category: 'outfits', rarity: 'common', level: 1, price: 100 })
+    expect(DEFAULT_STORE.find((item) => item.id === 'outfit:ghost')).toMatchObject({ category: 'outfits', rarity: 'epic', level: 10, price: 750 })
+    expect(DEFAULT_STORE.find((item) => item.id === 'santaHat:red')).toMatchObject({ category: 'headwear', kind: 'accessory', rarity: 'epic' })
+    expect(DEFAULT_STORE.find((item) => item.id === 'outfit:vampire')).toMatchObject({ category: 'outfits', rarity: 'legendary', level: 20, price: 2000 })
+    expect(DEFAULT_STORE.find((item) => item.id === 'witchHat:night')).toMatchObject({ category: 'headwear', kind: 'accessory', rarity: 'epic' })
+    expect(DEFAULT_STORE.find((item) => item.id === 'outfit:dragon')).toMatchObject({ category: 'outfits', rarity: 'legendary', level: 20, price: 2000 })
+    expect(DEFAULT_STORE.find((item) => item.id === 'outfit:dinosaur')).toMatchObject({ category: 'outfits', rarity: 'rare', level: 5, price: 300 })
+    expect(DEFAULT_STORE.find((item) => item.id === 'pirateHat:night')).toMatchObject({ category: 'headwear', kind: 'accessory', rarity: 'epic' })
+  })
+})
 
 describe('the store', () => {
   it('sells every accessory in every colour and every other option once, each id once', () => {
     const accessories = ACCESSORIES.filter((a) => a.id !== 'none').reduce((sum, a) => sum + a.colours.length, 0)
-    const others = EYES.length + (MOUTHS.length - 1) + (TATTOOS.length - 1) + COLOURS.length + LINE_PAIRS.length + SHAPES.length + (PANTS.length - 1) + (AURAS.length - 1)
+    const others = EYES.length + (MOUTHS.length - 1) + (TATTOOS.length - 1) + (FACE_TATTOOS.length - 1) + (PIERCINGS.length - 1) + (HAIRS.length - 1) + (PATTERNS.length - 1) + (PETS.length - 1) + (MOODS.length - 1) + COLOURS.length + LINE_PAIRS.length + SHAPES.length + (PANTS.length - 1) + (OUTFITS.length - 1) + (AURAS.length - 1)
     expect(DEFAULT_STORE).toHaveLength(accessories + others)
     expect(new Set(DEFAULT_STORE.map((item) => item.id)).size).toBe(accessories + others)
     expect(DEFAULT_STORE.find((item) => item.id === 'crown:gold')).toMatchObject({ category: 'headwear', rarity: 'legendary', level: 20, price: 2000 })
     expect(DEFAULT_STORE.find((item) => item.id === 'tattoo:heart')).toMatchObject({ kind: 'tattoo', category: 'tattoos', value: 'heart', colour: null, label: 'Tattoo, Heart' })
+    expect(DEFAULT_STORE.find((item) => item.id === 'faceTattoo:freckles')).toMatchObject({ kind: 'faceTattoo', category: 'tattoos', label: 'Face tattoo, Freckles' })
+    expect(DEFAULT_STORE.find((item) => item.id === 'piercing:faceGem')).toMatchObject({ kind: 'piercing', category: 'piercings', rarity: 'epic' })
+  })
+
+  it('wears a piercing and a face tattoo with a hat, glasses, an outfit, pants and a body tattoo, each drawn', () => {
+    const wearing = ['crown:gold', 'outfit:jumper', 'pants:jeans', 'tattoo:heart', 'faceTattoo:freckles', 'piercing:noseRing'].map((id) => DEFAULT_STORE.find((item) => item.id === id) as StoreItem)
+    const dressed = dress(traits('usr_pierced'), wearing)
+    expect(dressed).toMatchObject({ accessory: 'crown', outfit: 'jumper', pants: 'jeans', tattoo: 'heart', faceTattoo: 'freckles', piercing: 'noseRing' })
+    const svg = render(dressed, { size: 160 })
+    expect(svg).toContain('fl-piercing')
+    expect(svg).toContain('fl-face-tattoo')
+    expect(svg).toContain('fl-tattoo')
+    // Tattoos are in the skin, drawn before (under) the outfit and everything after it; a piercing is over the outfit under it.
+    const at = (mark: string) => svg.indexOf(mark)
+    expect(at('fl-tattoo')).toBeLessThan(at('fl-outfit'))
+    expect(at('fl-face-tattoo')).toBeLessThan(at('fl-outfit'))
+    expect(at('fl-piercing')).toBeGreaterThan(at('fl-outfit'))
+    // Nothing on the face under 32 px, as with body tattoos.
+    expect(render(dressed, { size: 24 })).not.toContain('fl-piercing')
   })
 
   it('puts every item in a category, in shelf order, and every category has items', () => {
@@ -72,7 +153,7 @@ describe('the store', () => {
   it('takes the seed’s sunglasses off to show eyes put on, unless an accessory is worn too', () => {
     const t = { ...traits('usr_a'), accessory: 'sunglasses' }
     expect(dress(t, { kind: 'eyes', value: 'wide', colour: null }).accessory).toBe('none')
-    expect(dress(t, [{ kind: 'eyes', value: 'wide', colour: null }, { kind: 'accessory', value: 'sunglasses', colour: 'gold' }]).accessory).toBe('sunglasses')
+    expect(dress(t, [{ kind: 'eyes', value: 'wide', colour: null }, { kind: 'accessory', value: 'sunglasses', colour: 'gold' }]).eyewear).toBe('sunglasses')
   })
 })
 

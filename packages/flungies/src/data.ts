@@ -1,6 +1,8 @@
 // The trait tables. Order and weights are part of every seed's output: append, never reorder, reweight or remove
 // (BUILDING.md, "Adding a trait").
 
+import { MOODS } from './expressions.js'
+
 export interface Option {
   readonly id: string
   readonly label: string
@@ -27,9 +29,18 @@ export interface Shape extends Option {
   readonly puff?: number
 }
 
+/**
+ * Where an accessory is worn. A Flungie wears one in each at once: a hat, glasses and something in its hand. Absent on an
+ * accessory: 'head'.
+ */
+export type AccessorySlot = 'head' | 'face' | 'hand'
+export const ACCESSORY_SLOTS: readonly AccessorySlot[] = ['head', 'face', 'hand']
+
 export interface Accessory extends Option {
   /** Preferred colours, keys of ACC_COLOURS, tried in order from a seeded start. */
   readonly colours: readonly string[]
+  /** Where it is worn. Absent: 'head'. */
+  readonly slot?: AccessorySlot
   /** Covers the top of the head, so the eyes sit lower. */
   readonly hat?: boolean
   /** Sits above the head, against the disc, so its colour must stand clear of both themes' discs too. */
@@ -78,6 +89,7 @@ export const ACC_COLOURS: readonly (Option & { readonly hex: string })[] = [
   { id: 'gold', label: 'Gold', hex: '#F5BC3C' },
   { id: 'rose', label: 'Rose', hex: '#FF8FA8' },
   { id: 'night', label: 'Night', hex: '#1E1C27' },
+  { id: 'red', label: 'Red', hex: '#D9363E' },
 ]
 export const ACC: Readonly<Record<string, string>> = Object.fromEntries(ACC_COLOURS.map((c) => [c.id, c.hex]))
 
@@ -125,17 +137,42 @@ export const ACCESSORIES: readonly Accessory[] = [
   { id: 'beanie', label: 'Beanie', hat: true, colours: ['coral', 'ocean', 'mint', 'butter', 'berry', 'lilac', 'night'] },
   { id: 'cap', label: 'Cap, forward', hat: true, colours: ['ocean', 'coral', 'night', 'butter', 'moss', 'berry'] },
   { id: 'capBack', label: 'Cap, backward', hat: true, colours: ['night', 'coral', 'sky', 'moss', 'plum', 'butter'] },
-  { id: 'sunglasses', label: 'Sunglasses', colours: ['night', 'berry', 'ocean', 'paper', 'gold'] },
-  { id: 'glasses', label: 'Round glasses', colours: ['night', 'rust', 'plum', 'ocean', 'paper'] },
+  { id: 'sunglasses', label: 'Sunglasses', slot: 'face', colours: ['night', 'berry', 'ocean', 'paper', 'gold'] },
+  { id: 'glasses', label: 'Round glasses', slot: 'face', colours: ['night', 'rust', 'plum', 'ocean', 'paper'] },
   { id: 'partyHat', label: 'Party hat', above: true, colours: ['berry', 'sky', 'mint', 'lilac', 'coral', 'butter', 'ocean'] },
   { id: 'antenna', label: 'Antenna', above: true, colours: ['coral', 'mint', 'sky', 'butter', 'rose', 'lilac'] },
   { id: 'bow', label: 'Bow', above: true, colours: ['rose', 'berry', 'coral', 'sky', 'butter', 'lilac'] },
   { id: 'halo', label: 'Ring light', above: true, colours: ['gold'] },
   { id: 'crown', label: 'Crown', above: true, colours: ['gold', 'coral', 'sky', 'mint'] },
-  { id: 'megaphone', label: 'Megaphone', colours: ['coral', 'butter', 'paper', 'sky', 'mint', 'night'] },
-  { id: 'pencil', label: 'Pencil', above: true, colours: ['butter', 'gold', 'sky', 'coral', 'mint'] },
+  { id: 'megaphone', label: 'Megaphone', slot: 'hand', colours: ['coral', 'butter', 'paper', 'sky', 'mint', 'night'] },
+  { id: 'pencil', label: 'Pencil', slot: 'hand', above: true, colours: ['butter', 'gold', 'sky', 'coral', 'mint'] },
   { id: 'plane', label: 'Paper plane', above: true, colours: ['paper', 'sky', 'butter', 'peach', 'mint', 'lilac'] },
+  // Weight 0: worn only when put on, so no seed's drawing changes. Keep store-only accessories at the end, weighted 0.
+  { id: 'santaHat', label: 'Santa hat', hat: true, weight: 0, colours: ['red', 'moss'] },
+  { id: 'witchHat', label: 'Witch hat', hat: true, weight: 0, colours: ['night', 'plum', 'moss'] },
+  { id: 'horns', label: 'Devil horns', above: true, weight: 0, colours: ['red', 'night', 'berry'] },
+  { id: 'bunnyEars', label: 'Bunny ears', above: true, weight: 0, colours: ['paper', 'rose', 'lilac', 'sand'] },
+  { id: 'antlers', label: 'Reindeer antlers', above: true, weight: 0, colours: ['rust', 'sand', 'gold'] },
+  { id: 'boppers', label: 'Heart boppers', above: true, weight: 0, colours: ['red', 'rose', 'berry'] },
+  { id: 'leprechaun', label: 'Leprechaun hat', hat: true, weight: 0, colours: ['moss', 'night'] },
+  { id: 'cakeHat', label: 'Birthday cake', above: true, weight: 0, colours: ['rose', 'butter', 'mint', 'lilac'] },
+  { id: 'pirateHat', label: 'Pirate hat', hat: true, weight: 0, colours: ['night', 'rust'] },
+  { id: 'lantern', label: 'Lucky lantern', above: true, weight: 0, colours: ['red', 'gold'] },
+  // Things to hold (held.ts), in the hand slot, so one is worn with a hat and glasses.
+  { id: 'coffee', label: 'Coffee', slot: 'hand', weight: 0, colours: ['paper', 'night', 'coral', 'mint', 'butter'] },
+  { id: 'phone', label: 'Phone', slot: 'hand', weight: 0, colours: ['night', 'coral', 'sky', 'lilac', 'paper'] },
+  { id: 'balloon', label: 'Balloon', slot: 'hand', above: true, weight: 0, colours: ['red', 'sky', 'butter', 'mint', 'lilac', 'rose'] },
+  { id: 'sign', label: 'Sign', slot: 'hand', above: true, weight: 0, colours: ['paper', 'butter', 'sky', 'mint', 'rose'] },
+  { id: 'iceCream', label: 'Ice cream', slot: 'hand', weight: 0, colours: ['rose', 'mint', 'butter', 'lilac', 'peach'] },
+  { id: 'bouquet', label: 'Bouquet', slot: 'hand', weight: 0, colours: ['paper', 'rose', 'sky', 'lilac'] },
+  // Earned, never sold (store.ts, EARNED): a trophy, a laurel wreath and a star crown.
+  { id: 'trophy', label: 'Trophy', slot: 'hand', weight: 0, colours: ['gold'] },
+  { id: 'laurel', label: 'Laurel wreath', above: true, weight: 0, colours: ['gold'] },
+  { id: 'starCrown', label: 'Star crown', above: true, weight: 0, colours: ['gold'] },
 ]
+
+/** Where an accessory is worn: its slot, 'head' when it names none. */
+export const slotOfAccessory = (id: string): AccessorySlot => ACCESSORIES.find((accessory) => accessory.id === id)?.slot ?? 'head'
 
 export const SIDES: readonly Option[] = [
   { id: 'left', label: 'Tail left, flying right', weight: 2.2 },
@@ -158,6 +195,41 @@ export const TATTOOS: readonly Option[] = [
 ]
 
 /**
+ * Face tattoos: a small mark on the face, by an eye or across the cheeks, in the skin: whatever is worn sits over one. One
+ * can be worn with a body tattoo. A seed never picks one, so adding one changes no one. Drawn from 32 px.
+ */
+export const FACE_TATTOOS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'freckles', label: 'Freckles' },
+  { id: 'heart', label: 'Cheek heart' },
+  { id: 'star', label: 'Cheek star' },
+  { id: 'teardrop', label: 'Teardrop' },
+  { id: 'dots', label: 'Three dots' },
+  { id: 'bolt', label: 'Cheek lightning' },
+  { id: 'sparkle', label: 'Sparkle' },
+  { id: 'whiskers', label: 'Whiskers' },
+]
+
+/**
+ * Piercings: a little metal on the face, in its own colours. They hang from the eyes and the mouth, clear of every hat, pair of
+ * glasses and outfit, so one is worn with any of them. A seed never picks one, so adding one changes no one. Drawn from 32 px.
+ */
+export const PIERCINGS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'noseStud', label: 'Nose stud' },
+  { id: 'noseRing', label: 'Nose ring' },
+  { id: 'septum', label: 'Septum ring' },
+  { id: 'browBar', label: 'Brow bar' },
+  { id: 'browRing', label: 'Brow ring' },
+  { id: 'lipRing', label: 'Lip ring' },
+  { id: 'snakebites', label: 'Snakebites' },
+  { id: 'labret', label: 'Labret stud' },
+  { id: 'dimples', label: 'Dimple studs' },
+  { id: 'bridge', label: 'Bridge bar' },
+  { id: 'faceGem', label: 'Face gem' },
+]
+
+/**
  * Pants: a little garment over the bottom of the body and the tail, the spike of the speech bubble. Never picked by a seed, as
  * tattoos are, so adding a pair changes no one. Each has its own colours. Drawn from 32 px.
  */
@@ -173,6 +245,44 @@ export const PANTS: readonly Option[] = [
 ]
 
 /**
+ * Outfits: a garment over more of the body than pants, or over all of it, as a ghost's sheet is. Never picked by a seed, so
+ * adding one changes no one. Each has its own colours. Drawn from 32 px.
+ */
+export const OUTFITS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'jumper', label: 'Cosy jumper' },
+  { id: 'festive', label: 'Christmas jumper' },
+  { id: 'sundress', label: 'Sundress' },
+  { id: 'santa', label: 'Santa suit' },
+  { id: 'ghost', label: 'Ghost sheet' },
+  { id: 'pumpkin', label: 'Pumpkin' },
+  { id: 'skeleton', label: 'Skeleton suit' },
+  { id: 'vampire', label: 'Vampire cape' },
+  { id: 'mummy', label: 'Mummy wraps' },
+  { id: 'tuxedo', label: 'Tuxedo' },
+  { id: 'raincoat', label: 'Raincoat' },
+  { id: 'aloha', label: 'Aloha shirt' },
+  { id: 'sweetheart', label: 'Sweetheart jumper' },
+  { id: 'scarf', label: 'Cosy scarf' },
+  { id: 'bee', label: 'Bumblebee' },
+  { id: 'frog', label: 'Frog onesie' },
+  { id: 'bear', label: 'Bear onesie' },
+  { id: 'bunny', label: 'Bunny suit' },
+  { id: 'fairy', label: 'Fairy wings' },
+  { id: 'superhero', label: 'Superhero' },
+  { id: 'wizard', label: 'Wizard robe' },
+  { id: 'dinosaur', label: 'Dinosaur onesie' },
+  { id: 'cat', label: 'Cat suit' },
+  { id: 'shark', label: 'Shark onesie' },
+  { id: 'penguin', label: 'Penguin suit' },
+  { id: 'unicorn', label: 'Unicorn onesie' },
+  { id: 'pirate', label: 'Pirate' },
+  { id: 'astronaut', label: 'Astronaut' },
+  { id: 'newYearJacket', label: 'New Year jacket' },
+  { id: 'dragon', label: 'Dragon' },
+]
+
+/**
  * Auras: something that moves behind the Flungie, a glow, bubbles, sparkles or a ring. Never picked by a seed. Still unless
  * the render asks for `animate`, and none under 32 px.
  */
@@ -185,6 +295,60 @@ export const AURAS: readonly Option[] = [
   { id: 'orbit', label: 'Orbit' },
   { id: 'halo', label: 'Rainbow halo' },
   { id: 'prism', label: 'Prism ring' },
+  { id: 'snow', label: 'Snowfall' },
+  { id: 'leaves', label: 'Autumn leaves' },
+  { id: 'blossoms', label: 'Cherry blossoms' },
+  { id: 'bats', label: 'Bats' },
+  { id: 'confetti', label: 'Confetti' },
+  { id: 'fireworks', label: 'Fireworks' },
+]
+
+/**
+ * Hairdos: a little felt on the head, in the body's own colour a shade deeper (hair.ts). Under a hat only what peeks out shows
+ * (a fringe, pigtails). Never picked by a seed, so adding one changes no one. Drawn from 32 px.
+ */
+export const HAIRS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'tuft', label: 'Tuft' },
+  { id: 'fringe', label: 'Fringe' },
+  { id: 'mohawk', label: 'Mohawk' },
+  { id: 'curls', label: 'Curls' },
+  { id: 'bun', label: 'Top bun' },
+  { id: 'pigtails', label: 'Pigtails' },
+  // Earned, never sold.
+  { id: 'rainbow', label: 'Rainbow crest' },
+]
+
+/**
+ * Body patterns: a print on the felt, in the skin (patterns.ts): under tattoos, pants, outfits, the face and every accessory.
+ * Never picked by a seed, so adding one changes no one. Drawn from 32 px.
+ */
+export const PATTERNS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'spots', label: 'Spots' },
+  { id: 'stripes', label: 'Stripes' },
+  { id: 'speckles', label: 'Speckles' },
+  { id: 'ombre', label: 'Sunset fade' },
+  { id: 'stars', label: 'Stars' },
+  { id: 'hearts', label: 'Hearts' },
+  // Earned, never sold.
+  { id: 'galaxy', label: 'Galaxy' },
+]
+
+/**
+ * Pets: a small friend that floats beside the Flungie on its leading side, bobbing when it moves (pets.ts). Never picked by a
+ * seed, so adding one changes no one. Drawn from 32 px.
+ */
+export const PETS: readonly Option[] = [
+  { id: 'none', label: 'None' },
+  { id: 'bird', label: 'Bluebird' },
+  { id: 'ghost', label: 'Little ghost' },
+  { id: 'star', label: 'Star buddy' },
+  { id: 'mini', label: 'Mini Flungie' },
+  { id: 'bee', label: 'Bumblebee' },
+  { id: 'cloud', label: 'Rain cloud' },
+  // Earned, never sold.
+  { id: 'owl', label: 'Wise owl' },
 ]
 
 /** Every trait with its options, for pickers and inspectors. */
@@ -199,11 +363,20 @@ export const TRAITS = {
   ],
   accessory: ACCESSORIES,
   accColour: ACC_COLOURS,
+  eyewear: [ACCESSORIES[0] as Accessory, ...ACCESSORIES.filter((accessory) => accessory.slot === 'face')],
+  held: [ACCESSORIES[0] as Accessory, ...ACCESSORIES.filter((accessory) => accessory.slot === 'hand')],
   side: SIDES,
   lines: LINE_PAIRS,
   tattoo: TATTOOS,
+  faceTattoo: FACE_TATTOOS,
+  piercing: PIERCINGS,
   pants: PANTS,
+  outfit: OUTFITS,
   aura: AURAS,
+  hair: HAIRS,
+  pattern: PATTERNS,
+  pet: PETS,
+  mood: MOODS,
 } as const
 
 export const byId = <T extends { readonly id: unknown }>(list: readonly T[], id: unknown): T | undefined => list.find((x) => x.id === id)

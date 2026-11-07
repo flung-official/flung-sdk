@@ -1,6 +1,10 @@
 // Accessories. Each returns { back, front } SVG in the body frame: back is drawn under the body, front over the face.
 
 import { mix } from './colour.js'
+import { EARNED_HAT_DRAW } from './earned-hats.js'
+import { FESTIVE_DRAW } from './festive-hats.js'
+import { HELD_DRAW } from './held.js'
+import { PARTY_DRAW } from './party-hats.js'
 import type { Geometry } from './geometry.js'
 import { f } from './random.js'
 import type { AccShading, Shading, Traits } from './traits.js'
@@ -19,6 +23,8 @@ export interface DrawContext {
   t: Traits
   eyeR: number
   eyeAt: { x: number; y: number; s: number; eyes: string }
+  /** Play what moves (SMIL); off where motion is reduced. */
+  animate?: boolean
 }
 
 export interface Drawn {
@@ -61,6 +67,62 @@ export const ACC_DRAW: Readonly<Record<string, (ctx: DrawContext) => Drawn>> = {
   },
   capBack(ctx) {
     return capDraw(ctx, true)
+  },
+  santaHat({ G, A, detail, sw }) {
+    // A soft cone that flops back over the head to a white pom-pom, on a band of white fur.
+    const T = -G.hh
+    const bw = G.edgeX(T + 5) * 0.96 + 1.2
+    const tip = { x: -bw * 1.05, y: T - 9.5 }
+    let s = `<path d="M${f(-bw * 0.95)} ${f(T + 5)}C${f(-bw * 0.9)} ${f(T - 10)} ${f(bw * 0.2)} ${f(T - 17)} ${f(bw * 0.15)} ${f(T - 15.5)}C${f(-bw * 0.2)} ${f(T - 16)} ${f(tip.x + 3)} ${f(T - 13)} ${f(tip.x)} ${f(tip.y)}C${f(tip.x + 4)} ${f(T - 9)} ${f(bw * 0.7)} ${f(T - 8)} ${f(bw * 0.95)} ${f(T + 5)}Z" fill="${A.base}"/>`
+    if (detail >= 1) s += `<path d="M${f(bw * 0.45)} ${f(T + 2)}Q${f(bw * 0.35)} ${f(T - 5)} ${f(bw * 0.05)} ${f(T - 9)}" fill="none" stroke="${A.shade}" stroke-width="${sw(1.1)}" stroke-linecap="round" opacity="0.45"/>`
+    // The fur band and the pom-pom.
+    s += `<rect x="${f(-bw - 0.8)}" y="${f(T + 1.4)}" width="${f(bw * 2 + 1.6)}" height="7.4" rx="3.7" fill="#FFFFFF"/>`
+    if (detail >= 2) for (let x = -bw + 1.5; x < bw; x += 3) s += `<circle cx="${f(x)}" cy="${f(T + 5.1)}" r="1.1" fill="#ECEAF2"/>`
+    s += `<circle cx="${f(tip.x)}" cy="${f(tip.y + 0.8)}" r="4.2" fill="#FFFFFF"/>`
+    if (detail >= 2) s += `<circle cx="${f(tip.x + 1.3)}" cy="${f(tip.y + 2)}" r="1.5" fill="#ECEAF2"/>`
+    return { front: s }
+  },
+  witchHat({ G, A, detail, sw }) {
+    // A tall cone with a crooked tip, an orange band and a gold buckle, on a wide brim.
+    const T = -G.hh
+    const bw = G.edgeX(T + 5) * 0.96 + 1.2
+    const brim = T + 3.6
+    const cone = bw * 0.68
+    let s = `<path d="M${f(-cone)} ${f(brim)}C${f(-cone * 0.6)} ${f(T - 8)} ${f(-bw * 0.12)} ${f(T - 18)} ${f(bw * 0.06)} ${f(T - 22)}Q${f(bw * 0.22)} ${f(T - 26.5)} ${f(bw * 0.62)} ${f(T - 24.5)}Q${f(bw * 0.28)} ${f(T - 21.5)} ${f(bw * 0.26)} ${f(T - 16)}C${f(bw * 0.36)} ${f(T - 8)} ${f(cone * 0.9)} ${f(T - 1)} ${f(cone)} ${f(brim)}Z" fill="${A.base}"/>`
+    if (detail >= 1) s += `<path d="M${f(bw * 0.3)} ${f(brim - 2)}Q${f(bw * 0.2)} ${f(T - 8)} ${f(bw * 0.14)} ${f(T - 16)}" fill="none" stroke="${A.light}" stroke-width="${sw(1)}" stroke-linecap="round" opacity="0.4"/>`
+    // The band, and its buckle.
+    s += `<path d="M${f(-cone * 0.98)} ${f(brim - 0.6)}L${f(cone * 0.98)} ${f(brim - 0.6)}L${f(cone * 0.88)} ${f(brim - 4.6)}L${f(-cone * 0.86)} ${f(brim - 4.6)}Z" fill="#F28C28"/>`
+    if (detail >= 1) s += `<rect x="-1.9" y="${f(brim - 4.4)}" width="3.8" height="3.6" rx="0.5" fill="none" stroke="#F5BC3C" stroke-width="${sw(0.9)}"/>`
+    // The brim, wide, with its underside showing a little.
+    s += `<ellipse cx="0" cy="${f(brim + 0.4)}" rx="${f(bw + 6.5)}" ry="3.4" fill="${A.shade}"/><ellipse cx="0" cy="${f(brim - 0.2)}" rx="${f(bw + 6)}" ry="2.8" fill="${A.base}"/>`
+    return { front: s }
+  },
+  horns({ G, A, detail, sw }) {
+    // Two small horns curving up and out from the top of the head.
+    let s = ''
+    for (const m of [-1, 1]) {
+      const x0 = m * G.hw * 0.42
+      const y0 = G.topY(x0) + 2
+      s += `<path transform="translate(${f(x0)} ${f(y0)})" d="M${f(-2.8 * m)} 0Q${f(-2.6 * m)} -5.4 ${f(2.6 * m)} -9.6Q${f(0.6 * m)} -4.6 ${f(2.8 * m)} 0.4Z" fill="${A.base}" stroke="${A.shade}" stroke-width="${sw(0.6)}" stroke-linejoin="round"/>`
+      if (detail >= 2) s += `<path transform="translate(${f(x0)} ${f(y0)})" d="M${f(-1.4 * m)} -1.2Q${f(-1.2 * m)} -4.8 ${f(1.6 * m)} -7.6" fill="none" stroke="${A.light}" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>`
+    }
+    return { front: s }
+  },
+  bunnyEars({ G, A, detail, sw }) {
+    // Two tall ears, pink inside, one standing and one bent over at the tip.
+    const inner = mix(A.base, '#FF8FA8', 0.55)
+    let s = ''
+    for (const m of [-1, 1]) {
+      const x0 = m * G.hw * 0.3
+      const y0 = G.topY(x0) + 3
+      const ear =
+        m < 0
+          ? `<ellipse cx="0" cy="-10.5" rx="4.1" ry="11" fill="${A.base}" stroke="${A.shade}" stroke-width="${sw(0.6)}"/>` + (detail >= 1 ? `<ellipse cx="0" cy="-10" rx="1.9" ry="8" fill="${inner}"/>` : '')
+          : `<path d="M-4 0C-4.6 -8 -3.8 -15 0 -16.5C3 -17.6 7.6 -15 8.4 -11.6C6.4 -12.8 3.6 -13 3.4 -10C3.6 -6 4.2 -3 4 0Z" fill="${A.base}" stroke="${A.shade}" stroke-width="${sw(0.6)}" stroke-linejoin="round"/>` +
+            (detail >= 1 ? `<path d="M-1.6 -1.6C-2 -7.6 -1.4 -12.6 0.6 -13.8C1.6 -11 1.4 -7 1.6 -1.6Z" fill="${inner}"/>` : '')
+      s += `<g transform="translate(${f(x0)} ${f(y0)}) rotate(${f(m * 12)})">${ear}</g>`
+    }
+    return { front: s }
   },
   sunglasses({ G, A, detail, sw, eyeAt }) {
     const { x, y, s } = eyeAt
@@ -195,6 +257,10 @@ export const ACC_DRAW: Readonly<Record<string, (ctx: DrawContext) => Drawn>> = {
     if (detail >= 2) s += `<path d="M-11.6 0.4C-15 1 -17 -3.2 -21 -2.6" fill="none" stroke="${A.shade}" stroke-width="0.9" stroke-dasharray="1.6 1.8" stroke-linecap="round" opacity="0.7"/>`
     return { front: `<g transform="translate(${f(x0)} ${f(y0)}) rotate(${f(ang)})">${s}</g>` }
   },
+  ...FESTIVE_DRAW,
+  ...PARTY_DRAW,
+  ...HELD_DRAW,
+  ...EARNED_HAT_DRAW,
 }
 
 function capDraw({ G, A, A2, detail, sw, P }: DrawContext, backward: boolean): Drawn {

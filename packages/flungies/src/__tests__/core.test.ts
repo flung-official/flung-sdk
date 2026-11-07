@@ -40,7 +40,7 @@ describe('seeding', () => {
 
   it('counts the discrete trait sets', () => {
     expect(combinations().discrete).toBe(907_200)
-    expect(Object.keys(TRAITS)).toEqual(['shape', 'colour', 'eyes', 'mouth', 'blush', 'accessory', 'accColour', 'side', 'lines', 'tattoo', 'pants', 'aura'])
+    expect(Object.keys(TRAITS)).toEqual(['shape', 'colour', 'eyes', 'mouth', 'blush', 'accessory', 'accColour', 'eyewear', 'held', 'side', 'lines', 'tattoo', 'faceTattoo', 'piercing', 'pants', 'outfit', 'aura', 'hair', 'pattern', 'pet', 'mood'])
   })
 })
 
@@ -79,7 +79,8 @@ describe('options for other projects', () => {
     expect([...only].sort()).toEqual(['crown', 'headphones', 'none'])
     const without = new Set(seeds.map((s) => traits(s, {}, { accessories: { exclude: ['none', 'megaphone'] } }).accessory))
     expect(without.has('none') || without.has('megaphone')).toBe(false)
-    expect(without.size).toBe(ACCESSORIES.length - 2)
+    // A seed never picks a store-only accessory (weight 0), such as the Santa hat.
+    expect(without.size).toBe(ACCESSORIES.filter((a) => (a.weight ?? 1) > 0).length - 2)
     expect(traits('usr_1', {}, { accessories: { include: ['no-such-thing'] } }).accessory).toBe('none')
   })
 })

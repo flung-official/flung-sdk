@@ -38,6 +38,9 @@ export const EXPRESSION_SPECS: Readonly<Record<Expression, ExpressionSpec>> = {
   sleepy: { id: 'sleepy', label: 'Sleepy', eyes: 'sleepy', mouth: 'o', brows: 'none', extra: 'zzz' },
 }
 
+/** The expressions a Flungie may wear as its own face (the `mood` trait), with neutral as none. */
+export const MOODS: readonly { readonly id: string; readonly label: string }[] = EXPRESSIONS.map((id) => ({ id, label: id === 'neutral' ? 'None' : EXPRESSION_SPECS[id].label }))
+
 /** The spec of an expression, or neutral's for anything it does not know. */
 export function expressionOf(id: string | undefined): ExpressionSpec {
   return (id !== undefined && Object.hasOwn(EXPRESSION_SPECS, id) ? EXPRESSION_SPECS[id as Expression] : undefined) ?? EXPRESSION_SPECS.neutral

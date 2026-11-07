@@ -22,7 +22,16 @@ export {
   INK,
   LINE_PAIRS,
   TATTOOS,
+  FACE_TATTOOS,
+  PIERCINGS,
+  HAIRS,
+  PATTERNS,
+  PETS,
+  ACCESSORY_SLOTS,
+  type AccessorySlot,
+  slotOfAccessory,
   PANTS,
+  OUTFITS,
   AURAS,
   type LinePair,
   MOUTHS,
@@ -34,7 +43,7 @@ export {
   TRAITS,
 } from './data.js'
 export { CX, CY, type Geometry, geometry, type Point } from './geometry.js'
-export { type BrowShape, type Expression, type ExpressionExtra, type ExpressionMouth, EXPRESSION_SPECS, type ExpressionSpec, EXPRESSIONS, expressionOf } from './expressions.js'
+export { type BrowShape, type Expression, type ExpressionExtra, type ExpressionMouth, EXPRESSION_SPECS, type ExpressionSpec, EXPRESSIONS, expressionOf, MOODS } from './expressions.js'
 export { hash, mulberry32, normalise } from './random.js'
 export {
   type Availability,
@@ -44,14 +53,20 @@ export {
   DEFAULT_STORE,
   dress,
   type EarnFacts,
+  earnedItems,
+  type EarnRule,
   type EarnRules,
+  meetsEarn,
+  slotOf,
   pointsEarned,
   preview,
   RARITIES,
   type Rarity,
   STORE_CATEGORIES,
+  STORE_EVENTS,
   STORE_KINDS,
   type StoreCategory,
+  type StoreEvent,
   type StoreItem,
   storeItems,
   type StoreKind,
@@ -59,6 +74,26 @@ export {
   type Wallet,
   type Wearable,
 } from './store.js'
+export {
+  DEFAULT_EVENT_SEASONS,
+  EVENT_LABELS,
+  type EventSeason,
+  type EventSeasonOverride,
+  eventSeasons,
+  eventsOn,
+  type Hemisphere,
+  HEMISPHERES,
+  hemisphereOf,
+  inSeason,
+  isMonthDay,
+  type MonthDay,
+  nextStart,
+  seasonalShelf,
+  type SeasonDays,
+  seasonDays,
+  seasonOn,
+  SOUTHERN_COUNTRIES,
+} from './store-events.js'
 export { describe, flungie, type FlungieOptions, type Layer, LAYERS, render, type RenderOptions, toDataUri, toSvgElement, type Variant } from './render.js'
 export {
   type AccShading,
@@ -73,7 +108,10 @@ export {
   type Theme,
   type Traits,
   traits,
+  type WornAccessory,
+  wornAccessories,
 } from './traits.js'
+export { isTrick, playTrick, type Trick, type TrickMotion, TRICK_MOTIONS, TRICKS } from './tricks.js'
 
 /**
  * The version of the drawing. A seed's Flungie never changes within a version; a change that would alter an existing

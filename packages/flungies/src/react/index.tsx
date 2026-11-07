@@ -3,6 +3,7 @@
 //   <Flungie seed={user.id} size={32} theme="dark" />
 //   <Flungie seed={user.id} size={240} animated />   // loads @flung.dev/flungies/gl only when it is shown
 //   <WorkspaceMark seed={workspace.id} name={workspace.name} size={32} />
+//   <Flungie seed={user.id} trick="spin" />       // a trick on hover; playTrick(el, 'jump') plays one when something happens
 //
 // The SVG renders on a server too, with ids from useId, so it hydrates without a mismatch. With `animated` and a size
 // of 160 or more, the SVG shows first and the WebGL hero takes its place once its code has loaded.
@@ -14,6 +15,9 @@ import { type MarkOptions, renderMark } from '../marks/render.js'
 import { markTraits } from '../marks/traits.js'
 import { type FlungieOptions, render } from '../render.js'
 import { type Theme, traits } from '../traits.js'
+import { playTrick, type Trick } from '../tricks.js'
+
+export { playTrick, type Trick, TRICKS } from '../tricks.js'
 
 /** The smallest size the animated Flungie is used at: below it the WebGL body is not worth its cost. */
 export const ANIMATED_MIN_SIZE = 160
@@ -23,11 +27,13 @@ export interface FlungieProps extends Omit<FlungieOptions, 'id' | 'layers'> {
   seed: string
   /** Breathes and blinks, in WebGL, at ANIMATED_MIN_SIZE and up. Still under prefers-reduced-motion. */
   animated?: boolean | undefined
+  /** A trick it plays on hover (TRICKS). Still under prefers-reduced-motion. */
+  trick?: Trick | undefined
   className?: string | undefined
   style?: CSSProperties | undefined
 }
 
-export function Flungie({ seed, size = 64, theme = 'light', variant = 'disc', animated = false, className, style, ...rest }: FlungieProps) {
+export function Flungie({ seed, size = 64, theme = 'light', variant = 'disc', animated = false, trick, className, style, ...rest }: FlungieProps) {
   const reactId = useId()
   const config = JSON.stringify([rest.overrides, rest.salt, rest.palette, rest.accessories])
   // config is the serialised form of the options traits() reads, so a new object with the same values is no change.
@@ -73,9 +79,10 @@ export function Flungie({ seed, size = 64, theme = 'light', variant = 'disc', an
   }, [variant])
 
   const box: CSSProperties = { display: 'inline-block', position: 'relative', width: size, height: size, lineHeight: 0, flex: 'none', ...style }
-  if (!gl) return <span className={className} style={box} dangerouslySetInnerHTML={{ __html: svg }} />
+  const onPointerEnter = trick === undefined ? undefined : (event: { currentTarget: Element }) => playTrick(event.currentTarget, trick)
+  if (!gl) return <span className={className} style={box} onPointerEnter={onPointerEnter} dangerouslySetInnerHTML={{ __html: svg }} />
   return (
-    <span className={className} style={box}>
+    <span className={className} style={box} onPointerEnter={onPointerEnter}>
       {mounted ? null : <span style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: svg }} />}
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
     </span>

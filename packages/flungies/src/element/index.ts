@@ -5,8 +5,8 @@
 //   <flung-ie seed="usr_8f3k2" size="40" theme="dark"></flung-ie>
 //   <flung-ie seed="usr_8f3k2" size="240" animated></flung-ie>
 //
-// Attributes: seed, size (px, default 64), theme (light or dark), variant (disc, square or bare), salt, and animated,
-// which loads the WebGL hero from 160 px. defineWorkspaceMark() registers <flung-mark>, a workspace mark, the same way.
+// Attributes: seed, size (px, default 64), theme (light or dark), variant (disc, square or bare), salt, animated, which
+// loads the WebGL hero from 160 px, and trick (spin, wave, jump or flip), played on hover. el.play('jump') plays one now. defineWorkspaceMark() registers <flung-mark>, a workspace mark, the same way.
 // Importing this module registers nothing, so it is safe on a server.
 
 import type { FlungieGL } from '../gl/index.js'
@@ -14,26 +14,39 @@ import { renderMark } from '../marks/render.js'
 import { markTraits } from '../marks/traits.js'
 import { render, toSvgElement, type Variant } from '../render.js'
 import { type Theme, traits } from '../traits.js'
+import { isTrick, playTrick, type Trick } from '../tricks.js'
 
 const ANIMATED_MIN_SIZE = 160
 const Base = (typeof HTMLElement === 'undefined' ? class {} : HTMLElement) as typeof HTMLElement
 
 export class FlungieElement extends Base {
-  static readonly observedAttributes = ['seed', 'size', 'theme', 'variant', 'salt', 'animated']
+  static readonly observedAttributes = ['seed', 'size', 'theme', 'variant', 'salt', 'animated', 'trick']
 
   #hero: FlungieGL | null = null
   #loading = 0
+  #hover = () => {
+    const trick = this.getAttribute('trick')
+    if (isTrick(trick)) playTrick(this, trick)
+  }
 
   connectedCallback(): void {
+    this.addEventListener('pointerenter', this.#hover)
     this.#draw()
   }
 
   disconnectedCallback(): void {
+    this.removeEventListener('pointerenter', this.#hover)
     this.#release()
   }
 
-  attributeChangedCallback(): void {
-    if (this.isConnected) this.#draw()
+  /** Plays a trick now (the `trick` attribute's when none is named), as after a post goes out. Nothing where motion is reduced. */
+  play(trick?: Trick): Animation | null {
+    const named = trick ?? this.getAttribute('trick')
+    return isTrick(named) ? playTrick(this, named) : null
+  }
+
+  attributeChangedCallback(name: string): void {
+    if (this.isConnected && name !== 'trick') this.#draw()
   }
 
   #options() {
