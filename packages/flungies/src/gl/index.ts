@@ -90,7 +90,9 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
   wrap.append(under, canvas, over)
   host.replaceChildren(wrap)
 
-  const svgOptions = () => ({ size: state.size, theme: state.theme, variant: state.variant, palette: state.palette, expression: state.expression })
+  // The SVG layers around the felt body (auras behind, hats and pants in front) move as the plain SVG Flungie's do, unless the
+  // reader asked for reduced motion; read when drawn, so a change of that setting redraws them still or moving.
+  const svgOptions = () => ({ size: state.size, theme: state.theme, variant: state.variant, palette: state.palette, expression: state.expression, animate: !still })
   const place = () => {
     wrap.style.cssText = `position:relative;width:${state.size}px;height:${state.size}px;`
     wrap.style.clipPath = state.variant === 'disc' ? 'circle(50%)' : state.variant === 'square' ? 'inset(0 round 22%)' : 'none'
@@ -236,6 +238,7 @@ export function mountFlungieGL(host: HTMLElement, who: string | Traits, options:
   const onVisibility = () => (pageVisible() ? resume() : stop())
   const onMotion = (e: MediaQueryListEvent) => {
     still = e.matches
+    if (webgl) build()
     if (still) drawStill()
     else resume()
   }
