@@ -4,7 +4,7 @@ import { type Accessory, ACCESSORIES, byId, type Colour, COLOURS, INK, labelOf, 
 import { type Geometry, geometry, toWorld } from './geometry.js'
 import { type Expression, expressionOf } from './expressions.js'
 import { clamp, f } from './random.js'
-import { aura } from './auras.js'
+import { aura, auraFront } from './auras.js'
 import { outfit } from './outfits/index.js'
 import { pants } from './pants.js'
 import { faceTattoo, piercing } from './face-marks.js'
@@ -128,6 +128,8 @@ export function render(t: Traits, options: RenderOptions = {}): string {
   if (has('face')) body.push(skin + pants(t.pants, G, id, defs, detail, options.animate === true) + (dressed?.under ?? '') + hairdo + face + piercing(t.piercing ?? 'none', faceAt, detail) + (dressed?.over ?? ''))
   if (has('front') && acc.front) body.push(acc.front)
   inner.push(`<g class="fl-breathe" data-ax="${f(bottom[0])}" data-ay="${f(bottom[1])}"><g transform="translate(${f(G.cx)} ${f(G.cy)}) rotate(${f(G.tilt)})">${body.join('')}</g></g>`)
+  // The near side of an aura that goes round the body (the orbit), over the body and what it wears.
+  if (has('front') && t.aura !== 'none') inner.push(auraFront(t.aura, G.cx, G.cy, id, defs, detail, options.animate === true))
   // A pet floats beside it, ahead, or behind when a balloon is up ahead.
   if (has('front') && (t.pet ?? 'none') !== 'none') inner.push(pet(t.pet, G, detail, options.animate === true, t.held === 'balloon' || t.accessory === 'balloon' ? -1 : 1))
 

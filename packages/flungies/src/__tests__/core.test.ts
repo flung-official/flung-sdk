@@ -173,3 +173,25 @@ describe('SVG', () => {
     expect(decodeURIComponent(uri.split(',')[1] as string)).toContain('</svg>')
   })
 })
+
+describe('the orbit aura', () => {
+  const orbiting = { ...traits('orbit-test'), aura: 'orbit' as const }
+
+  it('goes round the body: the whole ring behind it, and its near half again in front, on the same clock', () => {
+    const svg = render(orbiting, { size: 200, animate: true })
+    const back = svg.indexOf('class="fl-aura"')
+    const body = svg.indexOf('class="fl-breathe"')
+    const front = svg.indexOf('class="fl-aura fl-aura--front"')
+    expect(back).toBeGreaterThan(-1)
+    expect(front).toBeGreaterThan(body)
+    expect(back).toBeLessThan(body)
+    expect(svg).toMatch(/<clipPath id="[^"]+ao"><rect/)
+    expect(svg.match(/<animateMotion dur="5s" begin="0s"/g)).toHaveLength(2)
+  })
+
+  it('splits by layer: the near half comes with the front layer, the whole ring with the back ones', () => {
+    expect(render(orbiting, { size: 200, layers: ['disc', 'shadow', 'lines', 'back'] })).not.toContain('fl-aura--front')
+    expect(render(orbiting, { size: 200, layers: ['face', 'front'] })).toContain('fl-aura--front')
+    expect(render({ ...orbiting, aura: 'glow' }, { size: 200 })).not.toContain('fl-aura--front')
+  })
+})

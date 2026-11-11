@@ -22,6 +22,32 @@ const heart = (x: number, y: number, r: number) =>
 const spin = (cx: number, cy: number, seconds: number, reverse = false) =>
   `<animateTransform attributeName="transform" type="rotate" from="${reverse ? 360 : 0} ${f(cx)} ${f(cy)}" to="${reverse ? 0 : 360} ${f(cx)} ${f(cy)}" dur="${seconds}s" repeatCount="indefinite"/>`
 
+/**
+ * The orbit: a ring tilted toward the viewer with two moons going round it. Drawn whole behind the Flungie, and again in front of
+ * it clipped to the ring's near half (`auraFront`), so the ring and a moon pass in front of the body on that side and behind it on
+ * the far side. Both copies run the same clock, so they read as one ring.
+ */
+function orbit(cx: number, cy: number, animate: boolean, clip?: string): string {
+  const path = `M${f(cx - 40)} ${f(cy)}A40 13 0 1 0 ${f(cx + 40)} ${f(cy)}A40 13 0 1 0 ${f(cx - 40)} ${f(cy)}`
+  const dot = (colour: string, begin: string, at: [number, number]) =>
+    animate
+      ? `<circle r="3.2" fill="${colour}"><animateMotion dur="5s" begin="${begin}" repeatCount="indefinite" path="${path}"/></circle>`
+      : `<circle cx="${f(at[0])}" cy="${f(at[1])}" r="3.2" fill="${colour}"/>`
+  const ring = `<path d="${path}" fill="none" stroke="#A891EC" stroke-width="1.3" stroke-dasharray="2.5 2" opacity="0.85"/>${dot('#FFA584', '0s', [cx - 40, cy])}${dot('#86C0FF', '-2.5s', [cx + 40, cy])}`
+  return `<g class="fl-aura${clip === undefined ? '' : ' fl-aura--front'}" transform="rotate(-14 ${f(cx)} ${f(cy)})">${clip === undefined ? ring : `<g clip-path="url(#${clip})">${ring}</g>`}</g>`
+}
+
+/**
+ * The part of an aura that passes in front of the Flungie, drawn over the body and what it wears, or nothing. Only the orbit
+ * has one: its ring's near half, so it goes round the body rather than only behind it.
+ */
+export function auraFront(kind: string, cx: number, cy: number, id: string, defs: string[], detail: number, animate: boolean): string {
+  if (detail === 0 || kind !== 'orbit') return ''
+  // The near half of the tilted ring is its lower half, in the ring's own (rotated) frame; the moons' 3.2 radius stays inside.
+  defs.push(`<clipPath id="${id}ao"><rect x="${f(cx - 46)}" y="${f(cy)}" width="92" height="20"/></clipPath>`)
+  return orbit(cx, cy, animate, `${id}ao`)
+}
+
 /** An aura centred on cx, cy, or nothing. `body` is the body's colour, which the glow takes after. */
 export function aura(kind: string, cx: number, cy: number, id: string, defs: string[], body: string, detail: number, animate: boolean): string {
   if (detail === 0) return ''
@@ -69,14 +95,8 @@ export function aura(kind: string, cx: number, cy: number, id: string, defs: str
         .map(([dx, dy, r], i) => `<path d="${star(cx + dx, cy + dy, r)}">${a(`<animate attributeName="opacity" values="0.2;1;0.2" dur="${f(1.6 + (i % 3) * 0.5)}s" begin="${f(i * 0.3)}s" repeatCount="indefinite"/>`)}</path>`)
         .join('')}</g>`
     }
-    case 'orbit': {
-      const path = `M${f(cx - 40)} ${f(cy)}A40 13 0 1 0 ${f(cx + 40)} ${f(cy)}A40 13 0 1 0 ${f(cx - 40)} ${f(cy)}`
-      const dot = (colour: string, begin: string, at: [number, number]) =>
-        animate
-          ? `<circle r="3.2" fill="${colour}"><animateMotion dur="5s" begin="${begin}" repeatCount="indefinite" path="${path}"/></circle>`
-          : `<circle cx="${f(at[0])}" cy="${f(at[1])}" r="3.2" fill="${colour}"/>`
-      return `<g class="fl-aura" transform="rotate(-14 ${f(cx)} ${f(cy)})"><path d="${path}" fill="none" stroke="#A891EC" stroke-width="1.3" stroke-dasharray="2.5 2" opacity="0.85"/>${dot('#FFA584', '0s', [cx - 40, cy])}${dot('#86C0FF', '-2.5s', [cx + 40, cy])}</g>`
-    }
+    case 'orbit':
+      return orbit(cx, cy, animate)
     case 'halo': {
       defs.push(`<linearGradient id="${id}ah" x1="0" y1="0" x2="1" y2="1">${RAINBOW.map((c, i) => `<stop offset="${f(i / (RAINBOW.length - 1))}" stop-color="${c}"/>`).join('')}</linearGradient>`)
       return `<g class="fl-aura"><circle cx="${f(cx)}" cy="${f(cy)}" r="39" fill="none" stroke="url(#${id}ah)" stroke-width="5" opacity="0.18"/><circle cx="${f(cx)}" cy="${f(cy)}" r="39" fill="none" stroke="url(#${id}ah)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="7 4">${a(spin(cx, cy, 14))}</circle></g>`
