@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/flung-official/flung-sdk/compare/flungies-v0.2.0...flungies-v0.3.0) (2026-11-11)
+
+
+### Added
+
+* **flungies:** seasonal events, outfits, face marks, hair and pets ([fbb0f7f](https://github.com/flung-official/flung-sdk/commit/fbb0f7f8e75a582ce6024e48f408c8062be642c0))
+
+
+### Fixed
+
+* **flungies:** auras, pants and hats move on the live Flungie ([6da9ce4](https://github.com/flung-official/flung-sdk/commit/6da9ce4af773d0a158ab0ec4ac4f7199425c3e95))
+* **flungies:** the orbit goes round the body, its near half in front ([4d43bd7](https://github.com/flung-official/flung-sdk/commit/4d43bd7e3d3246442e4628f7f2a538e6e59d79dc))
+
 ## [0.2.0](https://github.com/flung-official/flung-sdk/compare/flungies-v0.1.0...flungies-v0.2.0) (2026-11-04)
 
 
