@@ -2,6 +2,13 @@
 
 Every version of `@flung.dev/sdk` on npm. From 0.2.0 on, release-please writes each section from the Conventional Commits that change `packages/sdk` (see RELEASING.md at the root of the repository).
 
+## [0.10.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.9.0...sdk-v0.10.0) (2026-11-12)
+
+
+### Added
+
+* **sdk:** every endpoint the API has today ([28d8868](https://github.com/flung-official/flung-sdk/commit/28d88682714b3571f0034703842c50d325ed6769))
+
 ## [0.9.0](https://github.com/flung-official/flung-sdk/compare/sdk-v0.8.0...sdk-v0.9.0) (2026-11-06)
 
 
