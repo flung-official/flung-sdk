@@ -128,6 +128,16 @@ describe('Flung', () => {
   it('refuses to start without a key or with a base address that is not http', () => {
     expect(() => new Flung({ apiKey: '' })).toThrow(TypeError)
     expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl: 'api.flung.dev' })).toThrow(TypeError)
+    expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl: 'ftp://api.flung.dev' })).toThrow(TypeError)
+  })
+
+  it('refuses plain http except on this machine, so a key never travels unencrypted', () => {
+    expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl: 'http://api.flung.dev' })).toThrow(/http baseUrl http:\/\/api\.flung\.dev.*unencrypted/)
+    expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl: 'http://localhost.evil.example' })).toThrow(TypeError)
+    expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl: 'http://10.0.0.5:8787' })).toThrow(TypeError)
+    for (const baseUrl of ['http://localhost:8787', 'http://127.0.0.1:8787/', 'http://[::1]:8787', 'https://api-preview.flung.dev']) {
+      expect(() => new Flung({ apiKey: 'flung_sk_test', baseUrl })).not.toThrow()
+    }
   })
 })
 

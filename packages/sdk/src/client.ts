@@ -42,7 +42,7 @@ export interface FlungOptions {
 export class Flung extends FlungApi {
   constructor(options: FlungOptions) {
     if (typeof options.apiKey !== 'string' || options.apiKey.length === 0) throw new TypeError('Flung needs an apiKey: an API key or an OAuth access token.')
-    if (options.baseUrl !== undefined && !/^https?:\/\//.test(options.baseUrl)) throw new TypeError('Flung needs an http(s) baseUrl, such as https://api.flung.dev.')
+    if (options.baseUrl !== undefined) checkBaseUrl(options.baseUrl)
     super({ client: buildClient(options) })
   }
 
@@ -110,6 +110,24 @@ export class Flung extends FlungApi {
       if (!page.hasMore || last === undefined) return
       page = await list({ ...params, startingAfter: last.id })
     }
+  }
+}
+
+/** Hosts a plain `http:` baseUrl may name: this machine only, so the credential never crosses a network in the clear. */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+/** Throws unless `baseUrl` is `https:`, or `http:` on this machine. */
+function checkBaseUrl(baseUrl: string): void {
+  let url: URL
+  try {
+    url = new URL(baseUrl)
+  } catch {
+    throw new TypeError('Flung needs an http(s) baseUrl, such as https://api.flung.dev.')
+  }
+  if (url.protocol === 'https:') return
+  if (url.protocol !== 'http:') throw new TypeError('Flung needs an http(s) baseUrl, such as https://api.flung.dev.')
+  if (!LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new TypeError(`Flung refuses the http baseUrl ${url.origin}: the API key would travel unencrypted. Use https, or http only on localhost, 127.0.0.1 or [::1].`)
   }
 }
 
