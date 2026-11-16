@@ -8,7 +8,7 @@ export interface LoadDetail {
 
 /** `flung-connect`: a connect or reconnect finished. `accounts` are the ones stored; Facebook stores one per page. */
 export interface ConnectDetail {
-  /** The connect session, or null when the person came back from a redirect. */
+  /** The connect session as the API returned it, also after a redirect. Kept nullable for older listeners. */
   session: ConnectSession | null
   /** The accounts stored. */
   accounts: Account[]

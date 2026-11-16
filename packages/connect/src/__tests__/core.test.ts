@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ConnectClient, connectInPopup, FlungConnectError, parsePlatformList, readRedirectResult, tokenPlatforms, withoutRedirectResult } from '../core/index.js'
+import { ConnectClient, connectInPopup, FlungConnectError, parsePlatformList, readRedirectResult, safeUrl, tokenPlatforms, withoutRedirectResult } from '../core/index.js'
 import { fakeApi, fakePopup } from './fake-api.js'
 
 afterEach(() => {
@@ -101,6 +101,26 @@ describe('connectInPopup', () => {
     vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
     await expect(connectInPopup(client, () => client.disconnect('acct_missing').then(() => client.connect('x')))).rejects.toBeInstanceOf(FlungConnectError)
     expect(popup.closed).toBe(true)
+  })
+
+  it('closes the window and throws rather than send it to an address that is not http or https', async () => {
+    const client = new ConnectClient({ token: 'flung_ct_a.b', fetch: fakeApi().fetch })
+    const popup = fakePopup()
+    vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
+    const hostile = async () => ({ ...(await client.connect('x')), authorizationUrl: 'javascript:alert(1)' })
+    await expect(connectInPopup(client, hostile)).rejects.toMatchObject({ code: 'unsafe_url' })
+    expect(popup.closed).toBe(true)
+    expect(popup.location.href).toBe('')
+  })
+
+  it('accepts only http and https addresses in safeUrl', () => {
+    expect(safeUrl('https://platform.example/consent')).toBe('https://platform.example/consent')
+    expect(safeUrl('http://localhost:8787/consent')).toBe('http://localhost:8787/consent')
+    expect(safeUrl('http://platform.example/', ['https:'])).toBeNull()
+    expect(safeUrl('javascript:alert(1)')).toBeNull()
+    expect(safeUrl('data:text/html,<b>x</b>')).toBeNull()
+    expect(safeUrl('not a url')).toBeNull()
+    expect(safeUrl(null)).toBeNull()
   })
 })
 

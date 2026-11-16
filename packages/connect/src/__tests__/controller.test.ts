@@ -118,12 +118,30 @@ describe('createConnectController', () => {
       if (new Request(input, init).method !== 'POST') return response
       return Response.json({ ...((await response.json()) as object), authorizationUrl: 'javascript:alert(1)' }, { status: 201 })
     }
-    const { controller } = start(api, { fetch: hostile })
+    const { controller, events } = start(api, { fetch: hostile })
     await loaded(controller)
     vi.spyOn(window, 'open').mockReturnValue(null)
     controller.connect('x')
-    await vi.waitFor(() => expect(api.requests.some((request) => request.path.startsWith('/v1/connect-sessions/'))).toBe(true))
-    expect(step(controller, 'x')).toMatchObject({ kind: 'waiting', blockedUrl: null })
+    await vi.waitFor(() => expect(events.error).toEqual([expect.objectContaining({ code: 'unsafe_url' })]))
+    expect(step(controller, 'x')).toEqual({ kind: 'idle' })
+    expect(api.requests.some((request) => request.path.startsWith('/v1/connect-sessions/'))).toBe(false)
+  })
+
+  it('closes the window and never sends it to a consent address that is not http or https', async () => {
+    const api = fakeApi()
+    const hostile: typeof fetch = async (input, init) => {
+      const response = await api.fetch(input, init)
+      if (new Request(input, init).method !== 'POST') return response
+      return Response.json({ ...((await response.json()) as object), authorizationUrl: 'javascript:alert(1)' }, { status: 201 })
+    }
+    const { controller, events } = start(api, { fetch: hostile })
+    await loaded(controller)
+    const popup = fakePopup()
+    vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window)
+    controller.connect('x')
+    await vi.waitFor(() => expect(events.error).toEqual([expect.objectContaining({ code: 'unsafe_url' })]))
+    expect(popup.closed).toBe(true)
+    expect(popup.location.href).toBe('')
   })
 
   it('asks for the Mastodon server as data, then sends it trimmed', async () => {
@@ -211,14 +229,36 @@ describe('createConnectController', () => {
     expect(controller.getState().labels.panel).toBe('Comptes')
   })
 
-  it('reads a redirect that came back, and takes it off the address', async () => {
+  it('reads a redirect that came back, confirms it with the API, and takes it off the address', async () => {
     const api = fakeApi()
     const back = api.account('x', 'flung')
+    api.sessions.set('cs_1', { id: 'cs_1', platform: 'x', accountId: null, status: 'connected', authorizationUrl: null, expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [back.id], error: null })
     history.replaceState(null, '', `/accounts?tab=1&flung_session_id=cs_1&flung_status=connected&flung_account_ids=${back.id}`)
     const { controller, events } = start(api, { mode: 'redirect' })
-    await vi.waitFor(() => expect(events.connect).toEqual([{ session: null, accounts: [expect.objectContaining({ id: back.id })] }]))
+    await vi.waitFor(() => expect(events.connect).toEqual([{ session: expect.objectContaining({ id: 'cs_1' }), accounts: [expect.objectContaining({ id: back.id })] }]))
+    expect(api.requests.some((request) => request.path === '/v1/connect-sessions/cs_1')).toBe(true)
     expect(location.search).toBe('?tab=1')
     expect(controller.getState().message.text).toBe('X is connected.')
+  })
+
+  it('believes the session, not the address, when a redirect claims a connect', async () => {
+    const api = fakeApi()
+    const other = api.account('x', 'other')
+    api.sessions.set('cs_1', { id: 'cs_1', platform: 'x', accountId: null, status: 'failed', authorizationUrl: null, expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [], error: { code: 'access_denied', message: 'The person said no.' } })
+    history.replaceState(null, '', `/accounts?flung_session_id=cs_1&flung_status=connected&flung_account_ids=${other.id}`)
+    const { controller, events } = start(api, { mode: 'redirect' })
+    await vi.waitFor(() => expect(events.error).toEqual([{ code: 'access_denied', message: 'The person said no.' }]))
+    expect(events.connect).toEqual([])
+    expect(controller.getState().message.text).toBe('The person said no.')
+  })
+
+  it('shows the API\'s words, never a message put on the address', async () => {
+    const api = fakeApi()
+    history.replaceState(null, '', '/accounts?flung_session_id=cs_forged&flung_status=error&flung_error=x&flung_message=Call%20+1%20555%20to%20fix%20this')
+    const { controller, events } = start(api, { mode: 'redirect' })
+    await vi.waitFor(() => expect(events.error).toEqual([{ code: 'not_found', message: 'No such session.' }]))
+    expect(controller.getState().message.text).not.toContain('555')
+    expect(location.search).toBe('')
   })
 
   it('stops listening, waiting and reporting once destroyed', async () => {

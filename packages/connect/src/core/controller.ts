@@ -1,7 +1,7 @@
 import { ConnectClient, FlungConnectError } from './client.js'
 import type { TokenSource } from './client.js'
 import type { ConnectDetail, DisconnectDetail, ErrorDetail, LoadDetail } from './events.js'
-import { connectInPopup, readRedirectResult, withoutRedirectResult } from './flows.js'
+import { connectInPopup, readRedirectResult, safeUrl, withoutRedirectResult } from './flows.js'
 import { DEFAULT_LABELS, formatLabel } from './labels.js'
 import type { ConnectLabels } from './labels.js'
 import { HANDLE_PROMPT, isConnectVariant, isPageAccount, PLATFORM_NAMES, tokenPlatforms } from './platforms.js'
@@ -250,7 +250,7 @@ class Controller implements ConnectController {
     this.#state = this.#snapshot()
     if (this.#client !== null) {
       void this.#load().then(() => {
-        if (options.readRedirect !== false) this.#readReturn()
+        if (options.readRedirect !== false) return this.#readReturn()
       })
     }
   }
@@ -389,19 +389,33 @@ class Controller implements ConnectController {
     }
   }
 
-  /** A connect that left the page (`mode: 'redirect'`) and came back: report it, and take Flung's result off the address. */
-  #readReturn(): void {
-    if (this.#destroyed || typeof location === 'undefined' || typeof history === 'undefined') return
+  /**
+   * A connect that left the page (`mode: 'redirect'`) and came back: take Flung's result off the address, then report
+   * what the API says of the session, never what the address says. Anyone can link to a page with `flung_status=connected`
+   * or a `flung_message` of their own; only the session id is read from it.
+   */
+  async #readReturn(): Promise<void> {
+    const client = this.#client
+    if (client === null || this.#destroyed || typeof location === 'undefined' || typeof history === 'undefined') return
     const result = readRedirectResult(location.href)
     if (result === null) return
     history.replaceState(history.state, '', withoutRedirectResult(location.href))
-    if (result.status === 'connected') {
-      const accounts = this.#accounts.filter((account) => result.accountIds.includes(account.id))
-      this.#tell({ kind: 'connected', platform: accounts[0]?.platform ?? null, accounts, session: null })
-      this.#options.onConnect?.({ session: null, accounts })
+    let session: ConnectSession
+    try {
+      session = await client.session(result.sessionId)
+    } catch (error) {
+      this.#fail(error, 'redirect', null)
+      return
+    }
+    if (this.#destroyed || session.status === 'pending') return
+    if (session.status === 'connected') {
+      // The accounts were read just before this, after the connect had finished.
+      const accounts = this.#accounts.filter((account) => session.accountIds.includes(account.id))
+      this.#tell({ kind: 'connected', platform: accounts[0]?.platform ?? null, accounts, session })
+      this.#options.onConnect?.({ session, accounts })
     } else {
-      const code = result.error?.code ?? 'platform_error'
-      const message = result.error?.message ?? ''
+      const code = session.status === 'expired' ? 'expired' : (session.error?.code ?? 'platform_error')
+      const message = session.error?.message ?? ''
       this.#tell({ kind: 'error', during: 'redirect', platform: null, code, message })
       this.#options.onError?.({ code, message })
     }
@@ -500,7 +514,7 @@ class Controller implements ConnectController {
     this.#fail(error, 'connect', platform)
   }
 
-  #fail(error: unknown, during: 'load' | 'connect' | 'disconnect', platform: Platform | null): void {
+  #fail(error: unknown, during: 'load' | 'connect' | 'disconnect' | 'redirect', platform: Platform | null): void {
     if (this.#destroyed) return
     const detail = error instanceof FlungConnectError ? { code: error.code, message: error.message } : { code: 'unknown', message: String(error) }
     this.#tell({ kind: 'error', during, platform, ...detail })
@@ -609,16 +623,6 @@ function nonEmpty(value: string | null | undefined): string | null {
 function initialOf(name: string): string {
   const first = Array.from(name.replace(/^@+/, '').trim())[0]
   return first === undefined ? '?' : first.toLocaleUpperCase()
-}
-
-/** `value` when it is an address on one of `protocols`, else null: an address from the API never becomes a `javascript:` link. */
-function safeUrl(value: string | null, protocols: readonly string[] = ['https:', 'http:']): string | null {
-  if (value === null) return null
-  try {
-    return protocols.includes(new URL(value).protocol) ? value : null
-  } catch {
-    return null
-  }
 }
 
 function frozenInitial(hasToken: boolean): ConnectState {

@@ -1,8 +1,19 @@
+import { FlungConnectError } from './client.js'
 import type { ConnectClient } from './client.js'
 import type { ConnectSession } from './types.js'
 
 const POPUP_NAME = 'flung-connect'
 const POPUP_FEATURES = 'popup,width=520,height=720'
+
+/** `value` when it is an address on one of `protocols`, else null: an address from the API never becomes a `javascript:` link. */
+export function safeUrl(value: string | null, protocols: readonly string[] = ['https:', 'http:']): string | null {
+  if (value === null) return null
+  try {
+    return protocols.includes(new URL(value).protocol) ? value : null
+  } catch {
+    return null
+  }
+}
 
 /** How a connect in a window ended: the session, or `blocked` when the browser refused to open the window. */
 export type PopupOutcome = { kind: 'finished'; session: ConnectSession } | { kind: 'blocked'; session: ConnectSession }
@@ -29,8 +40,13 @@ export async function connectInPopup(client: ConnectClient, start: () => Promise
     popup?.close()
     return { kind: 'finished', session }
   }
+  const url = safeUrl(session.authorizationUrl)
+  if (url === null) {
+    popup?.close()
+    throw new FlungConnectError(0, 'unsafe_url', 'Flung sent a sign-in address that is not http or https, so it was not opened.')
+  }
   if (popup === null) return { kind: 'blocked', session }
-  popup.location.href = session.authorizationUrl
+  popup.location.href = url
   try {
     const finished = await client.waitForSession(session.id, { signal: options.signal })
     return { kind: 'finished', session: finished }

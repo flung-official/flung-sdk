@@ -125,11 +125,12 @@ describe('<flung-connect>', () => {
 
   it('reports a connect that came back to the page, and takes Flung\'s result off the address', async () => {
     const made = api.account('x', 'flung')
+    api.sessions.set('cs_1', { id: 'cs_1', platform: 'x', accountId: null, status: 'connected', authorizationUrl: null, expiresAt: '2030-01-01T00:00:00.000Z', accountIds: [made.id], error: null })
     history.replaceState(null, '', `/accounts?flung_session_id=cs_1&flung_status=connected&flung_account_ids=${made.id}`)
     const connected: unknown[] = []
     document.addEventListener('flung-connect', (event) => connected.push((event as CustomEvent).detail), { once: true })
     const { element } = await mount({ token: 'flung_ct_a.b', mode: 'redirect' })
-    await vi.waitFor(() => expect(connected).toEqual([{ session: null, accounts: [expect.objectContaining({ id: made.id })] }]))
+    await vi.waitFor(() => expect(connected).toEqual([{ session: expect.objectContaining({ id: 'cs_1', status: 'connected' }), accounts: [expect.objectContaining({ id: made.id })] }]))
     expect(location.search).toBe('')
     expect(message(element)).toBe('X is connected.')
   })

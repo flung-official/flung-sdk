@@ -84,7 +84,7 @@ export function Accounts() {
 | Event | `detail` | When |
 |---|---|---|
 | `flung-load` | `{ accounts }` | The accounts were read: on first show and after each change. |
-| `flung-connect` | `{ session, accounts }` | A connect or reconnect finished. Facebook stores one account per page. `session` is null after a redirect. |
+| `flung-connect` | `{ session, accounts }` | A connect or reconnect finished. Facebook stores one account per page. After a redirect, the result on the address is confirmed with the API, and `session` is the session it returned. |
 | `flung-disconnect` | `{ account }` | An account was disconnected. Its past posts keep their results. |
 | `flung-error` | `{ code, message }` | A call or a connect failed: `access_denied`, `wrong_account`, `forbidden`, `network_error` and so on. |
 | `flung-change` | `{ state }` | Anything the panel shows changed. Does not bubble. |
