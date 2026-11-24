@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 7,
   "standards_root": ".standards",
   "packs": [
     "testing",
@@ -75,6 +75,30 @@
       },
       "post-edit-drift": {
         "enabled": false
+      },
+      "commit-attribution": {
+        "enabled": true
+      },
+      "file-names": {
+        "enabled": true
+      },
+      "git-cleanup": {
+        "enabled": true
+      },
+      "no-weakening": {
+        "enabled": true
+      },
+      "outward-guard": {
+        "enabled": true
+      },
+      "review-summary": {
+        "enabled": true
+      },
+      "tests-with-code": {
+        "enabled": true
+      },
+      "verify-before-stop": {
+        "enabled": true
       }
     }
   }

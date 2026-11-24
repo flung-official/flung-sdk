@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dispatch.py"
+            "command": "node $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dist/dispatch.mjs"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dispatch.py"
+            "command": "node $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dist/dispatch.mjs"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dispatch.py"
+            "command": "node $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dist/dispatch.mjs"
           }
         ]
       }
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dispatch.py"
+            "command": "node $CLAUDE_PROJECT_DIR/.standards/claude/enforcement/dist/dispatch.mjs"
           }
         ]
       }
