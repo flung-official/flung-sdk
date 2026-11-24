@@ -1,0 +1,28 @@
+{
+  "about": "Findings the standards gates already reported when this baseline was taken. CI fails only on a finding not listed here. Shrink it with `node .standards/claude/enforcement/ci.ts --baseline prune` as findings are fixed; never add to it.",
+  "taken": "2026-11-24",
+  "standards": "2.12.0",
+  "gates": {
+    "forbidden": {
+      "packages/connect/src/element/dom.ts: no-as-any - `any` disables the type checker: the escape hatch that hides real bugs.": 1,
+      "packages/flungies/src/__tests__/element.test.ts: no-inner-html-assignment - Assigning innerHTML is an XSS sink and forces reparse.": 1,
+      "packages/flungies/src/react/index.tsx: no-dangerously-set-inner-html - Direct HTML injection is an XSS sink.": 1,
+      "packages/sdk/src/__tests__/client.test.ts: no-hardcoded-secret - Hardcoded credentials leak via git and cannot be rotated.": 1
+    },
+    "semgrep": {
+      "fetch-without-timeout examples/nextjs/app/accounts.tsx: const response = await fetch('/api/connect-token', { method: 'POST' })": 1,
+      "fetch-without-timeout examples/react-vite/src/App.tsx: const response = await fetch('/connect-token', { method: 'POST' })": 1,
+      "fetch-without-timeout examples/vanilla/server.mjs: const response = await fetch(`${BASE_URL}/v1/connect-tokens`, { method: 'POST', headers: { authorization: `Bearer ${API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ origins: [ORIGIN], expiresIn: 900 }), })": 1,
+      "fetch-without-timeout packages/connect/src/core/client.ts: this.#fetch = options.fetch ?? ((input, init) => fetch(input, init))": 1,
+      "fetch-without-timeout packages/sdk/src/client.ts: fetch: retryingFetch(options.fetch ?? ((input, init) => fetch(input, init)), options.maxRetries ?? DEFAULT_MAX_RETRIES, options.timeoutMs ?? DEFAULT_TIMEOUT_MS),": 1,
+      "fetch-without-timeout scripts/sync-icons.mjs: const response = await fetch(FLUNG_MARK)": 1,
+      "fetch-without-timeout scripts/sync-openapi.mjs: const text = source === undefined ? await (await fetch('https://api.flung.dev/openapi.json')).text() : readFileSync(source, 'utf8')": 1,
+      "no-dangerously-set-inner-html packages/flungies/src/react/index.tsx: if (!gl) return <span className={className} style={box} onPointerEnter={onPointerEnter} dangerouslySetInnerHTML={{ __html: svg }} />": 1,
+      "no-dangerously-set-inner-html packages/flungies/src/react/index.tsx: return <span className={className} style={box} dangerouslySetInnerHTML={{ __html: svg }} />": 1,
+      "no-dangerously-set-inner-html packages/flungies/src/react/index.tsx: {mounted ? null : <span style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: svg }} />}": 1
+    },
+    "file-names": {
+      "examples/react-vite/src/App.tsx": 1
+    }
+  }
+}
